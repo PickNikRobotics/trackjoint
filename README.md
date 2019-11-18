@@ -11,131 +11,19 @@ TODO(andyze): fix Travis badge:
 
 ## Install
 
-### Ubuntu Debian
-
-> Note: this package has not been released yet
-
-    sudo apt-get install ros-${ROS_DISTRO}-trackjoint
-
 ### Build from Source
 
-1. Install [ROS melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) if you are running on Ubuntu 16.04 or [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) for Ubuntu 18.04. This package primerily targets melodic
-
-1. Install the following build tools:
-
-        sudo apt-get install python-wstool python-catkin-tools
-
-1. Re-use or create a catkin workspace:
-
-        mkdir -p ~/ws_catkin/
-        cd ~/ws_catkin/
-
-1. Download the required repositories and install any dependencies:
-
-        git clone git@github.com:PickNikRobotics/trackjoint.git
-        wstool init src
-        wstool merge -t src trackjoint/trackjoint.rosinstall
-        wstool update -t src
-        rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO}
-
-1. Configure and build the workspace:
-
-        catkin config --extend /opt/ros/${ROS_DISTRO} --cmake-args -DCMAKE_BUILD_TYPE=Release
-        catkin build
-
-1. Source the workspace.
-
-        source devel/setup.bash
-
-## Developers: Quick update code repositories
-
-To make sure you have the latest repos:
-
-    cd ~/ws_catkin/src/trackjoint
-    git checkout master
-    git pull origin master
-    cd ..
-    wstool merge trackjoint/trackjoint.rosinstall
-    wstool update
-    rosdep install --from-paths . --ignore-src --rosdistro ${ROS_DISTRO}
+1. TODO(andyze)
 
 ## Run
 
-Run run_example
-```
-roslaunch trackjoint run_example.launch
-```
-
-### Run with Debuging
-
-Run run_example with GDB
-```
-roslaunch trackjoint run_example.launch debug:=true
-```
-
-Run run_example with Callgrind
-```
-roslaunch trackjoint run_example.launch callgrind:=true
-```
-
-Run run_example with Valgrind
-```
-roslaunch trackjoint run_example.launch valgrind:=true
-```
-
-## Run Inside Docker
-
-### Prerequisite
-
-You must have a private rsa key `~/.ssh/id_rsa` that is not password protected and is attached to your Github/Bitbucket/Gerrit accounts.
-You must also have a working installation of `docker`.
-
-1. Navigate to `$CATKIN_WS/src/trackjoint/.docker`. You should see the `Dockerfile` recipe in the directory.
-
-1. Build the docker image
-
-        cd $CATKIN_WS/src/trackjoint/.docker
-        cp ~/.ssh/id_rsa id_rsa && docker build -t trackjoint:melodic-source .; rm id_rsa
-
-1. Run the docker image
-
-    * Without the gui
-
-            docker run -it --rm trackjoint:melodic-source /bin/bash
-
-    * With the gui (tested with Ubuntu native and a Ubuntu VM)
-
-            . ./gui-docker -it --rm trackjoint:melodic-source /bin/bash
+TODO(andyze)
 
 ## Code API
 
 > Note: this package has not been released yet
 
 See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/anotated.html)
-
-## Testing and Linting
-
-To run [roslint](http://wiki.ros.org/roslint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
-
-    roscd trackjoint
-    catkin build --no-status --no-deps --this --make-args roslint
-
-To run [catkin lint](https://pypi.python.org/pypi/catkin_lint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
-
-    catkin lint -W2 --rosdistro ${ROS_DISTRO}
-
-Use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/) to run tests.
-
-    catkin run_tests
-
-To run tests for just one package:
-
-    catkin run_tests --make-args tests -- trackjoint
-
-To view test results:
-
-    cd $CATKIN_WS
-    catkin_test_results --all
 
 ## Running CI tests locally
 
