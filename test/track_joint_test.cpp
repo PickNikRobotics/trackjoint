@@ -32,29 +32,70 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: FIRST_NAME LAST_NAME
-   Desc: TODO(GITHUB_NAME):
+/* Author: Andy Zelenak
+   Desc: TODO(andyze):
 */
+
+/** EXAMPLES:
+    EXPECT_FALSE(robot_state.hasFixedLinks());
+    EXPECT_EQ(robot_state.getFixedLinksCount(), 0);
+    EXPECT_TRUE(robot_state.getPrimaryFixedLink() == NULL);
+    EXPECT_GT(robot_state.getFixedLinksMode(), 0);
+    EXPECT_LT( fabs(vars[0] - 0), EPSILON) << "Virtual joint in wrong position " << vars[0];
+*/
+
+// C++
+#include <string>
 
 // ROS
 #include <ros/ros.h>
-#include <PACKAGE_NAME/CPP_CLASS_FILE_NAME.h>
+
+// Testing
+#include <gtest/gtest.h>
+
+// Main class
+#include <trackjoint/track_joint.h>
+
+
+namespace trackjoint
+{
+
+class TestTrackJoint : public ::testing::Test
+{
+public:
+  void SetUp() override
+  {
+    nh_.reset(new ros::NodeHandle("~"));
+    server_.reset(new TrackJoint());
+  }
+  void TearDown() override
+  {
+  }
+
+protected:
+  std::unique_ptr<ros::NodeHandle> nh_;
+  TrackJointPtr server_;
+};  // class TestTrackJoint
+
+TEST_F(TestTrackJoint, TestNameOfClass)
+{
+  std::string expected_class_name = "track_joint";
+  ASSERT_STREQ(server_->name_.c_str(), expected_class_name.c_str());
+}
+
+}  // namespace trackjoint
 
 int main(int argc, char** argv)
 {
-  // Initialize ROS
-  ros::init(argc, argv, "CPP_SHORT_NAME");
-  ROS_INFO_STREAM_NAMED("main", "Starting CPP_CLASS_NAME...");
+  testing::InitGoogleTest(&argc, argv);
+  ros::init(argc, argv, "track_joint_test");
 
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  // Initialize main class
-  PACKAGE_NAME::CPP_CLASS_NAME server;
+  int result = RUN_ALL_TESTS();
 
-  // Shutdown
-  ROS_INFO_STREAM_NAMED("main", "Shutting down.");
+  spinner.stop();
   ros::shutdown();
-
-  return 0;
+  return result;
 }

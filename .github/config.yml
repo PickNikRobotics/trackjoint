@@ -9,9 +9,9 @@ newIssueWelcomeComment: >
 # Configuration for new-pr-welcome - https://github.com/behaviorbot/new-pr-welcome
 # Comment to be posted to on PRs from first time contributors in your repository
 newPRWelcomeComment: >
-  Thanks for helping in improving PACKAGE_NAME.
+  Thanks for helping in improving trackjoint.
 
 # Configuration for first-pr-merge - https://github.com/behaviorbot/first-pr-merge
 # Comment to be posted to on pull requests merged by a first time user
 firstPRMergeComment: >
-  Congrats on getting your first PACKAGE_NAME pull request merged and improving open source robotics!
+  Congrats on getting your first trackjoint pull request merged and improving open source robotics!

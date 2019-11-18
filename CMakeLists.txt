@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(PACKAGE_NAME)
+project(trackjoint)
 
 # C++ 14
 add_compile_options(-std=c++14)
@@ -36,7 +36,6 @@ catkin_package(
     Boost
     EIGEN3
 )
-catkin_python_setup()
 
 ###########
 ## Build ##
@@ -58,7 +57,7 @@ include_directories(
 # Declare a C++ library with project namespace to avoid naming collision
 add_library(
   ${PROJECT_NAME}
-  src/CPP_CLASS_FILE_NAME.cpp
+  src/track_joint.cpp
 )
 
 # Specify libraries to link a library or executable target against
@@ -70,20 +69,20 @@ target_link_libraries(
 
 # Declare a C++ executable
 add_executable(
-  ${PROJECT_NAME}_CPP_EXECUTABLE_NAME
-  src/CPP_EXECUTABLE_NAME.cpp
+  ${PROJECT_NAME}_run_example
+  src/run_example.cpp
 )
 
 # Rename C++ executable without namespace
 set_target_properties(
-  ${PROJECT_NAME}_CPP_EXECUTABLE_NAME
+  ${PROJECT_NAME}_run_example
   PROPERTIES
-    OUTPUT_NAME CPP_EXECUTABLE_NAME PREFIX ""
+    OUTPUT_NAME run_example PREFIX ""
 )
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(
-  ${PROJECT_NAME}_CPP_EXECUTABLE_NAME
+  ${PROJECT_NAME}_run_example
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
@@ -96,7 +95,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_CPP_EXECUTABLE_NAME
+    ${PROJECT_NAME} ${PROJECT_NAME}_run_example
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION
@@ -112,9 +111,6 @@ install(
   DESTINATION
     ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
-
-catkin_install_python(PROGRAMS scripts/PYTHON_EXECUTABLE_NAME.py
-  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 # Mark roslaunch files for installation
 install(
@@ -139,8 +135,8 @@ install(
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
 
-  add_rostest_gtest(CPP_CLASS_FILE_NAME_test test/CPP_CLASS_FILE_NAME_test.test test/CPP_CLASS_FILE_NAME_test.cpp)
-  target_link_libraries(CPP_CLASS_FILE_NAME_test
+  add_rostest_gtest(track_joint_test test/track_joint_test.test test/track_joint_test.cpp)
+  target_link_libraries(track_joint_test
     ${PROJECT_NAME}
     ${catkin_LIBRARIES}
     ${Boost_LIBRARIES})

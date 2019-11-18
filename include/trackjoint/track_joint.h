@@ -32,26 +32,46 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: FIRST_NAME LAST_NAME
-   Desc: TODO(GITHUB_NAME):
+/* Author: Andy Zelenak
+   Desc: TODO(andyze):
 */
 
-#include <PACKAGE_NAME/CPP_CLASS_FILE_NAME.h>
+#ifndef TRACKJOINT_TRACK_JOINT_H
+#define TRACKJOINT_TRACK_JOINT_H
 
-namespace PACKAGE_NAME
+// C++
+#include <string>
+
+// ROS
+#include <ros/ros.h>
+
+// Testing
+#include <gtest/gtest.h>
+
+
+namespace trackjoint
 {
-CPP_CLASS_NAME::CPP_CLASS_NAME()
-: nh_("~")
-, name_("CPP_SHORT_NAME")
+class TrackJoint
 {
-  // Load rosparams
-  // ros::NodeHandle rpnh(nh_, name_);
-  // std::size_t error = 0;
-  // error += !rosparam_shortcuts::get(name_, rpnh, "control_rate", control_rate_);
+public:
+  /** \brief Constructor */
+  TrackJoint();
 
-  // Add more parameters here to load if desired
-  // rosparam_shortcuts::shutdownIfError(name_, error);
+protected:
+  // --------------------------------------------------------
+  // Any test that requires access to protected variables should go here
+  FRIEND_TEST(TestTrackJoint, TestNameOfClass);
 
-  ROS_INFO_STREAM_NAMED(name_, "Hello world.");
-}
-}  // end namespace PACKAGE_NAME
+  // A shared node handle
+  ros::NodeHandle nh_;
+
+  // The short name of this class
+  std::string name_;
+};  // end class TrackJoint
+
+// Create std pointers for this class
+typedef std::shared_ptr<TrackJoint> TrackJointPtr;
+typedef std::shared_ptr<const TrackJoint> TrackJointConstPtr;
+
+}  // namespace trackjoint
+#endif  // TRACKJOINT_TRACK_JOINT_H

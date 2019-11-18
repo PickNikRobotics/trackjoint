@@ -1,8 +1,8 @@
-# PACKAGE_NAME:___PREFERRED_ROS_DISTRO___-source
+# trackjoint:melodic-source
 # Downloads the source code, installs the remaining debian dependencies, and
 # builds the package
 
-FROM ros:___PREFERRED_ROS_DISTRO___
+FROM ros:melodic
 
 # Remove warning 'Could not determine the width of the terminal.'
 ENV TERM xterm
@@ -25,10 +25,10 @@ RUN chmod 700 /root/.ssh/id_rsa
 RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 RUN ssh-keyscan -t rsa bitbucket.org >> ~/.ssh/known_hosts
 
-# Download PACKAGE_NAME source
-RUN git clone git@github.com:PickNikRobotics/PACKAGE_NAME.git && \
+# Download trackjoint source
+RUN git clone git@github.com:PickNikRobotics/trackjoint.git && \
     wstool init . && \
-    wstool merge ./PACKAGE_NAME/PACKAGE_NAME.rosinstall && \
+    wstool merge ./trackjoint/trackjoint.rosinstall && \
     wstool update && \
     rm /root/.ssh/id_rsa
 

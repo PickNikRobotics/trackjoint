@@ -1,13 +1,13 @@
-# PACKAGE_NAME
+# trackjoint
 
-Description: PACKAGE_DESCRIPTION
+Description: A trajectory-smoothing library
 
 <img src="https://picknik.ai/assets/images/logo.jpg" width="100">
 
-Developed by FIRST_NAME LAST_NAME at [PickNik Consulting](http://picknik.ai/)
+Developed by Andy Zelenak at [PickNik Consulting](http://picknik.ai/)
 
-TODO(GITHUB_NAME): fix Travis badge:
-[![Build Status](https://travis-ci.com/PickNikRobotics/PACKAGE_NAME.svg?token=o9hPQnr2kShM9ckDs6J8&branch=master)](https://travis-ci.com/PickNikRobotics/PACKAGE_NAME)
+TODO(andyze): fix Travis badge:
+[![Build Status](https://travis-ci.com/PickNikRobotics/trackjoint.svg?token=o9hPQnr2kShM9ckDs6J8&branch=master)](https://travis-ci.com/PickNikRobotics/trackjoint)
 
 ## Install
 
@@ -15,11 +15,11 @@ TODO(GITHUB_NAME): fix Travis badge:
 
 > Note: this package has not been released yet
 
-    sudo apt-get install ros-${ROS_DISTRO}-PACKAGE_NAME
+    sudo apt-get install ros-${ROS_DISTRO}-trackjoint
 
 ### Build from Source
 
-1. Install [ROS ___PREFERRED_ROS_DISTRO___](http://wiki.ros.org/___PREFERRED_ROS_DISTRO___/Installation/Ubuntu) if you are running on Ubuntu 16.04 or [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) for Ubuntu 18.04. This package primerily targets ___PREFERRED_ROS_DISTRO___
+1. Install [ROS melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) if you are running on Ubuntu 16.04 or [ROS Melodic](http://wiki.ros.org/melodic/Installation/Ubuntu) for Ubuntu 18.04. This package primerily targets melodic
 
 1. Install the following build tools:
 
@@ -32,9 +32,9 @@ TODO(GITHUB_NAME): fix Travis badge:
 
 1. Download the required repositories and install any dependencies:
 
-        git clone git@github.com:PickNikRobotics/PACKAGE_NAME.git
+        git clone git@github.com:PickNikRobotics/trackjoint.git
         wstool init src
-        wstool merge -t src PACKAGE_NAME/PACKAGE_NAME.rosinstall
+        wstool merge -t src trackjoint/trackjoint.rosinstall
         wstool update -t src
         rosdep install --from-paths src --ignore-src --rosdistro ${ROS_DISTRO}
 
@@ -51,36 +51,36 @@ TODO(GITHUB_NAME): fix Travis badge:
 
 To make sure you have the latest repos:
 
-    cd ~/ws_catkin/src/PACKAGE_NAME
+    cd ~/ws_catkin/src/trackjoint
     git checkout master
     git pull origin master
     cd ..
-    wstool merge PACKAGE_NAME/PACKAGE_NAME.rosinstall
+    wstool merge trackjoint/trackjoint.rosinstall
     wstool update
     rosdep install --from-paths . --ignore-src --rosdistro ${ROS_DISTRO}
 
 ## Run
 
-Run CPP_EXECUTABLE_NAME
+Run run_example
 ```
-roslaunch PACKAGE_NAME CPP_EXECUTABLE_NAME.launch
+roslaunch trackjoint run_example.launch
 ```
 
 ### Run with Debuging
 
-Run CPP_EXECUTABLE_NAME with GDB
+Run run_example with GDB
 ```
-roslaunch PACKAGE_NAME CPP_EXECUTABLE_NAME.launch debug:=true
-```
-
-Run CPP_EXECUTABLE_NAME with Callgrind
-```
-roslaunch PACKAGE_NAME CPP_EXECUTABLE_NAME.launch callgrind:=true
+roslaunch trackjoint run_example.launch debug:=true
 ```
 
-Run CPP_EXECUTABLE_NAME with Valgrind
+Run run_example with Callgrind
 ```
-roslaunch PACKAGE_NAME CPP_EXECUTABLE_NAME.launch valgrind:=true
+roslaunch trackjoint run_example.launch callgrind:=true
+```
+
+Run run_example with Valgrind
+```
+roslaunch trackjoint run_example.launch valgrind:=true
 ```
 
 ## Run Inside Docker
@@ -90,34 +90,34 @@ roslaunch PACKAGE_NAME CPP_EXECUTABLE_NAME.launch valgrind:=true
 You must have a private rsa key `~/.ssh/id_rsa` that is not password protected and is attached to your Github/Bitbucket/Gerrit accounts.
 You must also have a working installation of `docker`.
 
-1. Navigate to `$CATKIN_WS/src/PACKAGE_NAME/.docker`. You should see the `Dockerfile` recipe in the directory.
+1. Navigate to `$CATKIN_WS/src/trackjoint/.docker`. You should see the `Dockerfile` recipe in the directory.
 
 1. Build the docker image
 
-        cd $CATKIN_WS/src/PACKAGE_NAME/.docker
-        cp ~/.ssh/id_rsa id_rsa && docker build -t PACKAGE_NAME:___PREFERRED_ROS_DISTRO___-source .; rm id_rsa
+        cd $CATKIN_WS/src/trackjoint/.docker
+        cp ~/.ssh/id_rsa id_rsa && docker build -t trackjoint:melodic-source .; rm id_rsa
 
 1. Run the docker image
 
     * Without the gui
 
-            docker run -it --rm PACKAGE_NAME:___PREFERRED_ROS_DISTRO___-source /bin/bash
+            docker run -it --rm trackjoint:melodic-source /bin/bash
 
     * With the gui (tested with Ubuntu native and a Ubuntu VM)
 
-            . ./gui-docker -it --rm PACKAGE_NAME:___PREFERRED_ROS_DISTRO___-source /bin/bash
+            . ./gui-docker -it --rm trackjoint:melodic-source /bin/bash
 
 ## Code API
 
 > Note: this package has not been released yet
 
-See [the Doxygen documentation](http://docs.ros.org/___PREFERRED_ROS_DISTRO___/api/PACKAGE_NAME/html/anotated.html)
+See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/anotated.html)
 
 ## Testing and Linting
 
 To run [roslint](http://wiki.ros.org/roslint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
 
-    roscd PACKAGE_NAME
+    roscd trackjoint
     catkin build --no-status --no-deps --this --make-args roslint
 
 To run [catkin lint](https://pypi.python.org/pypi/catkin_lint), use the following command with [catkin-tools](https://catkin-tools.readthedocs.org/).
@@ -130,7 +130,7 @@ Use the following command with [catkin-tools](https://catkin-tools.readthedocs.o
 
 To run tests for just one package:
 
-    catkin run_tests --make-args tests -- PACKAGE_NAME
+    catkin run_tests --make-args tests -- trackjoint
 
 To view test results:
 
@@ -144,8 +144,8 @@ It's also possible to run the CI script locally, without Travis.  You must also 
 1. First clone the repo you want to test:
 
         cd /tmp/travis   # any working directory will do
-        git clone https://github.com/PickNikRobotics/PACKAGE_NAME.git
-        cd PACKAGE_NAME
+        git clone https://github.com/PickNikRobotics/trackjoint.git
+        cd trackjoint
         git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
 
 1. Manually define the variables, Travis would otherwise define for you. These are required:
@@ -158,7 +158,7 @@ It's also possible to run the CI script locally, without Travis.  You must also 
 
 1. Set test variables (see `.travis.yaml` for other options):
 
-        export UPSTREAM_WORKSPACE=PACKAGE_NAME.rosinstall
+        export UPSTREAM_WORKSPACE=trackjoint.rosinstall
         export TEST=clang-format
 
 1. Start the script
@@ -168,7 +168,7 @@ It's also possible to run the CI script locally, without Travis.  You must also 
 It's also possible to run the script without using docker. To this end, issue the following additional commands:
 
     export IN_DOCKER=1               # pretend running docker
-    export CI_SOURCE_PATH=$PWD       # repository location in, i.e. /tmp/travis/PACKAGE_NAME
+    export CI_SOURCE_PATH=$PWD       # repository location in, i.e. /tmp/travis/trackjoint
     export ROS_WS=/tmp/ros_ws        # define a new ROS workspace location
     mkdir $ROS_WS                    # and create it
     .moveit_ci/travis.sh

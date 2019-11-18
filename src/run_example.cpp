@@ -32,46 +32,29 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: FIRST_NAME LAST_NAME
-   Desc: TODO(GITHUB_NAME):
+/* Author: Andy Zelenak
+   Desc: TODO(andyze):
 */
-
-#ifndef INDEF_NAMESPACE
-#define INDEF_NAMESPACE
-
-// C++
-#include <string>
 
 // ROS
 #include <ros/ros.h>
+#include <trackjoint/track_joint.h>
 
-// Testing
-#include <gtest/gtest.h>
-
-
-namespace PACKAGE_NAME
+int main(int argc, char** argv)
 {
-class CPP_CLASS_NAME
-{
-public:
-  /** \brief Constructor */
-  CPP_CLASS_NAME();
+  // Initialize ROS
+  ros::init(argc, argv, "track_joint");
+  ROS_INFO_STREAM_NAMED("main", "Starting TrackJoint...");
 
-protected:
-  // --------------------------------------------------------
-  // Any test that requires access to protected variables should go here
-  FRIEND_TEST(TestCPP_CLASS_NAME, TestNameOfClass);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
 
-  // A shared node handle
-  ros::NodeHandle nh_;
+  // Initialize main class
+  trackjoint::TrackJoint server;
 
-  // The short name of this class
-  std::string name_;
-};  // end class CPP_CLASS_NAME
+  // Shutdown
+  ROS_INFO_STREAM_NAMED("main", "Shutting down.");
+  ros::shutdown();
 
-// Create std pointers for this class
-typedef std::shared_ptr<CPP_CLASS_NAME> CPP_CLASS_NAMEPtr;
-typedef std::shared_ptr<const CPP_CLASS_NAME> CPP_CLASS_NAMEConstPtr;
-
-}  // namespace PACKAGE_NAME
-#endif  // INDEF_NAMESPACE
+  return 0;
+}

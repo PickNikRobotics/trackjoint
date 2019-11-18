@@ -9,11 +9,11 @@ cache: ccache
 notifications:
   email:
     recipients:
-      - EMAIL_ADDRESS
+      - zelenak@picknik.ai
 
 env:
   global: # default values that are common to all configurations (can be overriden below)
-    - ROS_DISTRO=___PREFERRED_ROS_DISTRO___   # ROS distro to test for
+    - ROS_DISTRO=melodic   # ROS distro to test for
     - ROS_REPO=ros         # ROS binary repository [ros | ros-shadow-fixed]
     - TEST_BLACKLIST=      # list packages, for which to skip the unittests
     - WARNINGS_OK=false    # Don't accept warnings [true | false]
@@ -23,7 +23,7 @@ env:
       - TEST=clang-tidy-fix  # perform static code analysis and compliance check against .clang-tidy rules
       - TEST=catkin_lint     # perform catkin_lint checks
       # pull in packages from a local .rosinstall file
-      - UPSTREAM_WORKSPACE=PACKAGE_NAME.rosinstall
+      - UPSTREAM_WORKSPACE=trackjoint.rosinstall
 
 matrix:
   include: # Add a separate config to the matrix, using clang as compiler
