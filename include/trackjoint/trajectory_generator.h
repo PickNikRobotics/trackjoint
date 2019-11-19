@@ -36,8 +36,7 @@
    Desc: TODO(andyze):
 */
 
-#ifndef TRACKJOINT_TRAJECTORY_GENERATOR_H
-#define TRACKJOINT_TRAJECTORY_GENERATOR_H
+#pragma once
 
 // C++
 #include <memory>  // shared_ptr
@@ -66,4 +65,3 @@ typedef std::shared_ptr<TrajectoryGenerator> TrajectoryGeneratorPtr;
 typedef std::shared_ptr<const TrajectoryGenerator> TrajectoryGeneratorConstPtr;
 
 }  // namespace trackjoint
-#endif  // TRACKJOINT_TRAJECTORY_GENERATOR_H

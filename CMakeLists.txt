@@ -12,6 +12,7 @@ add_definitions(-W -Wall -Wextra
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  roslint
 )
 
 # System dependencies are found with CMake's conventions

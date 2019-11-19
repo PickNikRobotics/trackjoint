@@ -15,6 +15,7 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
+  <depend>roslint</depend>
   <depend>eigen</depend>
   <depend version_eq="3.9">clang-format</depend>
 
