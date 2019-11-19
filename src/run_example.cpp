@@ -57,9 +57,17 @@ int main(int argc, char** argv)
     DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
     limits, VELOCITY_TOLERANCE, ACCELERATION_TOLERANCE, JERK_TOLERANCE);
 
+  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
+  traj_gen.GenerateTrajectories(output_trajectories);
 
-  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> trajectories;
-  traj_gen.GenerateTrajectories(trajectories);
+  // Print the synchronized trajectories
+  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  {
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
+    {
+      std::cout << output_trajectories.at(joint).at(waypoint).elapsed_time << std::endl;
+    }
+  }
 
   return 0;
 }

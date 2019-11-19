@@ -48,7 +48,18 @@ TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timest
 
 void TrajectoryGenerator::GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories)
 {
-  std::cout << "Done!" << std::endl;
+  // Create sample data
+  output_trajectories.resize(num_dof_);
+  const size_t num_waypoints = 10;
+  std::cout << output_trajectories.size() << std::endl;
+  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  {
+    output_trajectories.at(joint).resize(num_waypoints);
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
+    {
+      output_trajectories.at(joint).at(waypoint).elapsed_time = 1.0 * waypoint;
+    }
+  }
 }
 
 void KinematicState::print()
