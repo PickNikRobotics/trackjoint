@@ -51,6 +51,7 @@ include_directories(
 set(LIBRARY_NAME trajectory_generator)
 add_library(${LIBRARY_NAME} SHARED
   src/trajectory_generator.cpp
+  src/single_joint_generator.cpp
 )
 
 # Specify libraries to link a library or executable target against

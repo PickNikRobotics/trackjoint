@@ -38,6 +38,9 @@
 
 #pragma once
 
+// TrackJoint
+#include <trackjoint/single_joint_generator.h>
+
 // C++
 #include <memory>  // shared_ptr
 #include <Eigen/Geometry>
