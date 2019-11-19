@@ -36,66 +36,34 @@
    Desc: TODO(andyze):
 */
 
-/** EXAMPLES:
-    EXPECT_FALSE(robot_state.hasFixedLinks());
-    EXPECT_EQ(robot_state.getFixedLinksCount(), 0);
-    EXPECT_TRUE(robot_state.getPrimaryFixedLink() == NULL);
-    EXPECT_GT(robot_state.getFixedLinksMode(), 0);
-    EXPECT_LT( fabs(vars[0] - 0), EPSILON) << "Virtual joint in wrong position " << vars[0];
-*/
+#ifndef TRACKJOINT_TRAJECTORY_GENERATOR_H
+#define TRACKJOINT_TRAJECTORY_GENERATOR_H
 
 // C++
+#include <memory>  // shared_ptr
 #include <string>
-
-// ROS
-#include <ros/ros.h>
 
 // Testing
 #include <gtest/gtest.h>
 
-// Main class
-#include <trackjoint/track_joint.h>
-
 
 namespace trackjoint
 {
-
-class TestTrackJoint : public ::testing::Test
+class TrajectoryGenerator
 {
 public:
-  void SetUp() override
-  {
-    nh_.reset(new ros::NodeHandle("~"));
-    server_.reset(new TrackJoint());
-  }
-  void TearDown() override
-  {
-  }
+  /** \brief Constructor */
+  TrajectoryGenerator();
 
 protected:
-  std::unique_ptr<ros::NodeHandle> nh_;
-  TrackJointPtr server_;
-};  // class TestTrackJoint
+  // --------------------------------------------------------
+  // Any test that requires access to protected variables should go here
+  FRIEND_TEST(TestTrajectoryGenerator, TestNameOfClass);
+};  // end class TrajectoryGenerator
 
-TEST_F(TestTrackJoint, TestNameOfClass)
-{
-  std::string expected_class_name = "track_joint";
-  ASSERT_STREQ(server_->name_.c_str(), expected_class_name.c_str());
-}
+// Create std pointers for this class
+typedef std::shared_ptr<TrajectoryGenerator> TrajectoryGeneratorPtr;
+typedef std::shared_ptr<const TrajectoryGenerator> TrajectoryGeneratorConstPtr;
 
 }  // namespace trackjoint
-
-int main(int argc, char** argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "track_joint_test");
-
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
-
-  int result = RUN_ALL_TESTS();
-
-  spinner.stop();
-  ros::shutdown();
-  return result;
-}
+#endif  // TRACKJOINT_TRAJECTORY_GENERATOR_H

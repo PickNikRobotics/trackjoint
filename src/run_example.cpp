@@ -33,28 +33,18 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: TODO(andyze):
+   Desc: An example of smoothing a trajectory for several joints.
 */
 
-// ROS
-#include <ros/ros.h>
-#include <trackjoint/track_joint.h>
+#include <trackjoint/trajectory_generator.h>
 
 int main(int argc, char** argv)
 {
-  // Initialize ROS
-  ros::init(argc, argv, "track_joint");
-  ROS_INFO_STREAM_NAMED("main", "Starting TrackJoint...");
-
-  ros::AsyncSpinner spinner(1);
-  spinner.start();
-
   // Initialize main class
-  trackjoint::TrackJoint server;
+  trackjoint::TrajectoryGenerator traj_gen;
 
   // Shutdown
-  ROS_INFO_STREAM_NAMED("main", "Shutting down.");
-  ros::shutdown();
+  std::cout << "Hello world!" << std::endl;
 
   return 0;
 }

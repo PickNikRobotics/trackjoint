@@ -36,22 +36,11 @@
    Desc: TODO(andyze):
 */
 
-#include <trackjoint/track_joint.h>
+#include <trackjoint/trajectory_generator.h>
 
 namespace trackjoint
 {
-TrackJoint::TrackJoint()
-: nh_("~")
-, name_("track_joint")
+TrajectoryGenerator::TrajectoryGenerator()
 {
-  // Load rosparams
-  // ros::NodeHandle rpnh(nh_, name_);
-  // std::size_t error = 0;
-  // error += !rosparam_shortcuts::get(name_, rpnh, "control_rate", control_rate_);
-
-  // Add more parameters here to load if desired
-  // rosparam_shortcuts::shutdownIfError(name_, error);
-
-  ROS_INFO_STREAM_NAMED(name_, "Hello world.");
 }
 }  // end namespace trackjoint

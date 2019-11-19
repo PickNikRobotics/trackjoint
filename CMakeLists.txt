@@ -12,9 +12,6 @@ add_definitions(-W -Wall -Wextra
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  roslint
-  rospy
 )
 
 # System dependencies are found with CMake's conventions
@@ -26,8 +23,6 @@ find_package(Eigen3 REQUIRED)
 ###################################
 catkin_package(
   CATKIN_DEPENDS
-    roscpp
-    rospy
   INCLUDE_DIRS
     include
   LIBRARIES
@@ -89,58 +84,10 @@ target_link_libraries(
 )
 
 #############
-## Install ##
-#############
-
-# Mark executables and/or libraries for installation
-install(
-  TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_run_example
-  ARCHIVE DESTINATION
-    ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION
-    ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION
-    ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-
-# Mark cpp header files for installation
-install(
-  DIRECTORY
-    include/${PROJECT_NAME}/
-  DESTINATION
-    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-
-# Mark roslaunch files for installation
-install(
-  DIRECTORY
-    launch
-  DESTINATION
-    ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-# Mark config files for installation
-install(
-  DIRECTORY
-    config
-  DESTINATION
-    ${CATKIN_PACKAGE_SHARE_DESTINATION}
-)
-
-#############
 ## Testing ##
 #############
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
-
-  add_rostest_gtest(track_joint_test test/track_joint_test.test test/track_joint_test.cpp)
-  target_link_libraries(track_joint_test
-    ${PROJECT_NAME}
-    ${catkin_LIBRARIES}
-    ${Boost_LIBRARIES})
-endif()
+# TODO(andyz): add gtest
 
 ## Test for correct C++ source code
 roslint_cpp()
