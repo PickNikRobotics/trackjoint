@@ -32,15 +32,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Andy Zelenak
-   Desc: TODO(andyze):
-*/
-
 #include <trackjoint/trajectory_generator.h>
 
 namespace trackjoint
 {
-TrajectoryGenerator::TrajectoryGenerator()
+TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timestep, 
+	const double desired_duration, const double max_duration,
+	std::vector<KinematicState> &current_joint_states,
+	std::vector<KinematicState> &goal_joint_states,
+	std::vector<CartesianLimits> &limits, const double velocity_tolerance,
+	const double acceleration_tolerance, const double jerk_tolerance)
 {
+  num_dof_ = num_dof;
+}
+
+void TrajectoryGenerator::GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories)
+{
+  std::cout << "Done!" << std::endl;
+}
+
+void KinematicState::print()
+{
+  std::cout << "Position:" << std::endl;
+  std::cout << this->position << std::endl << std::endl;
+
+  std::cout << "Velocity:" << std::endl;
+  std::cout << this->velocity << std::endl << std::endl;
+
+  std::cout << "Acceleration:" << std::endl;
+  std::cout << this->acceleration << std::endl;
 }
 }  // end namespace trackjoint

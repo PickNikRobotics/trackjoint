@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 ###################################
@@ -29,7 +28,6 @@ catkin_package(
   LIBRARIES
     ${PROJECT_NAME}
   DEPENDS
-    Boost
     EIGEN3
 )
 
@@ -41,7 +39,6 @@ catkin_package(
 # Your package locations should be listed before other locations
 include_directories(
   SYSTEM
-    ${Boost_INCLUDE_DIR}
     ${EIGEN3_INCLUDE_DIRS}
 )
 
@@ -51,16 +48,15 @@ include_directories(
 )
 
 # Declare a C++ library with project namespace to avoid naming collision
-add_library(
-  ${PROJECT_NAME}
-  src/track_joint.cpp
+set(LIBRARY_NAME trajectory_generator)
+add_library(${LIBRARY_NAME} SHARED
+  src/trajectory_generator.cpp
 )
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(
-  ${PROJECT_NAME}
+  ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 # Declare a C++ executable
@@ -79,9 +75,8 @@ set_target_properties(
 # Specify libraries to link a library or executable target against
 target_link_libraries(
   ${PROJECT_NAME}_run_example
-  ${PROJECT_NAME}
+  ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
-  ${Boost_LIBRARIES}
 )
 
 #############

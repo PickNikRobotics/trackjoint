@@ -40,11 +40,26 @@
 
 int main(int argc, char** argv)
 {
-  // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen;
+  const int NUM_DOF = 3;
+  const double TIMESTEP = 0.01;
+  const double DESIRED_DURATION = 1;
+  const double MAX_DURATION = 3;
+  const double VELOCITY_TOLERANCE = 1e-4;
+  const double ACCELERATION_TOLERANCE = 1e-4;
+  const double JERK_TOLERANCE = 1e-4;
 
-  // Shutdown
-  std::cout << "Hello world!" << std::endl;
+  std::vector<trackjoint::KinematicState> current_joint_states;
+  std::vector<trackjoint::KinematicState> goal_joint_states;
+  std::vector<trackjoint::CartesianLimits> limits;
+
+  // Initialize main class
+  trackjoint::TrajectoryGenerator traj_gen(NUM_DOF, TIMESTEP,
+    DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
+    limits, VELOCITY_TOLERANCE, ACCELERATION_TOLERANCE, JERK_TOLERANCE);
+
+
+  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> trajectories;
+  traj_gen.GenerateTrajectories(trajectories);
 
   return 0;
 }
