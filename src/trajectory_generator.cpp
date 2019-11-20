@@ -40,22 +40,37 @@ TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timest
 	const double desired_duration, const double max_duration,
 	std::vector<KinematicState> &current_joint_states,
 	std::vector<KinematicState> &goal_joint_states,
-	std::vector<CartesianLimits> &limits, const double velocity_tolerance,
+	std::vector<Limits> &limits, const double velocity_tolerance,
 	const double acceleration_tolerance, const double jerk_tolerance)
 {
   ///////////////////////
   // Input error checking
   ///////////////////////
 
+  ////////////////////////////////////////////
+  // Preallocate / initialize member variables
+  ////////////////////////////////////////////
   num_dof_ = num_dof;
+  desired_duration_ = desired_duration_;
 
   /////////////////////////////////////////////////////////////////
   // Upsample if num. waypoints would be short. Helps with accuracy
   /////////////////////////////////////////////////////////////////
+  upsampled_timestep_ = timestep;
 
   ///////////////////////////////////////////////////
   // Initialize a trajectory generator for each joint
   ///////////////////////////////////////////////////
+  for (size_t joint=0; joint<num_dof_; ++joint)
+  {
+    single_joint_generators_.push_back(SingleJointGenerator(
+      desired_duration_,
+      max_duration,
+      current_joint_states[joint],
+      goal_joint_states[joint],
+      limits[joint],
+      velocity_tolerance));
+  }
 }
 
 void TrajectoryGenerator::GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories)
@@ -63,6 +78,10 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<std::vector<Trajector
   /////////////////////////////////////////
   // Generate individual joint trajectories
   /////////////////////////////////////////
+  for (SingleJointGenerator traj_gen : single_joint_generators_)
+  {
+    traj_gen.GenerateTrajectory();
+  }
 
   ////////////////////////////////////
   // Synchronize trajectory components
@@ -93,17 +112,5 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<std::vector<Trajector
       output_trajectories.at(joint).at(waypoint).elapsed_time = 1.0 * waypoint;
     }
   }
-}
-
-void KinematicState::print()
-{
-  std::cout << "Position:" << std::endl;
-  std::cout << this->position << std::endl << std::endl;
-
-  std::cout << "Velocity:" << std::endl;
-  std::cout << this->velocity << std::endl << std::endl;
-
-  std::cout << "Acceleration:" << std::endl;
-  std::cout << this->acceleration << std::endl;
 }
 }  // end namespace trackjoint

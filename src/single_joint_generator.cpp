@@ -36,8 +36,49 @@
 
 namespace trackjoint
 {
-SingleJointGenerator::SingleJointGenerator()
+SingleJointGenerator::SingleJointGenerator(
+  double desired_duration,
+  double max_duration,
+  trackjoint::KinematicState &current_joint_state,
+  trackjoint::KinematicState &goal_joint_state,
+  trackjoint::Limits &limits,
+  double velocity_tolerance)
 {
   ;
 }
+
+ErrorCodeEnum SingleJointGenerator::GenerateTrajectory()
+{
+  //////////////
+  // Interpolate
+  //////////////
+  Interpolate();
+
+  /////////////////////
+  // Limit Compensation
+  /////////////////////
+  PositionVectorLimitLookAhead();
+
+  ////////////////////////////////
+  // Duration extension, if needed
+  ////////////////////////////////
+
+  return PredictTimeToReach();
+}
+
+void SingleJointGenerator::Interpolate()
+{
+  ;
+}
+
+void SingleJointGenerator::PositionVectorLimitLookAhead()
+{
+  ;
+}
+
+ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
+{
+  return ErrorCodeEnum::NO_ERROR;
+}
+
 }  // end namespace trackjoint

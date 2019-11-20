@@ -32,43 +32,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for several joints.
-*/
+#pragma once
 
-#include <trackjoint/trajectory_generator.h>
+#include <iostream>
 
-int main(int argc, char** argv)
+namespace trackjoint
 {
-  const int NUM_DOF = 3;
-  const double TIMESTEP = 0.01;
-  const double DESIRED_DURATION = 1;
-  const double MAX_DURATION = 3;
-  const double VELOCITY_TOLERANCE = 1e-4;
-  const double ACCELERATION_TOLERANCE = 1e-4;
-  const double JERK_TOLERANCE = 1e-4;
+/**
+ * \brief Joint position, velocity, and acceleration
+ */
+struct KinematicState
+{
+  // State at this waypoint in a global, inertial reference frame
+  double position;  // radians
+  double velocity;
+  double acceleration;
 
-  std::vector<trackjoint::KinematicState> current_joint_states;
-  std::vector<trackjoint::KinematicState> goal_joint_states;
-  std::vector<trackjoint::Limits> limits;
-
-  // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen(NUM_DOF, TIMESTEP,
-    DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
-    limits, VELOCITY_TOLERANCE, ACCELERATION_TOLERANCE, JERK_TOLERANCE);
-
-  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
-  traj_gen.GenerateTrajectories(output_trajectories);
-
-  // Print the synchronized trajectories
-  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  /** \brief Print this state
+   */
+  void print()
   {
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
-    {
-      output_trajectories.at(joint).at(waypoint).state.print();
-      std::cout << "Elapsed time: " << output_trajectories.at(joint).at(waypoint).elapsed_time << std::endl;
-    }
-  }
+    std::cout << "Position:" << std::endl;
+    std::cout << this->position << std::endl << std::endl;
 
-  return 0;
-}
+    std::cout << "Velocity:" << std::endl;
+    std::cout << this->velocity << std::endl << std::endl;
+
+    std::cout << "Acceleration:" << std::endl;
+    std::cout << this->acceleration << std::endl;
+  }
+};
+}  // namespace trackjoint

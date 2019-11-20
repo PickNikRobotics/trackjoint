@@ -32,43 +32,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *********************************************************************/
 
-/* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for several joints.
-*/
+#pragma once
 
-#include <trackjoint/trajectory_generator.h>
-
-int main(int argc, char** argv)
+namespace trackjoint
 {
-  const int NUM_DOF = 3;
-  const double TIMESTEP = 0.01;
-  const double DESIRED_DURATION = 1;
-  const double MAX_DURATION = 3;
-  const double VELOCITY_TOLERANCE = 1e-4;
-  const double ACCELERATION_TOLERANCE = 1e-4;
-  const double JERK_TOLERANCE = 1e-4;
+/**
+ * \brief Maximum dynamics of Cartesian pose, parameters of TrackPose
+ */
+struct Limits
+{
+  // Scalar linear velocity limit [m/s]
+  double linear_velocity_limit;
+  // Scalar linear acceleration limit [m/s^2]
+  double linear_acceleration_limit;
+  // Scalar linear jerk limit [m/s^3]
+  double linear_jerk_limit;
 
-  std::vector<trackjoint::KinematicState> current_joint_states;
-  std::vector<trackjoint::KinematicState> goal_joint_states;
-  std::vector<trackjoint::Limits> limits;
+  // Tolerance on successful velocity matching [m/s]
+  double linear_velocity_tolerance;
+  // Tolerance on successful acceleration matching [m/s^s]
+  double linear_acceleration_tolerance;
+  // Tolerance on successful jerk matching [m/s^3]
+  double linear_jerk_tolerance;
 
-  // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen(NUM_DOF, TIMESTEP,
-    DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
-    limits, VELOCITY_TOLERANCE, ACCELERATION_TOLERANCE, JERK_TOLERANCE);
+  // Scalar limit on angular velocity [rad/s]
+  double angular_velocity_limit;
+  // Scalar limit on angular acceleration [rad/s^2]
+  double angular_acceleration_limit;
+  // Scalar limit on angular jerk [rad/s^3]
+  double angular_jerk_limit;
 
-  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
-  traj_gen.GenerateTrajectories(output_trajectories);
+  // Tolerance on successful velocity matching [rad/s]
+  double angular_velocity_tolerance;
+  // Tolerance on successful acceleration matching [rad/s^2]
+  double angular_acceleration_tolerance;
+  // Tolerance on successful jerk matching [rad/s^3]
+  double angular_jerk_tolerance;
+};
 
-  // Print the synchronized trajectories
-  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
-  {
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
-    {
-      output_trajectories.at(joint).at(waypoint).state.print();
-      std::cout << "Elapsed time: " << output_trajectories.at(joint).at(waypoint).elapsed_time << std::endl;
-    }
-  }
-
-  return 0;
-}
+}  // namespace trackjoint

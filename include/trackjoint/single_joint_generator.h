@@ -38,12 +38,34 @@
 
 #pragma once
 
+#include <trackjoint/error_codes.h>
+#include <trackjoint/kinematic_state.h>
+#include <trackjoint/limits.h>
+
 namespace trackjoint
 {
 class SingleJointGenerator
 {
 public:
   /** \brief Constructor */
-  SingleJointGenerator();
+  SingleJointGenerator(
+    double desired_duration,
+    double max_duration,
+    KinematicState &current_joint_state,
+    KinematicState &goal_joint_state,
+    trackjoint::Limits &limits,
+    double velocity_tolerance);
+
+  /** \brief Generate a jerk-limited trajectory for this joint */
+  ErrorCodeEnum GenerateTrajectory();
+
+  /** \brief Interpolate from start to end state with a polynomial */
+  void Interpolate();
+
+  /** \brief Step through a vector of positions, compensating for limits*/
+  void PositionVectorLimitLookAhead();
+
+  /** \brief Check whether the duration needs to be extended, and do it */
+  ErrorCodeEnum PredictTimeToReach();
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
