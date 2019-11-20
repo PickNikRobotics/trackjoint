@@ -37,6 +37,7 @@
 */
 
 #include <trackjoint/trajectory_generator.h>
+#include <fstream>
 
 int main(int argc, char** argv)
 {
@@ -47,6 +48,10 @@ int main(int argc, char** argv)
   const double VELOCITY_TOLERANCE = 1e-4;
   const double ACCELERATION_TOLERANCE = 1e-4;
   const double JERK_TOLERANCE = 1e-4;
+
+  std::ofstream output_file;
+  std::string output_base = "output_joint";
+  std::string output;
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   std::vector<trackjoint::KinematicState> goal_joint_states;
@@ -63,11 +68,17 @@ int main(int argc, char** argv)
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
   {
+    output = output_base + std::to_string(joint+1) + ".txt";
+    output_file.open(output);
     for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
     {
-      output_trajectories.at(joint).at(waypoint).state.print();
-      std::cout << "Elapsed time: " << output_trajectories.at(joint).at(waypoint).elapsed_time << std::endl;
+      output_file << output_trajectories.at(joint).at(waypoint).elapsed_time << " " <<
+      output_trajectories.at(joint).at(waypoint).state.position << " " <<
+      output_trajectories.at(joint).at(waypoint).state.velocity << " " <<
+      output_trajectories.at(joint).at(waypoint).state.acceleration << std::endl;
     }
+    output_file.close();
+    output_file.clear();
   }
 
   return 0;
