@@ -1,0 +1,43 @@
+sudo: required
+dist: trusty
+services:
+  - docker
+language: cpp
+compiler: gcc
+cache: ccache
+
+notifications:
+  email:
+    recipients:
+      - zelenak@picknik.ai
+
+env:
+  global: # default values that are common to all configurations (can be overriden below)
+    - ROS_DISTRO=melodic   # ROS distro to test for
+    - ROS_REPO=ros         # ROS binary repository [ros | ros-shadow-fixed]
+    - TEST_BLACKLIST=      # list packages, for which to skip the unittests
+    - WARNINGS_OK=false    # Don't accept warnings [true | false]
+    - CXXFLAGS="-Werror -Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls -Wno-unused-parameter -Wno-unused-but-set-parameter -Wno-unused-function"
+  matrix:  # define various jobs
+      - TEST=clang-format    # check code formatting for compliance to .clang-format rules
+      - TEST=clang-tidy-fix  # perform static code analysis and compliance check against .clang-tidy rules
+      - TEST=catkin_lint     # perform catkin_lint checks
+      # pull in packages from a local .rosinstall file
+      - UPSTREAM_WORKSPACE=trackjoint.rosinstall
+
+matrix:
+  include: # Add a separate config to the matrix, using clang as compiler
+    - compiler: clang
+      env: TEST=clang-tidy-check  # run static code analysis, but don't check for available auto-fixes
+           CXXFLAGS="-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls -Wno-unused-parameter -Wno-unused-function -Wno-overloaded-virtual"
+
+before_script:
+    - git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
+
+script:
+  - .moveit_ci/travis.sh
+
+addons:
+  # https://docs.travis-ci.com/user/ssh-known-hosts/
+  ssh_known_hosts:
+    - bitbucket.org

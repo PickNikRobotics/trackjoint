@@ -1,0 +1,21 @@
+# Vi
+.*.sw?
+
+# Vim
+*.swp
+
+# Python
+*.pyc
+
+# Raw data files
+*.dat
+*.csv
+
+# Emacs temp files
+.#*
+
+# OSX Files
+.DS_Store
+
+# SSH Keys (used for Docker)
+id_rsa
