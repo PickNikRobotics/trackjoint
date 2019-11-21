@@ -74,7 +74,7 @@ TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timest
   }
 }
 
-void TrajectoryGenerator::SaveTrajectoriesToFile(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories, const std::string base_filepath)
+void TrajectoryGenerator::SaveTrajectoriesToFile(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories, const std::string &base_filepath)
 {
   std::ofstream output_file;
   std::string output_path;

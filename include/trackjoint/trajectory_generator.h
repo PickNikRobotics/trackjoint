@@ -84,7 +84,7 @@ public:
 
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories,
-    const std::string base_filepath);
+    const std::string &base_filepath);
 
 protected:
   uint num_dof_;
