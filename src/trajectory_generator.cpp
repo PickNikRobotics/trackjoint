@@ -33,6 +33,7 @@
  *********************************************************************/
 
 #include <trackjoint/trajectory_generator.h>
+#include <fstream>
 
 namespace trackjoint
 {
@@ -70,6 +71,27 @@ TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timest
       goal_joint_states[joint],
       limits[joint],
       velocity_tolerance));
+  }
+}
+
+void TrajectoryGenerator::SaveTrajectoriesToFile(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories, const std::string base_filepath)
+{
+  std::ofstream output_file;
+  std::string output_path;
+
+  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  {
+    output_path = base_filepath + std::to_string(joint+1) + ".csv";
+    output_file.open(output_path);
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
+    {
+      output_file << output_trajectories.at(joint).at(waypoint).elapsed_time << " " <<
+      output_trajectories.at(joint).at(waypoint).state.position << " " <<
+      output_trajectories.at(joint).at(waypoint).state.velocity << " " <<
+      output_trajectories.at(joint).at(waypoint).state.acceleration << std::endl;
+    }
+    output_file.close();
+    output_file.clear();
   }
 }
 

@@ -82,6 +82,10 @@ public:
   /** \brief Generate and return trajectories for every joint*/
   void GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories);
 
+  /** \brief Save generated trajectory to a .csv file */
+  void SaveTrajectoriesToFile(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories,
+    const std::string base_filepath);
+
 protected:
   uint num_dof_;
   double desired_duration_;
