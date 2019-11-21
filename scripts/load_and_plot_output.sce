@@ -1,20 +1,28 @@
-M1 = fscanfMat("output_joint1.csv")
-M2 = fscanfMat("output_joint2.csv")
-M3 = fscanfMat("output_joint3.csv")
+// Commands to install SciLab in Linux:
+// sudo apt update
+// sudo apt upgrade
+// sudo apt install scilab
+//
+// Command to run Scilab in Linux:
+// scilab
 
-t = M1(1:size(M1)(1),1)
+joint1 = fscanfMat("output_joint1.csv")
+joint2 = fscanfMat("output_joint2.csv")
+joint3 = fscanfMat("output_joint3.csv")
 
-pos1 = M1(1:size(M1)(1),2)
-vel1 = M1(1:size(M1)(1),3)
-acc1 = M1(1:size(M1)(1),4)
+t = joint1(1:size(joint1)(1),1)
 
-pos2 = M2(1:size(M2)(1),2)
-vel2 = M2(1:size(M2)(1),3)
-acc2 = M2(1:size(M2)(1),4)
+pos1 = joint1(1:size(joint1)(1),2)
+vel1 = joint1(1:size(joint1)(1),3)
+acc1 = joint1(1:size(joint1)(1),4)
 
-pos3 = M3(1:size(M3)(1),2)
-vel3 = M3(1:size(M3)(1),3)
-acc3 = M3(1:size(M3)(1),4)
+pos2 = joint2(1:size(joint2)(1),2)
+vel2 = joint2(1:size(joint2)(1),3)
+acc2 = joint2(1:size(joint2)(1),4)
+
+pos3 = joint3(1:size(joint3)(1),2)
+vel3 = joint3(1:size(joint3)(1),3)
+acc3 = joint3(1:size(joint3)(1),4)
 
 figure();
 subplot(3,1,1)
