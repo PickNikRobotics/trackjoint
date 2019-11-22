@@ -15,7 +15,7 @@ namespace trackjoint {
 
 enum ErrorCodeEnum {
   kNoError = 0,
-  kQquaternionLengthMismatch = 1,
+  kQuaternionLengthMismatch = 1,
   kTranslationRotationLengthMismatch = 2,
   kDesiredDurationTooShort = 3,
   kCurrentOrientationNotNormalized = 4,

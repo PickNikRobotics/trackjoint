@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   const double kTimestep = 0.01;
   const double kDesiredDuration = 1;
   const double kMaxDuration = 3;
-  const std::string output_path_base =
+  const std::string kOutputPathBase =
       "/home/guilesn/trackjoint_ws/plots/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories = traj_gen.GenerateTrajectories();
 
   // Save the synchronized trajectories to .csv files
-  // traj_gen.SaveTrajectoriesToFile(output_trajectories, output_path_base);
+  // traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
