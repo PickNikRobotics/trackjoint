@@ -10,7 +10,7 @@
 
 namespace trackjoint {
 /**
- * \brief Maximum dynamics of Cartesian pose, parameters of TrackPose
+ * \brief Maximum dynamics and parameters of TrackJoint
  */
 struct Limits {
   // Scalar limit on angular velocity [rad/s]

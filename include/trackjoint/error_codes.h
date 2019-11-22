@@ -12,9 +12,23 @@
 #include <unordered_map>
 
 namespace trackjoint {
-// TrackJoint returns integer error codes. Use this array to look up the
-// corresponding string.
-const std::unordered_map<std::string, uint> error_code_map(
+
+enum ErrorCodeEnum {
+  kNoError = 0,
+  kQquaternionLengthMismatch = 1,
+  kTranslationRotationLengthMismatch = 2,
+  kDesiredDurationTooShort = 3,
+  kCurrentOrientationNotNormalized = 4,
+  kGoalOrientationNotNormalized = 5,
+  kMaxDurationExceeded = 6,
+  kVelocityExceedsLimit = 7,
+  kAccelExceedsLimit = 8,
+  kMaxDurationLessThanDesiredDuration = 9,
+  kLimitNotPositive = 10,
+  kGoalPositionMismatch = 11
+};
+
+const std::unordered_map<std::string, uint> kErrorCodeMap(
     {{"No error, trajectory generation was successful", 0},
      {"Internal error: Length mismatch between quaternion components", 1},
      {"Internal error: Length mismatch between translation and rotation", 2},
@@ -29,20 +43,4 @@ const std::unordered_map<std::string, uint> error_code_map(
      {"max_duration should not be less than desired_duration", 9},
      {"Vel/accel/jerk limits should be greater than zero", 10},
      {"Mismatch between the final position and the goal position", 11}});
-
-enum ErrorCodeEnum {
-  NO_ERROR = 0,
-  QUATERNION_LENGTH_MISMATCH = 1,
-  TRANSLATION_ROTATION_LENGTH_MISMATCH = 2,
-  DESIRED_DURATION_TOO_SHORT = 3,
-  CURRENT_ORIENTATION_NOT_NORMALIZED = 4,
-  GOAL_ORIENTATION_NOT_NORMALIZED = 5,
-  MAX_DURATION_EXCEEDED = 6,
-  VELOCITY_EXCEEDS_LIMIT = 7,
-  ACCEL_EXCEEDS_LIMIT = 8,
-  MAX_DURATION_LESS_THAN_DESIRED_DURATION = 9,
-  LIMIT_NOT_POSITIVE = 10,
-  GOAL_POSITION_MISMATCH = 11
-};
-
 }  // end namespace trackjoint

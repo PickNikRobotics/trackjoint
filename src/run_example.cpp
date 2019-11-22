@@ -30,8 +30,7 @@ int main(int argc, char** argv) {
                                            kMaxDuration, current_joint_states,
                                            goal_joint_states, limits);
 
-  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
-  traj_gen.GenerateTrajectories(output_trajectories);
+  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories = traj_gen.GenerateTrajectories();
 
   // Save the synchronized trajectories to .csv files
   // traj_gen.SaveTrajectoriesToFile(output_trajectories, output_path_base);

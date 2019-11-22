@@ -12,28 +12,26 @@
 namespace trackjoint {
 TrajectoryGenerator::TrajectoryGenerator(
     uint num_dof, double timestep, double desired_duration, double max_duration,
-    std::vector<KinematicState> &current_joint_states,
-    std::vector<KinematicState> &goal_joint_states,
-    std::vector<Limits> &limits) {
+    const std::vector<KinematicState> &current_joint_states,
+    const std::vector<KinematicState> &goal_joint_states,
+    const std::vector<Limits> &limits) :
+    kNumDof(num_dof),
+    desired_duration_(desired_duration),
+    // Default timestep
+    upsampled_timestep_(timestep)
+{
   ///////////////////////
   // Input error checking
   ///////////////////////
 
-  ////////////////////////////////////////////
-  // Preallocate / initialize member variables
-  ////////////////////////////////////////////
-  num_dof_ = num_dof;
-  desired_duration_ = desired_duration_;
-
   /////////////////////////////////////////////////////////////////
   // Upsample if num. waypoints would be short. Helps with accuracy
   /////////////////////////////////////////////////////////////////
-  upsampled_timestep_ = timestep;
 
   ///////////////////////////////////////////////////
   // Initialize a trajectory generator for each joint
   ///////////////////////////////////////////////////
-  for (size_t joint = 0; joint < num_dof_; ++joint) {
+  for (size_t joint = 0; joint < kNumDof; ++joint) {
     single_joint_generators_.push_back(SingleJointGenerator(
         desired_duration_, max_duration, current_joint_states[joint],
         goal_joint_states[joint], limits[joint]));
@@ -63,8 +61,7 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
-void TrajectoryGenerator::GenerateTrajectories(
-    std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories) {
+std::vector<std::vector<TrajectoryWaypoint>> TrajectoryGenerator::GenerateTrajectories() {
   /////////////////////////////////////////
   // Generate individual joint trajectories
   /////////////////////////////////////////
@@ -88,10 +85,10 @@ void TrajectoryGenerator::GenerateTrajectories(
   // TODO(andyz): remove this sample data
   // Create sample data for plotting
   ///////////////////////////////////////
-  output_trajectories.resize(num_dof_);
-  const size_t num_waypoints = 10;
+  std::vector<std::vector<TrajectoryWaypoint>> output_trajectories(kNumDof);
+  const size_t kNumWaypoints = 10;
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
-    output_trajectories.at(joint).resize(num_waypoints);
+    output_trajectories.at(joint).resize(kNumWaypoints);
     for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size();
          ++waypoint) {
       output_trajectories.at(joint).at(waypoint).state.position =
@@ -103,5 +100,6 @@ void TrajectoryGenerator::GenerateTrajectories(
       output_trajectories.at(joint).at(waypoint).elapsed_time = 1.0 * waypoint;
     }
   }
+  return output_trajectories;
 }
 }  // end namespace trackjoint

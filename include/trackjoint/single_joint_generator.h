@@ -21,9 +21,9 @@ class SingleJointGenerator {
  public:
   /** \brief Constructor */
   SingleJointGenerator(double desired_duration, double max_duration,
-                       KinematicState &current_joint_state,
-                       KinematicState &goal_joint_state,
-                       trackjoint::Limits &limits);
+                       const KinematicState &current_joint_state,
+                       const KinematicState &goal_joint_state,
+                       const trackjoint::Limits &limits);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();

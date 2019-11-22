@@ -11,8 +11,8 @@
 namespace trackjoint {
 SingleJointGenerator::SingleJointGenerator(
     double desired_duration, double max_duration,
-    trackjoint::KinematicState &current_joint_state,
-    trackjoint::KinematicState &goal_joint_state, trackjoint::Limits &limits) {
+    const trackjoint::KinematicState &current_joint_state,
+    const trackjoint::KinematicState &goal_joint_state, const trackjoint::Limits &limits) {
   ;
 }
 
@@ -31,7 +31,7 @@ void SingleJointGenerator::Interpolate() { ; }
 void SingleJointGenerator::PositionVectorLimitLookAhead() { ; }
 
 ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
-  return ErrorCodeEnum::NO_ERROR;
+  return ErrorCodeEnum::kNoError;
 }
 
 }  // end namespace trackjoint

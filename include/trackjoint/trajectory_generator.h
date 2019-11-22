@@ -46,13 +46,12 @@ class TrajectoryGenerator {
   /** \brief Constructor */
   TrajectoryGenerator(uint num_dof, double timestep, double desired_duration,
                       double max_duration,
-                      std::vector<KinematicState> &current_joint_states,
-                      std::vector<KinematicState> &goal_joint_states,
-                      std::vector<Limits> &limits);
+                      const std::vector<KinematicState> &current_joint_states,
+                      const std::vector<KinematicState> &goal_joint_states,
+                      const std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  void GenerateTrajectories(
-      std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories);
+  std::vector<std::vector<TrajectoryWaypoint>> GenerateTrajectories();
 
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(
@@ -60,15 +59,11 @@ class TrajectoryGenerator {
       const std::string &base_filepath) const;
 
  protected:
-  uint num_dof_;
+  const uint kNumDof;
   double desired_duration_;
-  uint error_code_ = ErrorCodeEnum::NO_ERROR;
+  uint error_code_ = ErrorCodeEnum::kNoError;
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   double upsampled_timestep_;
-
-  // --------------------------------------------------------
-  // Any test that requires access to protected variables should go here
-  FRIEND_TEST(TestTrajectoryGenerator, TestNameOfClass);
 };  // end class TrajectoryGenerator
 
 // Create std pointers for this class
