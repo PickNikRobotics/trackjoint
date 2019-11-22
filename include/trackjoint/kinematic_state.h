@@ -1,3 +1,11 @@
+/*********************************************************************
+ * Copyright (c) 2019, PickNik Consulting
+ * All rights reserved.
+ *
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *********************************************************************/
+
 #pragma once
 
 #include <iostream>
