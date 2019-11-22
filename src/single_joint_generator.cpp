@@ -8,20 +8,15 @@
 
 #include <trackjoint/single_joint_generator.h>
 
-namespace trackjoint
-{
+namespace trackjoint {
 SingleJointGenerator::SingleJointGenerator(
-  double desired_duration,
-  double max_duration,
-  trackjoint::KinematicState &current_joint_state,
-  trackjoint::KinematicState &goal_joint_state,
-  trackjoint::Limits &limits)
-{
+    double desired_duration, double max_duration,
+    trackjoint::KinematicState &current_joint_state,
+    trackjoint::KinematicState &goal_joint_state, trackjoint::Limits &limits) {
   ;
 }
 
-ErrorCodeEnum SingleJointGenerator::GenerateTrajectory()
-{
+ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   Interpolate();
 
   PositionVectorLimitLookAhead();
@@ -31,18 +26,11 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory()
   return PredictTimeToReach();
 }
 
-void SingleJointGenerator::Interpolate()
-{
-  ;
-}
+void SingleJointGenerator::Interpolate() { ; }
 
-void SingleJointGenerator::PositionVectorLimitLookAhead()
-{
-  ;
-}
+void SingleJointGenerator::PositionVectorLimitLookAhead() { ; }
 
-ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
-{
+ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
   return ErrorCodeEnum::NO_ERROR;
 }
 

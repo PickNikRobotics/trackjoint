@@ -8,13 +8,11 @@
 
 #pragma once
 
-namespace trackjoint
-{
+namespace trackjoint {
 /**
  * \brief Maximum dynamics of Cartesian pose, parameters of TrackPose
  */
-struct Limits
-{
+struct Limits {
   // Scalar limit on angular velocity [rad/s]
   double angular_velocity_limit;
   // Scalar limit on angular acceleration [rad/s^2]

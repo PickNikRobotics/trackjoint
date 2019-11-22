@@ -19,47 +19,47 @@
 #include <trackjoint/single_joint_generator.h>
 
 // C++
-#include <memory>  // shared_ptr
 #include <Eigen/Geometry>
+#include <memory>  // shared_ptr
 #include <vector>
 
 // Testing
 #include <gtest/gtest.h>
 
-
-namespace trackjoint
-{
+namespace trackjoint {
 
 /**
- * \brief A point of the output trajectory in Cartesian space, with time parameterization
+ * \brief A point of the output trajectory in Cartesian space, with time
+ * parameterization
  */
-struct TrajectoryWaypoint
-{
-  // Translational and angular state of 6dof Cartesian pose for position, velocity, and acceleration
+struct TrajectoryWaypoint {
+  // Translational and angular state of 6dof Cartesian pose for position,
+  // velocity, and acceleration
   KinematicState state;
 
   // Time elapsed since start of trajectory in seconds
   double elapsed_time;
 };
 
-class TrajectoryGenerator
-{
-public:
+class TrajectoryGenerator {
+ public:
   /** \brief Constructor */
-  TrajectoryGenerator(uint num_dof, double timestep,
-	double desired_duration, double max_duration,
-	std::vector<KinematicState> &current_joint_states,
-	std::vector<KinematicState> &goal_joint_states,
-	std::vector<Limits> &limits);
+  TrajectoryGenerator(uint num_dof, double timestep, double desired_duration,
+                      double max_duration,
+                      std::vector<KinematicState> &current_joint_states,
+                      std::vector<KinematicState> &goal_joint_states,
+                      std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  void GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories);
+  void GenerateTrajectories(
+      std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
-  void SaveTrajectoriesToFile(const std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories,
-    const std::string &base_filepath) const;
+  void SaveTrajectoriesToFile(
+      const std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories,
+      const std::string &base_filepath) const;
 
-protected:
+ protected:
   uint num_dof_;
   double desired_duration_;
   uint error_code_ = ErrorCodeEnum::NO_ERROR;

@@ -16,23 +16,19 @@
 #include <trackjoint/kinematic_state.h>
 #include <trackjoint/limits.h>
 
-namespace trackjoint
-{
-class SingleJointGenerator
-{
-public:
+namespace trackjoint {
+class SingleJointGenerator {
+ public:
   /** \brief Constructor */
-  SingleJointGenerator(
-    double desired_duration,
-    double max_duration,
-    KinematicState &current_joint_state,
-    KinematicState &goal_joint_state,
-    trackjoint::Limits &limits);
+  SingleJointGenerator(double desired_duration, double max_duration,
+                       KinematicState &current_joint_state,
+                       KinematicState &goal_joint_state,
+                       trackjoint::Limits &limits);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
-private:
+ private:
   /** \brief Interpolate from start to end state with a polynomial */
   void Interpolate();
 
