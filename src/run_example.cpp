@@ -11,6 +11,7 @@
 */
 
 #include <trackjoint/trajectory_generator.h>
+#include <trackjoint/joint_trajectory.h>
 #include <fstream>
 
 int main(int argc, char** argv) {
@@ -49,19 +50,20 @@ int main(int argc, char** argv) {
                                            kMaxDuration, current_joint_states,
                                            goal_joint_states, limits);
 
-  std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories = traj_gen.GenerateTrajectories();
+  std::vector<trackjoint::JointTrajectory> output_trajectories = traj_gen.GenerateTrajectories();
 
   // Save the synchronized trajectories to .csv files
   // traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size();
+    std::cout << "Joint positions: " << std::endl;
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).positions.size();
          ++waypoint) {
-      output_trajectories.at(joint).at(waypoint).state.print();
-      std::cout << "Elapsed time: "
-                << output_trajectories.at(joint).at(waypoint).elapsed_time
-                << std::endl;
+      std::cout << output_trajectories.at(joint).positions(waypoint) << std::endl;
+      // std::cout << "Elapsed time: "
+      //           << output_trajectories.at(joint).at(waypoint).elapsed_time
+      //           << std::endl;
     }
   }
 

@@ -47,11 +47,11 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
   Eigen::VectorXd interpolated_position(tao.size());
   for (size_t index=0; index<tao.size(); ++index)
   {
-    interpolated_position(index) = pow((1. - tao(index)),3) * (
+    interpolated_position(index) = pow((1. - tao(index)), 3) * (
       (kCurrentJointState.position + (3. * kCurrentJointState.position + kCurrentJointState.velocity * kDesiredDuration)) * tao(index) + 
       (kCurrentJointState.acceleration * pow(kDesiredDuration, 2) + 6. * kCurrentJointState.velocity + 12. * kCurrentJointState.position) * pow(tao(index), 2) / 2.) +
-      pow(tao(index), 3) * (kGoalJointState.position + (3. * kGoalJointState.position - kGoalJointState.velocity * kDesiredDuration) * (1 - tao(index)) + 
-      (kGoalJointState.acceleration * pow(kDesiredDuration, 2) - 6. * kGoalJointState.velocity + 12. * kGoalJointState.position) * pow((1 - tao(index)), 2) / 2);
+      pow(tao(index), 3) * (kGoalJointState.position + (3. * kGoalJointState.position - kGoalJointState.velocity * kDesiredDuration) * (1. - tao(index)) + 
+      (kGoalJointState.acceleration * pow(kDesiredDuration, 2) - 6. * kGoalJointState.velocity + 12. * kGoalJointState.position) * pow((1. - tao(index)), 2) / 2.);
   }
 
   return interpolated_position;

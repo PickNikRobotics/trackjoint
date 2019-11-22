@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include <Eigen/Dense>
 #include <trackjoint/error_codes.h>
+#include <trackjoint/joint_trajectory.h>
 #include <trackjoint/kinematic_state.h>
 #include <trackjoint/limits.h>
 
@@ -47,5 +47,6 @@ class SingleJointGenerator {
   const trackjoint::Limits kLimits;
 
   Eigen::VectorXd times_;
+  JointTrajectory waypoints_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint

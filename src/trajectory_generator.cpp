@@ -39,8 +39,9 @@ TrajectoryGenerator::TrajectoryGenerator(
 }
 
 void TrajectoryGenerator::SaveTrajectoriesToFile(
-    const std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories,
+    const std::vector<JointTrajectory> &output_trajectories,
     const std::string &base_filepath) const {
+/*
   std::ofstream output_file;
   std::string output_path;
 
@@ -59,9 +60,10 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
     output_file.close();
     output_file.clear();
   }
+*/
 }
 
-std::vector<std::vector<TrajectoryWaypoint>> TrajectoryGenerator::GenerateTrajectories() {
+std::vector<JointTrajectory> TrajectoryGenerator::GenerateTrajectories() {
   /////////////////////////////////////////
   // Generate individual joint trajectories
   /////////////////////////////////////////
@@ -85,19 +87,18 @@ std::vector<std::vector<TrajectoryWaypoint>> TrajectoryGenerator::GenerateTrajec
   // TODO(andyz): remove this sample data
   // Create sample data for plotting
   ///////////////////////////////////////
-  std::vector<std::vector<TrajectoryWaypoint>> output_trajectories(kNumDof);
+  std::vector<JointTrajectory> output_trajectories(kNumDof);
   const size_t kNumWaypoints = 10;
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
-    output_trajectories.at(joint).resize(kNumWaypoints);
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size();
+    // Size the vectors
+    output_trajectories.at(joint).positions.resize(kNumWaypoints);
+
+    for (size_t waypoint = 0; waypoint < kNumWaypoints;
          ++waypoint) {
-      output_trajectories.at(joint).at(waypoint).state.position =
-          1.0 * waypoint;
-      output_trajectories.at(joint).at(waypoint).state.velocity =
-          1.0 * waypoint;
-      output_trajectories.at(joint).at(waypoint).state.acceleration =
-          1.0 * waypoint;
-      output_trajectories.at(joint).at(waypoint).elapsed_time = 1.0 * waypoint;
+      output_trajectories.at(joint).positions(waypoint) = (1.0 * waypoint);
+//      output_trajectories.at(joint).velocities.push_back(1.0 * waypoint);
+//      output_trajectories.at(joint).accelerations.push_back(1.0 * waypoint);
+//      output_trajectories.at(joint).elapsed_times.push_back(1.0 * waypoint);
     }
   }
   return output_trajectories;
