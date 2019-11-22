@@ -5,9 +5,10 @@
   <description>A trajectory-smoothing library</description>
 
   <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
-  <author email="zelenak@picknik.ai">Andy Zelenak</author>
+  <author email="zelenak@picknik.ai">Andy Zelenak</author> 
+  <author email="guilherme@picknik.ai">Guilherme Sartori Natal</author>
 
-  <license>BSD</license>
+  <license>All rights reserved.</license>
 
   <url type="website">https://github.com/PickNikRobotics/trackjoint</url>
   <url type="bugtracker">https://github.com/PickNikRobotics/trackjoint/issues</url>

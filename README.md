@@ -13,11 +13,15 @@ TODO(andyze): fix Travis badge:
 
 ### Build from Source
 
-1. TODO(andyze)
+1. Clone this package into a catkin workspace
+
+2. `catkin build`
 
 ## Run
 
-TODO(andyze)
+1. rosrun trackjoint run_example
+
+(You don't need to start `roscore` because the executable doesn't use ROS)
 
 ## Code API
 

@@ -1,80 +1,45 @@
 /*********************************************************************
- * Software License Agreement (BSD License)
+ * Copyright (c) 2019, PickNik Consulting
+ * All rights reserved.
  *
- *  Copyright (c) 2019, PickNik LLC
- *  All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without
- *  modification, are permitted provided that the following conditions
- *  are met:
- *
- *   * Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *   * Redistributions in binary form must reproduce the above
- *     copyright notice, this list of conditions and the following
- *     disclaimer in the documentation and/or other materials provided
- *     with the distribution.
- *   * Neither the name of PickNik LLC nor the names of its
- *     contributors may be used to endorse or promote products derived
- *     from this software without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- *  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- *  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- *  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- *  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- *  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
  *********************************************************************/
 
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
-namespace trackjoint
-{
-// TrackJoint returns integer error codes. Use this array to look up the corresponding string.
-const std::string ERROR_CODES[17] = {
-  "No error, trajectory generation was successful", "Internal error: Length mismatch between quaternion components",
-  "Internal error: Length mismatch between translation and rotation",
-  "Desired duration is too short, cannot have less than one timestep in a trajectory",
-  "Current orientation input quaternion is not normalized", "Goal orientation quaternion is not normalized",
-  // CURRENT_AND_GOAL_STATES_IDENTICAL was removed
-  "Max duration was exceeded", "A translational velocity input exceeds the translational velocity limit",
-  "An angular velocity input exceeds the angular velocity limit",
-  "A translational acceleration input exceeds the translational velocity limit",
-  "An angular acceleration input exceeds the angular velocity limit",
-  "max_duration should not be less than desired_duration",
-  "Translational vel/accel/jerk limits should be greater than zero",
-  "Angular vel/accel/jerk limits should be greater than zero",
-  "Mismatch between the final position and the goal position",
-  "Mismatch between the final orientation and the goal orientation"
+namespace trackjoint {
+
+enum ErrorCodeEnum {
+  kNoError = 0,
+  kQuaternionLengthMismatch = 1,
+  kTranslationRotationLengthMismatch = 2,
+  kDesiredDurationTooShort = 3,
+  kCurrentOrientationNotNormalized = 4,
+  kGoalOrientationNotNormalized = 5,
+  kMaxDurationExceeded = 6,
+  kVelocityExceedsLimit = 7,
+  kAccelExceedsLimit = 8,
+  kMaxDurationLessThanDesiredDuration = 9,
+  kLimitNotPositive = 10,
+  kGoalPositionMismatch = 11
 };
 
-enum ErrorCodeEnum
-{
-  NO_ERROR = 0,
-  QUATERNION_LENGTH_MISMATCH = 1,
-  TRANSLATION_ROTATION_LENGTH_MISMATCH = 2,
-  DESIRED_DURATION_TOO_SHORT = 3,
-  CURRENT_ORIENTATION_NOT_NORMALIZED = 4,
-  GOAL_ORIENTATION_NOT_NORMALIZED = 5,
-  // CURRENT_AND_GOAL_STATES_IDENTICAL was removed
-  MAX_DURATION_EXCEEDED = 7,
-  TRANSLATIONAL_VELOCITY_EXCEEDS_LIMIT = 8,
-  ANGULAR_VELOCITY_EXCEEDS_LIMIT = 9,
-  TRANSLATIONAL_ACCEL_EXCEEDS_LIMIT = 10,
-  ANGULAR_ACCEL_EXCEEDS_LIMIT = 11,
-  MAX_DURATION_LESS_THAN_DESIRED_DURATION = 12,
-  TRANSLATIONAL_LIMIT_NOT_POSITIVE = 13,
-  ANGULAR_LIMIT_NOT_POSITIVE = 14,
-  GOAL_POSITION_MISMATCH = 15,
-  GOAL_ORIENTATION_MISMATCH = 16
-};
-
+const std::unordered_map<uint, std::string> kErrorCodeMap(
+    {{kNoError, "No error, trajectory generation was successful"},
+     {kQuaternionLengthMismatch, "Internal error: Length mismatch between quaternion components"},
+     {kTranslationRotationLengthMismatch, "Internal error: Length mismatch between translation and rotation"},
+     {kDesiredDurationTooShort, "Desired duration is too short, cannot have less than one timestep in a "
+      "trajectory"},
+     {kCurrentOrientationNotNormalized, "Current orientation input quaternion is not normalized"},
+     {kGoalOrientationNotNormalized, "Goal orientation quaternion is not normalized"},
+     {kMaxDurationExceeded, "Max duration was exceeded"},
+     {kVelocityExceedsLimit, "A velocity input exceeds the velocity limit"},
+     {kAccelExceedsLimit, "An acceleration input exceeds the acceleration limit"},
+     {kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration"},
+     {kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero"},
+     {kGoalPositionMismatch, "Mismatch between the final position and the goal position"}});
 }  // end namespace trackjoint
