@@ -48,7 +48,9 @@ int main(int argc, char** argv)
   const double VELOCITY_TOLERANCE = 1e-4;
   const double ACCELERATION_TOLERANCE = 1e-4;
   const double JERK_TOLERANCE = 1e-4;
-  const std::string output_path_base = "/home/guilesn/trackjoint_ws/plots/output_joint";
+
+  // The folder of the output data files is relative to the folder of the executable file
+  const std::string output_path_base = "../trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   std::vector<trackjoint::KinematicState> goal_joint_states;
