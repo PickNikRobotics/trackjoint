@@ -28,19 +28,18 @@ enum ErrorCodeEnum {
   kGoalPositionMismatch = 11
 };
 
-const std::unordered_map<std::string, uint> kErrorCodeMap(
-    {{"No error, trajectory generation was successful", 0},
-     {"Internal error: Length mismatch between quaternion components", 1},
-     {"Internal error: Length mismatch between translation and rotation", 2},
-     {"Desired duration is too short, cannot have less than one timestep in a "
-      "trajectory",
-      3},
-     {"Current orientation input quaternion is not normalized", 4},
-     {"Goal orientation quaternion is not normalized", 5},
-     {"Max duration was exceeded", 6},
-     {"A velocity input exceeds the velocity limit", 7},
-     {"An acceleration input exceeds the acceleration limit", 8},
-     {"max_duration should not be less than desired_duration", 9},
-     {"Vel/accel/jerk limits should be greater than zero", 10},
-     {"Mismatch between the final position and the goal position", 11}});
+const std::unordered_map<uint, std::string> kErrorCodeMap(
+    {{0, "No error, trajectory generation was successful"},
+     {1, "Internal error: Length mismatch between quaternion components"},
+     {2, "Internal error: Length mismatch between translation and rotation"},
+     {3, "Desired duration is too short, cannot have less than one timestep in a "
+      "trajectory"},
+     {4, "Current orientation input quaternion is not normalized"},
+     {5, "Goal orientation quaternion is not normalized"},
+     {6, "Max duration was exceeded"},
+     {7, "A velocity input exceeds the velocity limit"},
+     {8, "An acceleration input exceeds the acceleration limit"},
+     {9, "max_duration should not be less than desired_duration"},
+     {10, "Vel/accel/jerk limits should be greater than zero"},
+     {11, "Mismatch between the final position and the goal position"}});
 }  // end namespace trackjoint
