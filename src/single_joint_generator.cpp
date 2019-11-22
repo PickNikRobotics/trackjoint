@@ -11,7 +11,7 @@
 namespace trackjoint {
 
 SingleJointGenerator::SingleJointGenerator(
-    double desired_duration, double max_duration,
+    double timestep, double desired_duration, double max_duration,
     const trackjoint::KinematicState &current_joint_state,
     const trackjoint::KinematicState &goal_joint_state, const trackjoint::Limits &limits) :
 kTimestep(timestep),

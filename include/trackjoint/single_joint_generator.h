@@ -21,7 +21,7 @@ namespace trackjoint {
 class SingleJointGenerator {
  public:
   /** \brief Constructor */
-  SingleJointGenerator(double desired_duration, double max_duration,
+  SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState &current_joint_state,
                        const KinematicState &goal_joint_state,
                        const trackjoint::Limits &limits);
