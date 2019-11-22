@@ -57,13 +57,23 @@ int main(int argc, char** argv)
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(NUM_DOF, TIMESTEP,
     DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
-    limits, VELOCITY_TOLERANCE, ACCELERATION_TOLERANCE, JERK_TOLERANCE);
+    limits);
 
   std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
   traj_gen.GenerateTrajectories(output_trajectories);
 
   // Save the synchronized trajectories to .csv files
-  traj_gen.SaveTrajectoriesToFile(output_trajectories, output_path_base);
+  //traj_gen.SaveTrajectoriesToFile(output_trajectories, output_path_base);
+
+  // Print the synchronized trajectories
+  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  {
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).size(); ++waypoint)
+    {
+      output_trajectories.at(joint).at(waypoint).state.print();
+      std::cout << "Elapsed time: " << output_trajectories.at(joint).at(waypoint).elapsed_time << std::endl;
+    }
+  }
 
   return 0;
 }

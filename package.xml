@@ -5,7 +5,8 @@
   <description>A trajectory-smoothing library</description>
 
   <maintainer email="zelenak@picknik.ai">Andy Zelenak</maintainer>
-  <author email="zelenak@picknik.ai">Andy Zelenak</author>
+  <author email="zelenak@picknik.ai">Andy Zelenak</author> 
+  <author email="guilherme@picknik.ai">Guilherme Sartori Natal</author>
 
   <license>BSD</license>
 

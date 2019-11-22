@@ -37,12 +37,11 @@
 
 namespace trackjoint
 {
-TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timestep, 
-	const double desired_duration, const double max_duration,
+TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, 
+	double desired_duration, double max_duration,
 	std::vector<KinematicState> &current_joint_states,
 	std::vector<KinematicState> &goal_joint_states,
-	std::vector<Limits> &limits, const double velocity_tolerance,
-	const double acceleration_tolerance, const double jerk_tolerance)
+	std::vector<Limits> &limits)
 {
   ///////////////////////
   // Input error checking
@@ -69,8 +68,7 @@ TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const double timest
       max_duration,
       current_joint_states[joint],
       goal_joint_states[joint],
-      limits[joint],
-      velocity_tolerance));
+      limits[joint]));
   }
 }
 

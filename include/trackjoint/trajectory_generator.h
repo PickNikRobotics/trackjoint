@@ -72,12 +72,11 @@ class TrajectoryGenerator
 {
 public:
   /** \brief Constructor */
-  TrajectoryGenerator(const uint num_dof, const double timestep,
-	const double desired_duration, const double max_duration,
+  TrajectoryGenerator(uint num_dof, double timestep,
+	double desired_duration, double max_duration,
 	std::vector<KinematicState> &current_joint_states,
 	std::vector<KinematicState> &goal_joint_states,
-	std::vector<Limits> &limits, const double velocity_tolerance,
-	const double acceleration_tolerance, const double jerk_tolerance);
+	std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
   void GenerateTrajectories(std::vector<std::vector<TrajectoryWaypoint>> &output_trajectories);

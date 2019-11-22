@@ -53,12 +53,12 @@ public:
     double max_duration,
     KinematicState &current_joint_state,
     KinematicState &goal_joint_state,
-    trackjoint::Limits &limits,
-    double velocity_tolerance);
+    trackjoint::Limits &limits);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
+private:
   /** \brief Interpolate from start to end state with a polynomial */
   void Interpolate();
 

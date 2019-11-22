@@ -41,8 +41,7 @@ SingleJointGenerator::SingleJointGenerator(
   double max_duration,
   trackjoint::KinematicState &current_joint_state,
   trackjoint::KinematicState &goal_joint_state,
-  trackjoint::Limits &limits,
-  double velocity_tolerance)
+  trackjoint::Limits &limits)
 {
   ;
 }
