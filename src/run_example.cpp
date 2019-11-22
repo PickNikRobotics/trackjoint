@@ -7,7 +7,7 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for several joints.
+   Desc: An example of smoothing a trajectory for three joints.
 */
 
 #include <trackjoint/trajectory_generator.h>
@@ -22,8 +22,27 @@ int main(int argc, char** argv) {
       "/home/guilesn/trackjoint_ws/plots/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
+  trackjoint::KinematicState joint_state;
+  joint_state.position = 0;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+
+  joint_state.position = 0.1;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
   std::vector<trackjoint::KinematicState> goal_joint_states;
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+
   std::vector<trackjoint::Limits> limits;
+  trackjoint::Limits single_joint_limits;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration,

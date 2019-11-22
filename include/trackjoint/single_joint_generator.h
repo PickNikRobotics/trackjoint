@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <Eigen/Dense>
 #include <trackjoint/error_codes.h>
 #include <trackjoint/kinematic_state.h>
 #include <trackjoint/limits.h>
@@ -30,12 +31,21 @@ class SingleJointGenerator {
 
  private:
   /** \brief Interpolate from start to end state with a polynomial */
-  void Interpolate();
+  Eigen::VectorXd Interpolate();
 
   /** \brief Step through a vector of positions, compensating for limits*/
   void PositionVectorLimitLookAhead();
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
+
+  const double kTimestep;
+  const double kDesiredDuration;
+  const double kMaxDuration;
+  const KinematicState kCurrentJointState;
+  const KinematicState kGoalJointState;
+  const trackjoint::Limits kLimits;
+
+  Eigen::VectorXd times_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint

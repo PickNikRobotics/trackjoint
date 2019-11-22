@@ -33,7 +33,7 @@ TrajectoryGenerator::TrajectoryGenerator(
   ///////////////////////////////////////////////////
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     single_joint_generators_.push_back(SingleJointGenerator(
-        desired_duration_, max_duration, current_joint_states[joint],
+        upsampled_timestep_, desired_duration_, max_duration, current_joint_states[joint],
         goal_joint_states[joint], limits[joint]));
   }
 }
