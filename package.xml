@@ -8,8 +8,6 @@
   <author email="zelenak@picknik.ai">Andy Zelenak</author> 
   <author email="guilherme@picknik.ai">Guilherme Sartori Natal</author>
 
-  <license>BSD</license>
-
   <url type="website">https://github.com/PickNikRobotics/trackjoint</url>
   <url type="bugtracker">https://github.com/PickNikRobotics/trackjoint/issues</url>
   <url type="repository">https://github.com/PickNikRobotics/trackjoint/</url>
