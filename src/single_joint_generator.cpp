@@ -22,19 +22,11 @@ SingleJointGenerator::SingleJointGenerator(
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory()
 {
-  //////////////
-  // Interpolate
-  //////////////
   Interpolate();
 
-  /////////////////////
-  // Limit Compensation
-  /////////////////////
   PositionVectorLimitLookAhead();
 
-  ////////////////////////////////
-  // Duration extension, if needed
-  ////////////////////////////////
+  // TODO(andyz): check for duration extension
 
   return PredictTimeToReach();
 }

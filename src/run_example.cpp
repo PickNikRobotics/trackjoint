@@ -15,10 +15,10 @@
 
 int main(int argc, char** argv)
 {
-  const int NUM_DOF = 3;
-  const double TIMESTEP = 0.01;
-  const double DESIRED_DURATION = 1;
-  const double MAX_DURATION = 3;
+  const int kNumDof = 3;
+  const double kTimestep = 0.01;
+  const double kDesiredDuration = 1;
+  const double kMaxDuration = 3;
   const std::string output_path_base = "/home/guilesn/trackjoint_ws/plots/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
@@ -26,8 +26,8 @@ int main(int argc, char** argv)
   std::vector<trackjoint::Limits> limits;
 
   // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen(NUM_DOF, TIMESTEP,
-    DESIRED_DURATION, MAX_DURATION, current_joint_states, goal_joint_states,
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep,
+    kDesiredDuration, kMaxDuration, current_joint_states, goal_joint_states,
     limits);
 
   std::vector<std::vector<trackjoint::TrajectoryWaypoint>> output_trajectories;
