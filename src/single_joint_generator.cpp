@@ -7,6 +7,7 @@
  *********************************************************************/
 
 #include <trackjoint/single_joint_generator.h>
+#include <trackjoint/utilities.h>
 
 namespace trackjoint {
 
@@ -26,12 +27,17 @@ kLimits(limits)
 }
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
-  Interpolate();
+  waypoints_.positions = Interpolate();
+
+  // From position vector, approximate velocity and acceleration.
+  // velocity = (difference between adjacent position elements) / delta_t
+  // acceleration = (difference between adjacent velocity elements) / delta_t
+  waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep);
+  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep);
 
   PositionVectorLimitLookAhead();
 
   // TODO(andyz): check for duration extension
-
   return PredictTimeToReach();
 }
 
@@ -57,7 +63,10 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
   return interpolated_position;
 }
 
-void SingleJointGenerator::PositionVectorLimitLookAhead() { ; }
+size_t SingleJointGenerator::PositionVectorLimitLookAhead()
+{
+  ;
+}
 
 ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
   return ErrorCodeEnum::kNoError;
