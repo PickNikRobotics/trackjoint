@@ -39,7 +39,7 @@ class TrajectoryGenerator {
                       const std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  std::vector<JointTrajectory> GenerateTrajectories();
+  void GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(

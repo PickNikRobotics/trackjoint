@@ -34,8 +34,9 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   // acceleration = (difference between adjacent velocity elements) / delta_t
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep);
   waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep);
+  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep);
 
-  PositionVectorLimitLookAhead();
+  LimitCompensation();
 
   // TODO(andyz): check for duration extension
   return PredictTimeToReach();
@@ -63,7 +64,50 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
   return interpolated_position;
 }
 
-size_t SingleJointGenerator::PositionVectorLimitLookAhead()
+size_t SingleJointGenerator::LimitCompensation()
+{
+  // for (size_t i=0; i<waypoints_.velocities.size(); ++i)
+  //   std::cout << waypoints_.accelerations(i) << std::endl;
+
+  // Start with the assumption that the entire trajectory can be completed
+  size_t index_last_successful = waypoints_.positions.size();
+  bool successful_compensation = false;
+
+  // Preallocate
+  double delta_j(0), delta_a(0), delta_v(0);
+  size_t num_waypoints = waypoints_.positions.size();
+
+  // Compensate for jerk limits at each timestep, starting near the beginning
+  for (size_t index = 0; index < num_waypoints; ++index)
+  {
+    if (fabs(waypoints_.jerks(index)) > kLimits.angular_jerk_limit)
+    {
+      if (waypoints_.jerks(index) > kLimits.angular_jerk_limit)
+      {
+        delta_j = waypoints_.jerks(index) - kLimits.angular_jerk_limit;
+        waypoints_.jerks(index) = kLimits.angular_jerk_limit;
+      }
+      else if (waypoints_.jerks(index) < -kLimits.angular_jerk_limit)
+      {
+        delta_j = waypoints_.jerks(index) + kLimits.angular_jerk_limit;
+        waypoints_.jerks(index) = -kLimits.angular_jerk_limit;
+      }
+      waypoints_.accelerations(index) = waypoints_.accelerations(index) + delta_j * kTimestep;
+      delta_v = 0.5 * delta_j * kTimestep * kTimestep;
+      waypoints_.velocities(index) = waypoints_.velocities(index) + delta_v;
+      // Try adjusting the veloicty in previous timesteps to compensate for this limit, if needed
+      VelocityCompensation();
+    }
+  }
+
+  // Compensate for acceleration limits at each timestep, starting near the beginning
+
+  // Compensate for velocity limits at each timestep, starting near the beginning
+
+  return index_last_successful;
+}
+
+void SingleJointGenerator::VelocityCompensation()
 {
   ;
 }

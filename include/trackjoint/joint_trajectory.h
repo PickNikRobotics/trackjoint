@@ -22,6 +22,7 @@ struct JointTrajectory {
   Eigen::VectorXd positions;  // rad
   Eigen::VectorXd velocities;  // rad/s
   Eigen::VectorXd accelerations;  // rad/s^2
+  Eigen::VectorXd jerks;  // rad/s^3
   Eigen::VectorXd elapsed_times;  // seconds
 };
 }  // namespace trackjoint
