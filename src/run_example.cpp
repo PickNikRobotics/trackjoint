@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   const double kDesiredDuration = 1;
   const double kMaxDuration = 3;
   const std::string kOutputPathBase =
-      "/home/guilesn/trackjoint_ws/plots/output_joint";
+      "../trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   std::vector<trackjoint::KinematicState> goal_joint_states;
