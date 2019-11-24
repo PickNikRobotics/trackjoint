@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <trackjoint/error_codes.h>
-#include <trackjoint/joint_trajectory.h>
-#include <trackjoint/kinematic_state.h>
-#include <trackjoint/limits.h>
+#include <math.h>  // signbit
+#include "trackjoint/error_codes.h"
+#include "trackjoint/joint_trajectory.h"
+#include "trackjoint/kinematic_state.h"
+#include "trackjoint/limits.h"
 
 namespace trackjoint {
 class SingleJointGenerator {
@@ -39,7 +40,10 @@ class SingleJointGenerator {
   **/
   size_t LimitCompensation();
 
-  void VelocityCompensation();
+  /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index.
+   *
+  **/
+  void VelocityCompensation(size_t limited_index, double excess_velocity);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
