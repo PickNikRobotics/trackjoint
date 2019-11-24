@@ -78,7 +78,8 @@ size_t SingleJointGenerator::LimitCompensation()
   size_t num_waypoints = waypoints_.positions.size();
 
   // Compensate for jerk limits at each timestep, starting near the beginning
-  for (size_t index = 0; index < num_waypoints; ++index)
+  // Do not want to affect the velocity at the last timestep
+  for (size_t index = 0; index < (num_waypoints-1); ++index)
   {
     if (fabs(waypoints_.jerks(index)) > kLimits.jerk_limit)
     {
@@ -96,18 +97,71 @@ size_t SingleJointGenerator::LimitCompensation()
       delta_v = 0.5 * delta_j * kTimestep * kTimestep;
       waypoints_.velocities(index) = waypoints_.velocities(index) + delta_v;
       // Try adjusting the veloicty in previous timesteps to compensate for this limit, if needed
-      VelocityCompensation(index, delta_v);
+      successful_compensation = VelocityCompensation(index, delta_v);
     }
   }
 
   // Compensate for acceleration limits at each timestep, starting near the beginning
+  // Do not want to affect the velocity at the last timestep
+  for (size_t index = 0; index < (num_waypoints-1); ++index)
+  {
+    if (fabs(waypoints_.accelerations(index)) > kLimits.acceleration_limit)
+    {
+      double temp_accel = 0;
+      if (waypoints_.accelerations(index) > kLimits.acceleration_limit)
+      {
+        delta_a = kLimits.acceleration_limit - waypoints_.accelerations(index);
+        temp_accel = kLimits.acceleration_limit;
+      }
+      else if (waypoints_.accelerations(index) < -kLimits.acceleration_limit)
+      {
+        delta_a = -kLimits.acceleration_limit - waypoints_.accelerations(index);
+        temp_accel = -kLimits.acceleration_limit;
+      }
+
+      // Check jerk limit before applying the change
+      if (!(fabs(waypoints_.jerks(index-1) + delta_a / kTimestep) < kLimits.jerk_limit))
+      {
+        waypoints_.accelerations(index) = temp_accel;
+      }
+      else
+      {
+        index_last_successful = RecordFailureTime(index, index_last_successful);
+        break;
+      }
+
+      waypoints_.jerks(index) = 0;
+      delta_v = delta_a * kTimestep;
+      waypoints_.velocities(index) = waypoints_.velocities(index) + delta_v;
+      // Try decreasing the velocity in previous timesteps to compensate for this limit, if needed
+      successful_compensation = VelocityCompensation(index, delta_v);
+      if (!successful_compensation)
+      {
+        index_last_successful = RecordFailureTime(index, index_last_successful);
+      }
+    }
+  }
 
   // Compensate for velocity limits at each timestep, starting near the beginning
+  // Do not want to affect the velocity at the last timestep
+  for (size_t index = 0; index < (num_waypoints-1); ++index)
+  {
+    ;
+  }
 
   return index_last_successful;
 }
 
-void SingleJointGenerator::VelocityCompensation(size_t limited_index, double excess_velocity)
+size_t SingleJointGenerator::RecordFailureTime(size_t current_index, size_t index_last_successful)
+{
+  // Record the index when compensation first failed
+  if (current_index < index_last_successful)
+    index_last_successful = current_index;
+
+  return index_last_successful;
+}
+
+bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double excess_velocity)
 {
   bool successful_compensation = false;
 
@@ -167,6 +221,7 @@ void SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
     // Clip velocities at min/max due to small rounding errors
     waypoints_.velocities(index) = std::min(std::max(waypoints_.velocities(index), -kLimits.velocity_limit), kLimits.velocity_limit);
   }
+  return successful_compensation;
 }
 
 ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {

@@ -40,10 +40,11 @@ class SingleJointGenerator {
   **/
   size_t LimitCompensation();
 
-  /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index.
-   *
-  **/
-  void VelocityCompensation(size_t limited_index, double excess_velocity);
+  /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index. */
+  bool VelocityCompensation(size_t limited_index, double excess_velocity);
+
+  /** \brief Record the index when compensation first failed */
+  size_t RecordFailureTime(size_t current_index, size_t index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
