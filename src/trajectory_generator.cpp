@@ -25,6 +25,7 @@ TrajectoryGenerator::TrajectoryGenerator(
   InputChecking();
 
   // Upsample if num. waypoints would be short. Helps with accuracy
+  UpSample();
 
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint) {
@@ -32,6 +33,46 @@ TrajectoryGenerator::TrajectoryGenerator(
         upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
         goal_joint_states[joint], limits[joint], kMaxNumWaypoints));
   }
+}
+
+void TrajectoryGenerator::UpSample()
+{
+  // Halve the timestep until there are at least kMinNumWaypoints
+
+  size_t num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
+
+  if (num_waypoints < kMinNumWaypoints)
+  {
+    upsampled_timestep_ = 0.5 * upsampled_timestep_;
+    ++upsample_rounds_;
+    num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
+  }
+}
+
+Eigen::VectorXd TrajectoryGenerator::DownSample(Eigen::VectorXd *vector_to_downsample)
+{
+  Eigen::VectorXd downsampled_vector = *vector_to_downsample;
+  size_t expected_size = 0;
+  size_t downsampled_index = 0;
+
+  // Remove every other sample from the vector for each round of sampling
+  // e.g. 1,2,3,4,5,6 gets downsampled to 1,3,5
+  for (size_t round = 0; round < upsample_rounds_; ++round)
+  {
+    Eigen::VectorXd temp_vector = downsampled_vector;
+    expected_size = 1 + floor((downsampled_vector.size() - 1) / 2);
+    downsampled_vector.resize(expected_size);
+    downsampled_vector[0] = temp_vector[0];
+    if (temp_vector.size() > 3)
+      downsampled_index = 3;
+      for (size_t upsampled_index = 3; upsampled_index < temp_vector.size(); upsampled_index = upsampled_index + 2)
+      {
+        downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
+        ++downsampled_index;
+      }
+  }
+
+  return downsampled_vector;
 }
 
 ErrorCodeEnum TrajectoryGenerator::InputChecking()
@@ -78,25 +119,25 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
 }
 
 void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
-  /////////////////////////////////////////
   // Generate individual joint trajectories
-  /////////////////////////////////////////
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     single_joint_generators_[joint].GenerateTrajectory();
     output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
   }
 
-  ////////////////////////////////////
   // Synchronize trajectory components
-  ////////////////////////////////////
 
-  /////////////////////////////////////////////////
-  // Downsample, if needed, to the correct timestep
-  /////////////////////////////////////////////////
+  // Downsample all vectors, if needed, to the correct timestep
+  if (upsample_rounds_ > 0)
+    for (size_t joint = 0; joint < kNumDof; ++joint)
+    {
+      output_trajectories->at(joint).positions = DownSample(&output_trajectories->at(joint).positions);
+      output_trajectories->at(joint).velocities = DownSample(&output_trajectories->at(joint).velocities);
+      output_trajectories->at(joint).accelerations = DownSample(&output_trajectories->at(joint).accelerations);
+      output_trajectories->at(joint).elapsed_times = DownSample(&output_trajectories->at(joint).elapsed_times);
+    }
 
-  ///////////////////////
-  // Final error checking
-  ///////////////////////
+  // TODO(andyz): Final error checking
 
   return;
 }

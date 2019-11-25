@@ -7,7 +7,7 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: Generate jerk-limited trajectories for n robot joints.
+   Desc: Hold kinematics data for a robot joint trajectory.
 */
 
 #pragma once
