@@ -84,7 +84,28 @@ target_link_libraries(
 ## Testing ##
 #############
 
-# TODO(andyz): add gtest
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+
+  add_rostest_gtest(trajectory_generation_test
+    test/trajectory_generation_test.test
+    test/trajectory_generation_test.cpp
+  )
+  target_link_libraries(trajectory_generation_test
+    ${LIBRARY_NAME}
+    ${catkin_LIBRARIES}
+  )
+
+  add_rostest_gtest(helper_function_test
+    test/helper_function_test.test
+    test/helper_function_test.cpp
+  )
+  target_link_libraries(helper_function_test
+    ${LIBRARY_NAME}
+    ${catkin_LIBRARIES}
+  )
+
+endif()
 
 ## Test for correct C++ source code
 roslint_cpp()
