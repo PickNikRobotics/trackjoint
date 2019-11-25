@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   const int kNumDof = 3;
   const double kTimestep = 0.01;
   const double kDesiredDuration = 1;
-  const double kMaxDuration = 3;
+  const double kMaxDuration = 10;
   const std::string kOutputPathBase =
       "/home/guilesn/trackjoint_ws/plots/output_joint";
 

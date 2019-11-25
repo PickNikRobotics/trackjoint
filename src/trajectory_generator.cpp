@@ -49,9 +49,9 @@ void TrajectoryGenerator::UpSample()
   }
 }
 
-Eigen::VectorXd TrajectoryGenerator::DownSample(Eigen::VectorXd *vector_to_downsample)
+Eigen::VectorXd TrajectoryGenerator::DownSample(const Eigen::VectorXd &vector_to_downsample)
 {
-  Eigen::VectorXd downsampled_vector = *vector_to_downsample;
+  Eigen::VectorXd downsampled_vector = vector_to_downsample;
   size_t expected_size = 0;
   size_t downsampled_index = 0;
 
@@ -118,23 +118,76 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
+bool TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
+{
+  bool  has_error = false;
+  size_t longest_num_waypoints = 0;
+
+  // Extend to the longest duration across all components
+  for (size_t joint = 0; joint < kNumDof; ++joint)
+  {
+    if(single_joint_generators_[joint].GetLastSuccessfulIndex() > longest_num_waypoints)
+      longest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex();
+  }
+
+  // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration.
+  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_ + 1))
+  {
+    SetFinalStateToCurrentState();
+    has_error = true;
+    error_code_ = ErrorCodeEnum::kMaxDurationExceeded;
+    std::cout << "Returning early" << std::endl;
+    return has_error;
+  }
+
+  // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
+  double new_desired_duration = (longest_num_waypoints-1) * upsampled_timestep_;
+
+  std::cout << "Getting trajectories" << std::endl;
+
+  // If any of the component durations need to be extended, run them again
+  if (new_desired_duration > desired_duration_)
+  {
+    for (size_t joint = 0; joint < kNumDof; ++joint)
+    {
+      single_joint_generators_[joint].UpdateTrajectoryDuration(new_desired_duration);
+      single_joint_generators_[joint].ExtendTrajectoryDuration();
+      output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+    }
+  }
+  else
+  {
+    for (size_t joint = 0; joint < kNumDof; ++joint)
+    {
+      output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+    }
+  }
+
+  return has_error;
+}
+
+void TrajectoryGenerator::SetFinalStateToCurrentState()
+{
+  ;
+}
+
 void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     single_joint_generators_[joint].GenerateTrajectory();
-    output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
   }
 
   // Synchronize trajectory components
+  SynchronizeTrajComponents(output_trajectories);
 
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
-      output_trajectories->at(joint).positions = DownSample(&output_trajectories->at(joint).positions);
-      output_trajectories->at(joint).velocities = DownSample(&output_trajectories->at(joint).velocities);
-      output_trajectories->at(joint).accelerations = DownSample(&output_trajectories->at(joint).accelerations);
-      output_trajectories->at(joint).elapsed_times = DownSample(&output_trajectories->at(joint).elapsed_times);
+      output_trajectories->at(joint).positions = DownSample(output_trajectories->at(joint).positions);
+      output_trajectories->at(joint).velocities = DownSample(output_trajectories->at(joint).velocities);
+      output_trajectories->at(joint).accelerations = DownSample(output_trajectories->at(joint).accelerations);
+      output_trajectories->at(joint).elapsed_times = DownSample(output_trajectories->at(joint).elapsed_times);
     }
 
   // TODO(andyz): Final error checking

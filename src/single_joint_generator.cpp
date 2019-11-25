@@ -18,7 +18,7 @@ SingleJointGenerator::SingleJointGenerator(
     const size_t max_num_waypoints) :
 kTimestep(timestep),
 desired_duration_(desired_duration),
-kMaxDuration(max_duration),
+max_duration_(max_duration),
 kCurrentJointState(current_joint_state),
 kGoalJointState(goal_joint_state),
 kLimits(limits),
@@ -39,9 +39,26 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   return PredictTimeToReach();
 }
 
+ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
+{
+  waypoints_.positions = Interpolate();
+  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
+
+  CalculateDerivatives();
+
+  index_last_successful_ = LimitCompensation();
+
+  return ErrorCodeEnum::kNoError;
+}
+
 JointTrajectory  SingleJointGenerator::GetTrajectory()
 {
   return waypoints_;
+}
+
+size_t SingleJointGenerator::GetLastSuccessfulIndex()
+{
+  return index_last_successful_;
 }
 
 Eigen::VectorXd SingleJointGenerator::Interpolate()
@@ -255,7 +272,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
 
   // Iterate over new durations until the position error is acceptable or the maximum duration is reached
   while ((index_last_successful_ < waypoints_.positions.size()) &&
-    (desired_duration_ < kMaxDuration))
+    (desired_duration_ < max_duration_))
   {
     // Try increasing the duration, based on fraction of states that weren't reached successfully
     // TODO(andyz): Ensure at least one new timestep is added
@@ -318,5 +335,12 @@ void SingleJointGenerator::CalculateDerivatives()
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep);
 
   // Ensure the initial conditions and final positions are exactly copied
+}
+
+void SingleJointGenerator::UpdateTrajectoryDuration(double new_trajectory_duration)
+{
+  // The trajectory will be forced to have this duration (or fail) because max_duration == desired_duration
+  desired_duration_ = new_trajectory_duration;
+  max_duration_ = new_trajectory_duration;
 }
 }  // end namespace trackjoint

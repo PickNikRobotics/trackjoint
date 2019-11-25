@@ -30,8 +30,17 @@ class SingleJointGenerator {
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
+  /** \brief Calculate a trajectory once duration is known. Similar to GenerateTrajectory minus PredictTimeToRead(). */
+  ErrorCodeEnum ExtendTrajectoryDuration();
+
   /** \brief Get the generated trajectory */
   JointTrajectory GetTrajectory();
+
+  /** \brief Get the last index that successfully matched the polynomial interpolation */
+  size_t GetLastSuccessfulIndex();
+
+  /** \brief Update desired_duration_ for this joint */
+  void UpdateTrajectoryDuration(double new_trajectory_duration);
 
  private:
   /** \brief Interpolate from start to end state with a polynomial */
@@ -59,13 +68,12 @@ class SingleJointGenerator {
   void CalculateDerivatives();
 
   const double kTimestep;
-  const double kMaxDuration;
   const KinematicState kCurrentJointState;
   const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
   const size_t kMaxNumWaypoints;
 
-  double desired_duration_;
+  double desired_duration_, max_duration_;
   Eigen::VectorXd times_;
   JointTrajectory waypoints_;
   size_t index_last_successful_;

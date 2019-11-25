@@ -50,8 +50,14 @@ private:
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
-  /** \brief Undo UpSample() to output waypoints with the correct spacing */
-  Eigen::VectorXd DownSample(Eigen::VectorXd *vector_to_downsample);
+  /** \brief Undo UpSample() to output waypoints with the correct spacing. */
+  Eigen::VectorXd DownSample(const Eigen::VectorXd &vector_to_downsample);
+
+  /** \brief Synchronize all trajectories with the one of longest duration. */
+  bool SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories);
+
+  /** \brief Set the output state equal to the current state. Used if an error is encountered. */
+  void SetFinalStateToCurrentState();
 
   const uint kNumDof;
   double desired_duration_, max_duration_;
