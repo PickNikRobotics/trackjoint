@@ -24,9 +24,6 @@
 #include <memory>  // shared_ptr
 #include <vector>
 
-// Testing
-#include <gtest/gtest.h>
-
 namespace trackjoint {
 
 class TrajectoryGenerator {

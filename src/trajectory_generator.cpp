@@ -41,7 +41,7 @@ void TrajectoryGenerator::UpSample()
 
   size_t num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
 
-  if (num_waypoints < kMinNumWaypoints)
+  while (num_waypoints < kMinNumWaypoints)
   {
     upsampled_timestep_ = 0.5 * upsampled_timestep_;
     ++upsample_rounds_;
