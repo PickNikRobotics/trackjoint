@@ -29,6 +29,8 @@ kMaxNumWaypoints(max_num_waypoints)
 }
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
+  // Clear previous results
+  waypoints_ = JointTrajectory();
   waypoints_.positions = Interpolate();
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
 
@@ -41,6 +43,8 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
 
 ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
 {
+  // Clear previous results
+  waypoints_ = JointTrajectory();
   waypoints_.positions = Interpolate();
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
 

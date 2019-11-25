@@ -131,19 +131,16 @@ bool TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory>
   }
 
   // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration.
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_ + 1))
+  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_))
   {
     SetFinalStateToCurrentState();
     has_error = true;
     error_code_ = ErrorCodeEnum::kMaxDurationExceeded;
-    std::cout << "Returning early" << std::endl;
     return has_error;
   }
 
   // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
   double new_desired_duration = (longest_num_waypoints-1) * upsampled_timestep_;
-
-  std::cout << "Getting trajectories" << std::endl;
 
   // If any of the component durations need to be extended, run them again
   if (new_desired_duration > desired_duration_)
