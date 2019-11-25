@@ -25,7 +25,7 @@ class SingleJointGenerator {
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState &current_joint_state,
                        const KinematicState &goal_joint_state,
-                       const trackjoint::Limits &limits);
+                       const trackjoint::Limits &limits, const size_t max_num_waypoints);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
@@ -43,20 +43,28 @@ class SingleJointGenerator {
   /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index. */
   bool VelocityCompensation(size_t limited_index, double excess_velocity);
 
+  /** \brief This uses VelocityCompensation() but it starts from a position vector */
+  void PositionVectorLimitLookAhead();
+
   /** \brief Record the index when compensation first failed */
   size_t RecordFailureTime(size_t current_index, size_t index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
 
+  /** \brief Calculate vel/accel/jerk from position */
+  void CalculateDerivatives();
+
   const double kTimestep;
-  const double kDesiredDuration;
   const double kMaxDuration;
   const KinematicState kCurrentJointState;
   const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
+  const size_t kMaxNumWaypoints;
 
+  double desired_duration_;
   Eigen::VectorXd times_;
   JointTrajectory waypoints_;
+  size_t index_last_successful_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint

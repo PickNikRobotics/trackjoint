@@ -46,9 +46,12 @@ class TrajectoryGenerator {
       const std::vector<JointTrajectory> &output_trajectories,
       const std::string &base_filepath) const;
 
+  ErrorCodeEnum InputChecking();
+
  protected:
   const uint kNumDof;
-  double desired_duration_;
+  double desired_duration_, max_duration_;
+  const double kMaxNumWaypoints = 100;  // A relatively small number, to run fast
   uint error_code_ = ErrorCodeEnum::kNoError;
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   double upsampled_timestep_;

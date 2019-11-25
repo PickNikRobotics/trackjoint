@@ -14,31 +14,28 @@ namespace trackjoint {
 SingleJointGenerator::SingleJointGenerator(
     double timestep, double desired_duration, double max_duration,
     const trackjoint::KinematicState &current_joint_state,
-    const trackjoint::KinematicState &goal_joint_state, const trackjoint::Limits &limits) :
+    const trackjoint::KinematicState &goal_joint_state, const trackjoint::Limits &limits,
+    const size_t max_num_waypoints) :
 kTimestep(timestep),
-kDesiredDuration(desired_duration),
+desired_duration_(desired_duration),
 kMaxDuration(max_duration),
 kCurrentJointState(current_joint_state),
 kGoalJointState(goal_joint_state),
-kLimits(limits)
+kLimits(limits),
+kMaxNumWaypoints(max_num_waypoints)
 {
   // Waypoint times
-  times_ = Eigen::VectorXd::LinSpaced(int(kDesiredDuration / kTimestep), 0, kDesiredDuration);
+  times_ = Eigen::VectorXd::LinSpaced(int(desired_duration_ / kTimestep), 0, desired_duration_);
 }
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   waypoints_.positions = Interpolate();
+  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
 
-  // From position vector, approximate velocity and acceleration.
-  // velocity = (difference between adjacent position elements) / delta_t
-  // acceleration = (difference between adjacent velocity elements) / delta_t
-  waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep);
-  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep);
+  CalculateDerivatives();
 
-  LimitCompensation();
+  index_last_successful_ = LimitCompensation();
 
-  // TODO(andyz): check for duration extension
   return PredictTimeToReach();
 }
 
@@ -48,17 +45,17 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
   // Interpolate a smooth trajectory from initial to final state while matching boundary conditions.
 
   // De Luca uses tao to represent a normalized time
-  Eigen::VectorXd tao = times_ / kDesiredDuration;
+  Eigen::VectorXd tao = times_ / desired_duration_;
 
   // TODO(andyz): vectorize this calculation
   Eigen::VectorXd interpolated_position(tao.size());
   for (size_t index=0; index<tao.size(); ++index)
   {
     interpolated_position(index) = pow((1. - tao(index)), 3) * (
-      (kCurrentJointState.position + (3. * kCurrentJointState.position + kCurrentJointState.velocity * kDesiredDuration)) * tao(index) + 
-      (kCurrentJointState.acceleration * pow(kDesiredDuration, 2) + 6. * kCurrentJointState.velocity + 12. * kCurrentJointState.position) * pow(tao(index), 2) / 2.) +
-      pow(tao(index), 3) * (kGoalJointState.position + (3. * kGoalJointState.position - kGoalJointState.velocity * kDesiredDuration) * (1. - tao(index)) + 
-      (kGoalJointState.acceleration * pow(kDesiredDuration, 2) - 6. * kGoalJointState.velocity + 12. * kGoalJointState.position) * pow((1. - tao(index)), 2) / 2.);
+      (kCurrentJointState.position + (3. * kCurrentJointState.position + kCurrentJointState.velocity * desired_duration_)) * tao(index) + 
+      (kCurrentJointState.acceleration * pow(desired_duration_, 2) + 6. * kCurrentJointState.velocity + 12. * kCurrentJointState.position) * pow(tao(index), 2) / 2.) +
+      pow(tao(index), 3) * (kGoalJointState.position + (3. * kGoalJointState.position - kGoalJointState.velocity * desired_duration_) * (1. - tao(index)) + 
+      (kGoalJointState.acceleration * pow(desired_duration_, 2) - 6. * kGoalJointState.velocity + 12. * kGoalJointState.position) * pow((1. - tao(index)), 2) / 2.);
   }
 
   return interpolated_position;
@@ -66,9 +63,6 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
 
 size_t SingleJointGenerator::LimitCompensation()
 {
-  // for (size_t i=0; i<waypoints_.velocities.size(); ++i)
-  //   std::cout << waypoints_.accelerations(i) << std::endl;
-
   // Start with the assumption that the entire trajectory can be completed
   size_t index_last_successful = waypoints_.positions.size();
   bool successful_compensation = false;
@@ -181,6 +175,11 @@ size_t SingleJointGenerator::RecordFailureTime(size_t current_index, size_t inde
 
 bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double excess_velocity)
 {
+  // The algorithm:
+  // 1) check jerk limits, from beginning to end of trajectory. Don't bother checking accel/vel limits here, they will be checked next
+  // 2) check accel limits. Make sure it doesn't cause jerk to exceed limits.
+  // 3) check vel limits. This will also check whether previously-checked jerk/accel limits were exceeded
+
   bool successful_compensation = false;
 
   // Add a bit of velocity at step i to compensate for the limit at timestep i+1
@@ -243,7 +242,76 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
 }
 
 ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
-  return ErrorCodeEnum::kNoError;
+  // Take a trajectory that could not reach the desired position in time.
+  // Try increasing the duration until it is interpolated without violating limits.
+  // This gives a new duration estimate.
+
+  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+
+  // Iterate over new durations until the position error is acceptable or the maximum duration is reached
+  while ((index_last_successful_ < waypoints_.positions.size()) &&
+    (desired_duration_ < kMaxDuration))
+  {
+    // Try increasing the duration, based on fraction of states that weren't reached successfully
+    // TODO(andyz): Ensure at least one new timestep is added
+    desired_duration_ = (1. + 0.5 * (1. - index_last_successful_ / waypoints_.positions.size())) * desired_duration_;
+
+    // // Round to nearest timestep
+    if ( std::fmod(desired_duration_, kTimestep) > 0.5 * kTimestep )
+      desired_duration_ = desired_duration_ + kTimestep;
+
+    size_t new_num_waypoints = floor(1 + desired_duration_/kTimestep);
+    // Cap the trajectory duration to maintain determinism
+    if (new_num_waypoints > kMaxNumWaypoints)
+      new_num_waypoints = kMaxNumWaypoints;
+
+    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+    waypoints_.positions.resize(waypoints_.elapsed_times.size());
+    waypoints_.velocities.resize(waypoints_.elapsed_times.size());
+    waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
+    waypoints_.jerks.resize(waypoints_.elapsed_times.size());
+
+    ////////////////////////////////////////////////////////////
+    // Try to create the trajectory again, with the new duration
+    ////////////////////////////////////////////////////////////
+    Interpolate();
+    CalculateDerivatives();
+
+    PositionVectorLimitLookAhead();
+  }
+
+  // Error if we extended the duration to the maximum and it still wasn't successful
+  if (index_last_successful_ < waypoints_.elapsed_times.size())
+    error_code = ErrorCodeEnum::kMaxDurationExceeded;
+
+  return error_code;
 }
 
+void SingleJointGenerator::PositionVectorLimitLookAhead()
+{
+  size_t index_last_successful = LimitCompensation();
+
+  // Re-compile the position with these modifications.
+  // Ensure the first and last elements are a perfect match with initial/final conditions
+  double kOneSixth = 0.166667;
+  waypoints_.positions(0) = kCurrentJointState.position;
+  for (size_t index = 1; index < waypoints_.positions.size()-1; ++index)
+     waypoints_.positions(index) = waypoints_.positions(index-1) + waypoints_.velocities(index-1) * kTimestep +
+      0.5*waypoints_.accelerations(index-2) * pow(kTimestep, 2) + kOneSixth*waypoints_.jerks(index-3) * pow(kTimestep, 3);
+  waypoints_.positions(waypoints_.positions.size() - 1) = kGoalJointState.position;
+
+  return;
+}
+
+void SingleJointGenerator::CalculateDerivatives()
+{
+  // From position vector, approximate velocity and acceleration.
+  // velocity = (difference between adjacent position elements) / delta_t
+  // acceleration = (difference between adjacent velocity elements) / delta_t
+  waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep);
+  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep);
+  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep);
+
+  // Ensure the initial conditions and final positions are exactly copied
+}
 }  // end namespace trackjoint

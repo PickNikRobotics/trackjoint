@@ -41,6 +41,9 @@ int main(int argc, char** argv) {
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 1;
+  single_joint_limits.acceleration_limit = 10;
+  single_joint_limits.jerk_limit = 100;
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);

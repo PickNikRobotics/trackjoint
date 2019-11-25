@@ -17,24 +17,39 @@ TrajectoryGenerator::TrajectoryGenerator(
     const std::vector<Limits> &limits) :
     kNumDof(num_dof),
     desired_duration_(desired_duration),
+    max_duration_(max_duration),
     // Default timestep
     upsampled_timestep_(timestep)
 {
-  ///////////////////////
   // Input error checking
-  ///////////////////////
+  InputChecking();
 
-  /////////////////////////////////////////////////////////////////
   // Upsample if num. waypoints would be short. Helps with accuracy
-  /////////////////////////////////////////////////////////////////
 
-  ///////////////////////////////////////////////////
   // Initialize a trajectory generator for each joint
-  ///////////////////////////////////////////////////
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     single_joint_generators_.push_back(SingleJointGenerator(
-        upsampled_timestep_, desired_duration_, max_duration, current_joint_states[joint],
-        goal_joint_states[joint], limits[joint]));
+        upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
+        goal_joint_states[joint], limits[joint], kMaxNumWaypoints));
+  }
+}
+
+ErrorCodeEnum TrajectoryGenerator::InputChecking()
+{
+  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+
+  if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_)
+  {
+    // Print a warning but do not exit
+    std::cout << "Capping duration at 100 waypoints to maintain determinism." << std::endl;
+    desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
+  }
+
+  if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_)
+  {
+    // Print a warning but do not exit
+    std::cout << "Capping duration at 100 waypoints to maintain determinism." << std::endl;
+    max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
 

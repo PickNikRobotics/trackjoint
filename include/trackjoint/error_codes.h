@@ -29,17 +29,17 @@ enum ErrorCodeEnum {
 };
 
 const std::unordered_map<uint, std::string> kErrorCodeMap(
-    {{kNoError, "No error, trajectory generation was successful"},
-     {kQuaternionLengthMismatch, "Internal error: Length mismatch between quaternion components"},
-     {kTranslationRotationLengthMismatch, "Internal error: Length mismatch between translation and rotation"},
-     {kDesiredDurationTooShort, "Desired duration is too short, cannot have less than one timestep in a "
-      "trajectory"},
-     {kCurrentOrientationNotNormalized, "Current orientation input quaternion is not normalized"},
-     {kGoalOrientationNotNormalized, "Goal orientation quaternion is not normalized"},
-     {kMaxDurationExceeded, "Max duration was exceeded"},
-     {kVelocityExceedsLimit, "A velocity input exceeds the velocity limit"},
-     {kAccelExceedsLimit, "An acceleration input exceeds the acceleration limit"},
-     {kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration"},
-     {kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero"},
-     {kGoalPositionMismatch, "Mismatch between the final position and the goal position"}});
+  {{kNoError, "No error, trajectory generation was successful"},
+   {kQuaternionLengthMismatch, "Internal error: Length mismatch between quaternion components"},
+   {kTranslationRotationLengthMismatch, "Internal error: Length mismatch between translation and rotation"},
+   {kDesiredDurationTooShort, "Desired duration is too short, cannot have less than one timestep in a "
+    "trajectory"},
+   {kCurrentOrientationNotNormalized, "Current orientation input quaternion is not normalized"},
+   {kGoalOrientationNotNormalized, "Goal orientation quaternion is not normalized"},
+   {kMaxDurationExceeded, "Max duration was exceeded"},
+   {kVelocityExceedsLimit, "A velocity input exceeds the velocity limit"},
+   {kAccelExceedsLimit, "An acceleration input exceeds the acceleration limit"},
+   {kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration"},
+   {kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero"},
+   {kGoalPositionMismatch, "Mismatch between the final position and the goal position"}});
 }  // end namespace trackjoint
