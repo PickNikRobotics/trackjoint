@@ -30,6 +30,9 @@ class SingleJointGenerator {
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
+  /** \brief Get the generated trajectory */
+  JointTrajectory GetTrajectory();
+
  private:
   /** \brief Interpolate from start to end state with a polynomial */
   Eigen::VectorXd Interpolate();

@@ -81,8 +81,9 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *out
   /////////////////////////////////////////
   // Generate individual joint trajectories
   /////////////////////////////////////////
-  for (SingleJointGenerator traj_gen : single_joint_generators_) {
-    traj_gen.GenerateTrajectory();
+  for (size_t joint = 0; joint < kNumDof; ++joint) {
+    single_joint_generators_[joint].GenerateTrajectory();
+    output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
   }
 
   ////////////////////////////////////
@@ -96,32 +97,6 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *out
   ///////////////////////
   // Final error checking
   ///////////////////////
-
-  ///////////////////////////////////////
-  // TODO(andyz): remove this sample data
-  // Create sample data for plotting
-  ///////////////////////////////////////
-
-  // for (size_t dof = 0; dof < kNumDof; ++dof)
-  // {
-  //   output_trajectories[dof] = ;
-  // }
-  const size_t kNumWaypoints = 10;
-  for (size_t joint = 0; joint < output_trajectories->size(); ++joint) {
-    // Size the vectors
-    output_trajectories->at(joint).positions.resize(kNumWaypoints);
-    output_trajectories->at(joint).velocities.resize(kNumWaypoints);
-    output_trajectories->at(joint).accelerations.resize(kNumWaypoints);
-    output_trajectories->at(joint).elapsed_times.resize(kNumWaypoints);
-
-    for (size_t waypoint = 0; waypoint < kNumWaypoints;
-         ++waypoint) {
-      output_trajectories->at(joint).positions(waypoint) = 1.0 * waypoint;
-      output_trajectories->at(joint).velocities(waypoint) = 1.0 * waypoint;
-      output_trajectories->at(joint).accelerations(waypoint) = 1.0 * waypoint;
-      output_trajectories->at(joint).elapsed_times(waypoint) = 1.0 * waypoint;
-    }
-  }
 
   return;
 }

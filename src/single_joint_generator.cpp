@@ -39,6 +39,11 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   return PredictTimeToReach();
 }
 
+JointTrajectory  SingleJointGenerator::GetTrajectory()
+{
+  return waypoints_;
+}
+
 Eigen::VectorXd SingleJointGenerator::Interpolate()
 {
   // See De Luca, "Trajectory Planning" pdf, slide 19
