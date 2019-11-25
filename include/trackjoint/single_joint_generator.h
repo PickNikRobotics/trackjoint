@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <math.h>  // signbit
+#include <cmath>  // copysign
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
