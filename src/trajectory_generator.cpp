@@ -82,14 +82,14 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking()
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_)
   {
     // Print a warning but do not exit
-    std::cout << "Capping duration at 100 waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_)
   {
     // Print a warning but do not exit
-    std::cout << "Capping duration at 100 waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
@@ -190,5 +190,10 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *out
   // TODO(andyz): Final error checking
 
   return;
+}
+
+ErrorCodeEnum TrajectoryGenerator::GetErrorCode()
+{
+  return error_code_;
 }
 }  // end namespace trackjoint

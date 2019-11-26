@@ -10,29 +10,30 @@
    Desc: An example of smoothing a trajectory for three joints.
 */
 
-#include <trackjoint/trajectory_generator.h>
+#include <trackjoint/error_codes.h>
 #include <trackjoint/joint_trajectory.h>
+#include <trackjoint/trajectory_generator.h>
 #include <fstream>
 
 int main(int argc, char** argv) {
   const int kNumDof = 3;
-  const double kTimestep = 0.01;
-  const double kDesiredDuration = 1;
-  const double kMaxDuration = 10;
+  const double kTimestep = 0.001;
+  const double kDesiredDuration = 25;
+  const double kMaxDuration = 25;
   const std::string kOutputPathBase =
-      "/home/guilesn/trackjoint_ws/plots/output_joint";
+      "/home/andyz/ws_tp/src/trackjoint/plots/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   trackjoint::KinematicState joint_state;
-  joint_state.position = 0;
-  joint_state.velocity = 0;
+  joint_state.position = -1;
+  joint_state.velocity = -0.1;
   joint_state.acceleration = 0;
   current_joint_states.push_back(joint_state);
   current_joint_states.push_back(joint_state);
   current_joint_states.push_back(joint_state);
 
-  joint_state.position = 0.1;
-  joint_state.velocity = 0;
+  joint_state.position = 3;
+  joint_state.velocity = -0.1;
   joint_state.acceleration = 0;
   std::vector<trackjoint::KinematicState> goal_joint_states;
   goal_joint_states.push_back(joint_state);
@@ -41,9 +42,9 @@ int main(int argc, char** argv) {
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 1;
-  single_joint_limits.acceleration_limit = 10;
-  single_joint_limits.jerk_limit = 100;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 1e4;
+  single_joint_limits.jerk_limit = 1e6;
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
@@ -71,6 +72,10 @@ int main(int argc, char** argv) {
                  << output_trajectories.at(joint).elapsed_times(waypoint) << std::endl;
     }
   }
+
+  // Retrieve the error code
+  trackjoint::ErrorCodeEnum error = traj_gen.GetErrorCode();
+  std::cout << "Error code: " << error << std::endl;
 
   return 0;
 }

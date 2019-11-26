@@ -83,6 +83,60 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
   EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
 }
+
+TEST_F(TrajectoryGenerationTest, LimitCompensationTrajectory)
+{
+  // These test parameters require limit compensation
+
+  std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
+  trackjoint::KinematicState joint_state;
+  joint_state.position = -1;
+  joint_state.velocity = -0.1;
+  joint_state.acceleration = 0;
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+
+  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  joint_state.position = 3;
+  joint_state.velocity = 1.9;
+  joint_state.acceleration = 0;
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+
+  std::vector<trackjoint::Limits> limits;
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 1e4;
+  single_joint_limits.jerk_limit = 1e6;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+
+  const double kDesiredDuration = 2.5;
+  const double kMaxDuration = kDesiredDuration;
+  const double kTimestep = 0.001;
+
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
+                                           kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  traj_gen.GenerateTrajectories(&output_trajectories);
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  SCOPED_TRACE(output_trajectories[0].positions( output_trajectories[0].positions.size()-1 ));
+  SCOPED_TRACE(position_error);
+  EXPECT_LT(position_error, position_tolerance);
+  // Duration
+  uint num_waypoint_tolerance = 1;
+  uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
+  SCOPED_TRACE(output_trajectories[0].positions.size());
+  EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
+  EXPECT_EQ(true, false);
+}
 }  // namespace trackjoint
 
 int main(int argc, char** argv)
