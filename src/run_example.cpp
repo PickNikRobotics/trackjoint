@@ -55,7 +55,8 @@ int main(int argc, char** argv) {
                                            goal_joint_states, limits);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  std::cout << "Error code: " << error_code << std::endl;
 
   // Save the synchronized trajectories to .csv files
   // traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
@@ -72,10 +73,6 @@ int main(int argc, char** argv) {
                  << output_trajectories.at(joint).elapsed_times(waypoint) << std::endl;
     }
   }
-
-  // Retrieve the error code
-  trackjoint::ErrorCodeEnum error = traj_gen.GetErrorCode();
-  std::cout << "Error code: " << error << std::endl;
 
   return 0;
 }

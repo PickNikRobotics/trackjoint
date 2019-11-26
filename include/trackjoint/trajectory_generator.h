@@ -36,7 +36,7 @@ class TrajectoryGenerator {
                       const std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  void GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(
@@ -56,7 +56,7 @@ private:
   Eigen::VectorXd DownSample(const Eigen::VectorXd &vector_to_downsample);
 
   /** \brief Synchronize all trajectories with the one of longest duration. */
-  bool SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories);
 
   /** \brief Set the output state equal to the current state. Used if an error is encountered. */
   void SetFinalStateToCurrentState();

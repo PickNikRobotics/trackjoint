@@ -118,9 +118,8 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
-bool TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
+ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
 {
-  bool  has_error = false;
   size_t longest_num_waypoints = 0;
 
   // Extend to the longest duration across all components
@@ -134,9 +133,7 @@ bool TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory>
   if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_))
   {
     SetFinalStateToCurrentState();
-    has_error = true;
-    error_code_ = ErrorCodeEnum::kMaxDurationExceeded;
-    return has_error;
+    return ErrorCodeEnum::kMaxDurationExceeded;
   }
 
   // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
@@ -160,7 +157,7 @@ bool TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory>
     }
   }
 
-  return has_error;
+  return ErrorCodeEnum::kNoError;
 }
 
 void TrajectoryGenerator::SetFinalStateToCurrentState()
@@ -168,14 +165,24 @@ void TrajectoryGenerator::SetFinalStateToCurrentState()
   ;
 }
 
-void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
+ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
+  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint) {
-    single_joint_generators_[joint].GenerateTrajectory();
+    error_code = single_joint_generators_[joint].GenerateTrajectory();
+    if (error_code)
+    {
+      return error_code;
+    }
   }
 
   // Synchronize trajectory components
-  SynchronizeTrajComponents(output_trajectories);
+  error_code = SynchronizeTrajComponents(output_trajectories);
+  if (error_code)
+  {
+    return error_code;
+  }
 
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
@@ -189,7 +196,7 @@ void TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *out
 
   // TODO(andyz): Final error checking
 
-  return;
+  return error_code;
 }
 
 ErrorCodeEnum TrajectoryGenerator::GetErrorCode()
