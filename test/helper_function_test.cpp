@@ -32,7 +32,7 @@ public:
   }
 };  // class HelperFunctionTest
 
-TEST_F(HelperFunctionTest, MultipleCalls)
+TEST_F(HelperFunctionTest, Placeholder)
 {
   EXPECT_EQ(true, true);
 }
