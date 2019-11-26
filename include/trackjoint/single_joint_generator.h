@@ -22,21 +22,25 @@ namespace trackjoint {
 class SingleJointGenerator {
  public:
   /** \brief Constructor */
-  SingleJointGenerator(double timestep, double desired_duration, double max_duration,
+  SingleJointGenerator(double timestep, double desired_duration,
+                       double max_duration,
                        const KinematicState &current_joint_state,
                        const KinematicState &goal_joint_state,
-                       const trackjoint::Limits &limits, const size_t max_num_waypoints);
+                       const trackjoint::Limits &limits,
+                       const size_t max_num_waypoints);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
-  /** \brief Calculate a trajectory once duration is known. Similar to GenerateTrajectory minus PredictTimeToRead(). */
+  /** \brief Calculate a trajectory once duration is known. Similar to
+   * GenerateTrajectory minus PredictTimeToRead(). */
   ErrorCodeEnum ExtendTrajectoryDuration();
 
   /** \brief Get the generated trajectory */
   JointTrajectory GetTrajectory();
 
-  /** \brief Get the last index that successfully matched the polynomial interpolation */
+  /** \brief Get the last index that successfully matched the polynomial
+   * interpolation */
   size_t GetLastSuccessfulIndex();
 
   /** \brief Update desired_duration_ for this joint */
@@ -52,10 +56,12 @@ class SingleJointGenerator {
   **/
   size_t LimitCompensation();
 
-  /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index. */
+  /** \brief Start looking back through a velocity vector to calculate for an
+   * excess velocity at limited_index. */
   bool VelocityCompensation(size_t limited_index, double excess_velocity);
 
-  /** \brief This uses VelocityCompensation() but it starts from a position vector */
+  /** \brief This uses VelocityCompensation() but it starts from a position
+   * vector */
   void PositionVectorLimitLookAhead();
 
   /** \brief Record the index when compensation first failed */
