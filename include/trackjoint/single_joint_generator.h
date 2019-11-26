@@ -46,20 +46,17 @@ class SingleJointGenerator {
   /** \brief Interpolate from start to end state with a polynomial */
   Eigen::VectorXd Interpolate();
 
-  /** \brief Step through a vector of velocities, compensating for limits
-   *
-   * \return The last successful position index.
-  **/
-  size_t LimitCompensation();
+  /** \brief Step through a vector of velocities, compensating for limits */
+  ErrorCodeEnum LimitCompensation(size_t *index_last_successful);
 
   /** \brief Start looking back through a velocity vector to calculate for an excess velocity at limited_index. */
   bool VelocityCompensation(size_t limited_index, double excess_velocity);
 
   /** \brief This uses VelocityCompensation() but it starts from a position vector */
-  void PositionVectorLimitLookAhead();
+  ErrorCodeEnum PositionVectorLimitLookAhead();
 
   /** \brief Record the index when compensation first failed */
-  size_t RecordFailureTime(size_t current_index, size_t index_last_successful);
+  void RecordFailureTime(size_t current_index, size_t *index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();

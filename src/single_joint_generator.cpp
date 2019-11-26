@@ -33,12 +33,14 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   waypoints_ = JointTrajectory();
   waypoints_.positions = Interpolate();
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
-
   CalculateDerivatives();
+  index_last_successful_ = waypoints_.positions.size();
 
-  index_last_successful_ = LimitCompensation();
+  ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
 
-  return PredictTimeToReach();
+  PredictTimeToReach();
+
+  return error_code;
 }
 
 ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
@@ -50,9 +52,9 @@ ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
 
   CalculateDerivatives();
 
-  index_last_successful_ = LimitCompensation();
+   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
 
-  return ErrorCodeEnum::kNoError;
+  return error_code;
 }
 
 JointTrajectory  SingleJointGenerator::GetTrajectory()
@@ -87,10 +89,10 @@ Eigen::VectorXd SingleJointGenerator::Interpolate()
   return interpolated_position;
 }
 
-size_t SingleJointGenerator::LimitCompensation()
+ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_successful)
 {
   // Start with the assumption that the entire trajectory can be completed
-  size_t index_last_successful = waypoints_.positions.size();
+  *index_last_successful = waypoints_.positions.size();
   bool successful_compensation = false;
 
   // Preallocate
@@ -146,7 +148,7 @@ size_t SingleJointGenerator::LimitCompensation()
       }
       else
       {
-        index_last_successful = RecordFailureTime(index, index_last_successful);
+        RecordFailureTime(index, index_last_successful);
         break;
       }
       waypoints_.jerks(index) = 0;
@@ -156,7 +158,7 @@ size_t SingleJointGenerator::LimitCompensation()
       successful_compensation = VelocityCompensation(index, delta_v);
       if (!successful_compensation)
       {
-        index_last_successful = RecordFailureTime(index, index_last_successful);
+        RecordFailureTime(index, index_last_successful);
       }
     }
   }
@@ -182,21 +184,20 @@ size_t SingleJointGenerator::LimitCompensation()
         // Do not mess with previous timesteps if the velocity is greater than the limit
         successful_compensation = VelocityCompensation(index, -delta_v);
         if (!successful_compensation)
-          index_last_successful = RecordFailureTime(index, index_last_successful);
+          RecordFailureTime(index, index_last_successful);
       }
     }
   }
 
-  return index_last_successful;
+  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  return error_code;
 }
 
-size_t SingleJointGenerator::RecordFailureTime(size_t current_index, size_t index_last_successful)
+void SingleJointGenerator::RecordFailureTime(size_t current_index, size_t *index_last_successful)
 {
   // Record the index when compensation first failed
-  if (current_index < index_last_successful)
-    index_last_successful = current_index;
-
-  return index_last_successful;
+  if (current_index < *index_last_successful)
+    *index_last_successful = current_index;
 }
 
 bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double excess_velocity)
@@ -313,9 +314,9 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
   return error_code;
 }
 
-void SingleJointGenerator::PositionVectorLimitLookAhead()
+ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead()
 {
-  size_t index_last_successful = LimitCompensation();
+  ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
 
   // Re-compile the position with these modifications.
   // Ensure the first and last elements are a perfect match with initial/final conditions
@@ -326,7 +327,7 @@ void SingleJointGenerator::PositionVectorLimitLookAhead()
       0.5*waypoints_.accelerations(index-2) * pow(kTimestep, 2) + kOneSixth*waypoints_.jerks(index-3) * pow(kTimestep, 3);
   waypoints_.positions(waypoints_.positions.size() - 1) = kGoalJointState.position;
 
-  return;
+  return error_code;
 }
 
 void SingleJointGenerator::CalculateDerivatives()
