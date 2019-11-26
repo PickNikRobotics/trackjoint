@@ -18,8 +18,8 @@
 int main(int argc, char** argv) {
   const int kNumDof = 3;
   const double kTimestep = 0.001;
-  const double kDesiredDuration = 25;
-  const double kMaxDuration = 25;
+  const double kDesiredDuration = 2.5;
+  const double kMaxDuration = 2.5;
   const std::string kOutputPathBase =
       "/home/andyz/ws_tp/src/trackjoint/plots/output_joint";
 
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
   trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
-  std::cout << "Error code: " << error_code << std::endl;
+  std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
   // traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
