@@ -82,14 +82,14 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking()
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_)
   {
     // Print a warning but do not exit
-    std::cout << "Capping duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping desired duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_)
   {
     // Print a warning but do not exit
-    std::cout << "Capping duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping max duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
