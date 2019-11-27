@@ -71,7 +71,7 @@ class SingleJointGenerator {
   const size_t kMaxNumWaypoints;
 
   double desired_duration_, max_duration_;
-  Eigen::VectorXd times_;
+  Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
   size_t index_last_successful_;
 };  // end class SingleJointGenerator

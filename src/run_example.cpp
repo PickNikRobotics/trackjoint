@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   current_joint_states.push_back(joint_state);
 
   joint_state.position = 3;
-  joint_state.velocity = -0.1;
+  joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
   std::vector<trackjoint::KinematicState> goal_joint_states;
   goal_joint_states.push_back(joint_state);

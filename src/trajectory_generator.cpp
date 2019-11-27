@@ -162,6 +162,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
 
 void TrajectoryGenerator::SetFinalStateToCurrentState()
 {
+  // TODO(andyz)
   ;
 }
 
