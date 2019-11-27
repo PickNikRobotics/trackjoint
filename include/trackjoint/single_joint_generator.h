@@ -48,7 +48,7 @@ class SingleJointGenerator {
 
  private:
   /** \brief Interpolate from start to end state with a polynomial */
-  Eigen::VectorXd Interpolate();
+  Eigen::VectorXd Interpolate(Eigen::VectorXd &times);
 
   /** \brief Step through a vector of velocities, compensating for limits */
   ErrorCodeEnum LimitCompensation(size_t *index_last_successful);

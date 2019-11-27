@@ -30,15 +30,17 @@ SingleJointGenerator::SingleJointGenerator(
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   // Clear previous results
   waypoints_ = JointTrajectory();
-  waypoints_.positions = Interpolate();
+  waypoints_.positions = Interpolate(nominal_times_);
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
   CalculateDerivatives();
 
   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
   if (error_code)
+  {
     return error_code;
+  }
 
-  PredictTimeToReach();
+  error_code = PredictTimeToReach();
 
   return error_code;
 }
@@ -46,14 +48,11 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
 ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration() {
   // Clear previous results
   waypoints_ = JointTrajectory();
-  waypoints_.positions = Interpolate();
-  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0.,
-                                        desired_duration_);
-
+  size_t expected_num_waypoints = 1 + desired_duration_ / kTimestep;
+  waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
+  waypoints_.positions = Interpolate(waypoints_.elapsed_times);
   CalculateDerivatives();
-
   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
-
   return error_code;
 }
 
@@ -63,13 +62,14 @@ size_t SingleJointGenerator::GetLastSuccessfulIndex() {
   return index_last_successful_;
 }
 
-Eigen::VectorXd SingleJointGenerator::Interpolate() {
+Eigen::VectorXd SingleJointGenerator::Interpolate(Eigen::VectorXd &times)
+{
   // See De Luca, "Trajectory Planning" pdf, slide 19
   // Interpolate a smooth trajectory from initial to final state while matching
   // boundary conditions.
 
   // De Luca uses tao to represent a normalized time
-  Eigen::VectorXd tao = nominal_times_ / desired_duration_;
+  Eigen::VectorXd tao = times / desired_duration_;
 
   // TODO(andyz): vectorize this calculation
   Eigen::VectorXd interpolated_position(tao.size());
@@ -116,7 +116,8 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       if (!successful_compensation)
       {
         RecordFailureTime(index, index_last_successful);
-        return ErrorCodeEnum::kMaxDurationExceeded;
+        // Return, but do not flag an error. The trajectory can be extended to compensate for this. 
+        return ErrorCodeEnum::kNoError;
       }
     }
   }
@@ -144,7 +145,8 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       else
       {
         RecordFailureTime(index, index_last_successful);
-        return ErrorCodeEnum::kMaxDurationExceeded;
+        // Return, but do not flag an error. The trajectory can be extended to compensate for this. 
+        return ErrorCodeEnum::kNoError;
       }
       waypoints_.jerks(index) = 0;
       delta_v = delta_a * kTimestep;
@@ -155,7 +157,8 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       if (!successful_compensation)
       {
         RecordFailureTime(index, index_last_successful);
-        return ErrorCodeEnum::kMaxDurationExceeded;
+        // Return, but do not flag an error. The trajectory can be extended to compensate for this. 
+        return ErrorCodeEnum::kNoError;
       }
     }
   }
@@ -182,25 +185,27 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       {
         // Try decreasing the velocity in previous timesteps to compensate for this limit
         // Do not mess with previous timesteps if the velocity is greater than the limit
-       successful_compensation = VelocityCompensation(index, -delta_v);
-       if (!successful_compensation)
-       {
-         RecordFailureTime(index, index_last_successful);
-         return ErrorCodeEnum::kMaxDurationExceeded;
-       }
+        successful_compensation = VelocityCompensation(index, -delta_v);
+        if (!successful_compensation)
+        {
+          RecordFailureTime(index, index_last_successful);
+          // Return, but do not flag an error. The trajectory can be extended to compensate for this. 
+          return ErrorCodeEnum::kNoError;
+        }
       }
     }
   }
 
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
-  return error_code;
+  return ErrorCodeEnum::kNoError;
 }
 
 void SingleJointGenerator::RecordFailureTime(size_t current_index, size_t *index_last_successful)
 {
   // Record the index when compensation first failed
   if (current_index < *index_last_successful)
+  {
     *index_last_successful = current_index;
+  }
 }
 
 bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
@@ -216,7 +221,7 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
 
   // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
   // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
-  for (size_t index = limited_index; limited_index>2; --index)
+  for (size_t index = limited_index; index>2; --index)
   {
     // if there is some room to increase the velocity at timestep i
     if (fabs(waypoints_.velocities(index)) < kLimits.velocity_limit) {
@@ -333,16 +338,17 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
     ////////////////////////////////////////////////////////////
     // Try to create the trajectory again, with the new duration
     ////////////////////////////////////////////////////////////
-    Interpolate();
+    waypoints_.positions = Interpolate(waypoints_.elapsed_times);
     CalculateDerivatives();
-
     PositionVectorLimitLookAhead();
   }
 
   // Error if we extended the duration to the maximum and it still wasn't
   // successful
   if (index_last_successful_ < waypoints_.elapsed_times.size())
+  {
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
+  }
 
   return error_code;
 }
@@ -357,15 +363,13 @@ ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead()
   // Ensure the first and last elements are a perfect match with initial/final
   // conditions
   double kOneSixth = 0.166667;
+  // Initial waypoint
   waypoints_.positions(0) = kCurrentJointState.position;
-  for (size_t index = 1; index < waypoints_.positions.size() - 1; ++index)
-    waypoints_.positions(index) =
-        waypoints_.positions(index - 1) +
-        waypoints_.velocities(index - 1) * kTimestep +
-        0.5 * waypoints_.accelerations(index - 2) * pow(kTimestep, 2) +
-        kOneSixth * waypoints_.jerks(index - 3) * pow(kTimestep, 3);
-  waypoints_.positions(waypoints_.positions.size() - 1) =
-      kGoalJointState.position;
+  for (size_t index = 1; index < waypoints_.positions.size()-1; ++index)
+    waypoints_.positions(index) = waypoints_.positions(index-1) + waypoints_.velocities(index-1) * kTimestep +
+      0.5*waypoints_.accelerations(index-1) * pow(kTimestep, 2) + kOneSixth*waypoints_.jerks(index-1) * pow(kTimestep, 3);
+  // Final waypoint
+  waypoints_.positions(waypoints_.positions.size() - 1) = kGoalJointState.position;
 
   return error_code;
 }

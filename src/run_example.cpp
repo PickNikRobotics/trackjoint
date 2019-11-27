@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   const int kNumDof = 3;
   const double kTimestep = 0.001;
   const double kDesiredDuration = 2.5;
-  const double kMaxDuration = 2.5;
+  const double kMaxDuration = 5;
   const std::string kOutputPathBase =
       "../trackjoint_data/output_joint";
 
@@ -32,12 +32,15 @@ int main(int argc, char** argv) {
   current_joint_states.push_back(joint_state);
   current_joint_states.push_back(joint_state);
 
-  joint_state.position = 3;
+  std::vector<trackjoint::KinematicState> goal_joint_states;
+  // No position change for the first two joints
+  joint_state.position = -1;
   joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
-  std::vector<trackjoint::KinematicState> goal_joint_states;
   goal_joint_states.push_back(joint_state);
   goal_joint_states.push_back(joint_state);
+  // Big position change for the third joint
+  joint_state.position = 4;
   goal_joint_states.push_back(joint_state);
 
   std::vector<trackjoint::Limits> limits;
@@ -64,17 +67,19 @@ int main(int argc, char** argv) {
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
     std::cout << "==========" << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "==========" << std::endl;
     std::cout << "Joint " << joint << std::endl;
     std::cout << "==========" << std::endl;
-    for (size_t waypoint = 0;
-         waypoint < output_trajectories.at(joint).positions.size();
+    std::cout << std::endl;
+    std::cout << std::endl;
+    std::cout << "==========" << std::endl;
+    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).positions.size();
          ++waypoint) {
-      std::cout << "Position: "
-                << output_trajectories.at(joint).positions(waypoint)
-                << std::endl;
       std::cout << "Elapsed time: "
-                << output_trajectories.at(joint).elapsed_times(waypoint)
-                << std::endl;
+                 << output_trajectories.at(joint).elapsed_times(waypoint)
+                 << "  Position: " << output_trajectories.at(joint).positions(waypoint) << std::endl;
     }
   }
 

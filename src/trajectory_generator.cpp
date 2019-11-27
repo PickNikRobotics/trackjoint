@@ -127,7 +127,6 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   // trajectory was extended to max_duration.
   if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_)) {
     SetFinalStateToCurrentState();
-    std::cout << "Error in SynchronizeTrajComponents" << std::endl;
     return ErrorCodeEnum::kMaxDurationExceeded;
   }
 
