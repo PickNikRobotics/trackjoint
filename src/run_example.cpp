@@ -66,11 +66,15 @@ int main(int argc, char** argv) {
     std::cout << "==========" << std::endl;
     std::cout << "Joint " << joint << std::endl;
     std::cout << "==========" << std::endl;
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).positions.size();
+    for (size_t waypoint = 0;
+         waypoint < output_trajectories.at(joint).positions.size();
          ++waypoint) {
-      std::cout << "Position: " << output_trajectories.at(joint).positions(waypoint) << std::endl;
+      std::cout << "Position: "
+                << output_trajectories.at(joint).positions(waypoint)
+                << std::endl;
       std::cout << "Elapsed time: "
-                 << output_trajectories.at(joint).elapsed_times(waypoint) << std::endl;
+                << output_trajectories.at(joint).elapsed_times(waypoint)
+                << std::endl;
     }
   }
 
