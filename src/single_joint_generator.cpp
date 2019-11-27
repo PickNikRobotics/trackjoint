@@ -94,6 +94,7 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
 {
   // Start with the assumption that the entire trajectory can be completed
   *index_last_successful = waypoints_.positions.size();
+
   bool successful_compensation = false;
 
   // Preallocate
@@ -189,12 +190,12 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       {
         // Try decreasing the velocity in previous timesteps to compensate for this limit
         // Do not mess with previous timesteps if the velocity is greater than the limit
-        successful_compensation = VelocityCompensation(index, -delta_v);
-        if (!successful_compensation)
-        {
-          RecordFailureTime(index, index_last_successful);
-          return ErrorCodeEnum::kMaxDurationExceeded;
-        }
+       successful_compensation = VelocityCompensation(index, -delta_v);
+       if (!successful_compensation)
+       {
+         RecordFailureTime(index, index_last_successful);
+         return ErrorCodeEnum::kMaxDurationExceeded;
+       }
       }
     }
   }
@@ -219,15 +220,9 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
 
   bool successful_compensation = false;
 
-  std::cout << "Limited index: " << limited_index << std::endl;
-  std::cout << "position0: " << waypoints_.positions( limited_index-1 ) << std::endl;
-  std::cout << "position1: " << waypoints_.positions( limited_index ) << std::endl;
-  std::cout << "velocity0: " << waypoints_.velocities( limited_index-1 ) << std::endl;
-  std::cout << "velocity1: " << waypoints_.velocities( limited_index ) << std::endl;
-
   // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
   // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
-  for (size_t index = limited_index; limited_index>2; --limited_index)
+  for (size_t index = limited_index; limited_index>2; --index)
   {
     // if there is some room to increase the velocity at timestep i
     if (fabs(waypoints_.velocities(index)) < kLimits.velocity_limit)
