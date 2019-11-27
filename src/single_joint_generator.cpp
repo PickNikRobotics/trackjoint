@@ -50,13 +50,11 @@ ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
 {
   // Clear previous results
   waypoints_ = JointTrajectory();
-  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
+  size_t expected_num_waypoints = 1 + desired_duration_ / kTimestep;
+  waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
   waypoints_.positions = Interpolate(waypoints_.elapsed_times);
-
   CalculateDerivatives();
-
   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
-
   return error_code;
 }
 
@@ -199,7 +197,6 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
         if (!successful_compensation)
         {
           RecordFailureTime(index, index_last_successful);
-          std::cout << "index_last_successful_ in LimitCompensation: " << *index_last_successful << std::endl;
           // Return, but do not flag an error. The trajectory can be extended to compensate for this. 
           return ErrorCodeEnum::kNoError;
         }
@@ -216,7 +213,6 @@ void SingleJointGenerator::RecordFailureTime(size_t current_index, size_t *index
   if (current_index < *index_last_successful)
   {
     *index_last_successful = current_index;
-    std::cout << "index_last_successful in RecordFailureTime: " << *index_last_successful << std::endl;
   }
 }
 
@@ -228,8 +224,6 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
   // 3) check vel limits. This will also check whether previously-checked jerk/accel limits were exceeded
 
   bool successful_compensation = false;
-
-  std::cout << "limited index: " << limited_index << std::endl;
 
   // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
   // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
@@ -315,7 +309,6 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
     if (new_num_waypoints > kMaxNumWaypoints)
       new_num_waypoints = kMaxNumWaypoints;
 
-    std::cout << "New num waypoints: " << new_num_waypoints << std::endl;
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
     waypoints_.positions.resize(waypoints_.elapsed_times.size());
     waypoints_.velocities.resize(waypoints_.elapsed_times.size());
@@ -326,28 +319,13 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
     // Try to create the trajectory again, with the new duration
     ////////////////////////////////////////////////////////////
     waypoints_.positions = Interpolate(waypoints_.elapsed_times);
-    std::cout << "Position waypoints: " << waypoints_.positions.size() << std::endl;
     CalculateDerivatives();
-
-    for (size_t waypoint = 0; waypoint < waypoints_.positions.size();
-         ++waypoint) {
-      std::cout << "===\n";
-      std::cout << "Position: " << waypoints_.positions(waypoint) << std::endl;
-      std::cout << "Velocity: " << waypoints_.velocities(waypoint) << std::endl;
-      std::cout << "Acceleration: " << waypoints_.accelerations(waypoint) << std::endl;
-      std::cout << "Elapsed time: "
-                 << waypoints_.elapsed_times(waypoint) << std::endl;
-    }
-
     PositionVectorLimitLookAhead();
   }
 
   // Error if we extended the duration to the maximum and it still wasn't successful
   if (index_last_successful_ < waypoints_.elapsed_times.size())
   {
-    std::cout << "Error here" << std::endl;
-    std::cout << index_last_successful_ << std::endl;
-    std::cout << waypoints_.elapsed_times.size() << std::endl;
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
   }
 
@@ -356,9 +334,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
 
 ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead()
 {
-  std::cout << "Positions size going into PositionVectorLimitLookAhead: " << waypoints_.positions.size() << std::endl;
   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
-  std::cout << "index_last_successful_ in PositionVectorLimitLookAhead: " << index_last_successful_ << std::endl;
   if (error_code)
     return error_code;
 

@@ -177,14 +177,14 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
       return error_code;
     }
   }
-/*
+
   // Synchronize trajectory components
   error_code = SynchronizeTrajComponents(output_trajectories);
   if (error_code)
   {
     return error_code;
   }
-*/
+
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
     for (size_t joint = 0; joint < kNumDof; ++joint)
