@@ -354,9 +354,9 @@ void SingleJointGenerator::CalculateDerivatives()
   // From position vector, approximate velocity and acceleration.
   // velocity = (difference between adjacent position elements) / delta_t
   // acceleration = (difference between adjacent velocity elements) / delta_t
-  waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep);
-  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep);
+  waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, kTimestep, kCurrentJointState.velocity);
+  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, kTimestep, kCurrentJointState.acceleration);
+  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, kTimestep, 0);
 
   // Ensure the initial conditions and final positions are exactly copied
   // TODO(andyz)
