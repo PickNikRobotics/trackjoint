@@ -14,11 +14,11 @@ namespace trackjoint {
  */
 struct Limits {
   // Scalar limit on angular velocity [rad/s]
-  double angular_velocity_limit;
+  double velocity_limit;
   // Scalar limit on angular acceleration [rad/s^2]
-  double angular_acceleration_limit;
+  double acceleration_limit;
   // Scalar limit on angular jerk [rad/s^3]
-  double angular_jerk_limit;
+  double jerk_limit;
 
   // Tolerance on successful velocity matching [rad/s]
   double angular_velocity_tolerance;
@@ -27,5 +27,4 @@ struct Limits {
   // Tolerance on successful jerk matching [rad/s^3]
   double angular_jerk_tolerance;
 };
-
 }  // namespace trackjoint

@@ -65,14 +65,6 @@ It's also possible to run the script without using docker. To this end, issue th
     mkdir $ROS_WS                    # and create it
     .moveit_ci/travis.sh
 
-## Using ccache
+## Formatting
 
-ccache is a useful tool to speed up compilation times with GCC or any other sufficiently similar compiler.
-
-To install ccache on Linux:
-
-    sudo apt-get install ccache
-
-To use ccache add it to your ``PATH`` in front of your regular compiler. It is recommended that you add this line to your `.bashrc`:
-
-    export PATH=/usr/lib/ccache:$PATH
+Use `clang_this_directory_google`

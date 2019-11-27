@@ -12,30 +12,76 @@
 
 #pragma once
 
-#include <trackjoint/error_codes.h>
-#include <trackjoint/kinematic_state.h>
-#include <trackjoint/limits.h>
+#include <cmath>  // copysign
+#include "trackjoint/error_codes.h"
+#include "trackjoint/joint_trajectory.h"
+#include "trackjoint/kinematic_state.h"
+#include "trackjoint/limits.h"
 
 namespace trackjoint {
 class SingleJointGenerator {
  public:
   /** \brief Constructor */
-  SingleJointGenerator(double desired_duration, double max_duration,
+  SingleJointGenerator(double timestep, double desired_duration,
+                       double max_duration,
                        const KinematicState &current_joint_state,
                        const KinematicState &goal_joint_state,
-                       const trackjoint::Limits &limits);
+                       const trackjoint::Limits &limits,
+                       const size_t max_num_waypoints);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
 
+  /** \brief Calculate a trajectory once duration is known. Similar to
+   * GenerateTrajectory minus PredictTimeToRead(). */
+  ErrorCodeEnum ExtendTrajectoryDuration();
+
+  /** \brief Get the generated trajectory */
+  JointTrajectory GetTrajectory();
+
+  /** \brief Get the last index that successfully matched the polynomial
+   * interpolation */
+  size_t GetLastSuccessfulIndex();
+
+  /** \brief Update desired_duration_ for this joint */
+  void UpdateTrajectoryDuration(double new_trajectory_duration);
+
  private:
   /** \brief Interpolate from start to end state with a polynomial */
-  void Interpolate();
+  Eigen::VectorXd Interpolate();
 
-  /** \brief Step through a vector of positions, compensating for limits*/
+  /** \brief Step through a vector of velocities, compensating for limits
+   *
+   * \return The last successful position index.
+  **/
+  size_t LimitCompensation();
+
+  /** \brief Start looking back through a velocity vector to calculate for an
+   * excess velocity at limited_index. */
+  bool VelocityCompensation(size_t limited_index, double excess_velocity);
+
+  /** \brief This uses VelocityCompensation() but it starts from a position
+   * vector */
   void PositionVectorLimitLookAhead();
+
+  /** \brief Record the index when compensation first failed */
+  size_t RecordFailureTime(size_t current_index, size_t index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
+
+  /** \brief Calculate vel/accel/jerk from position */
+  void CalculateDerivatives();
+
+  const double kTimestep;
+  const KinematicState kCurrentJointState;
+  const KinematicState kGoalJointState;
+  const trackjoint::Limits kLimits;
+  const size_t kMaxNumWaypoints;
+
+  double desired_duration_, max_duration_;
+  Eigen::VectorXd times_;
+  JointTrajectory waypoints_;
+  size_t index_last_successful_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
