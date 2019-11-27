@@ -10,10 +10,11 @@
    Desc: An example of smoothing a trajectory for three joints.
 */
 
+#include <chrono>
+#include <fstream>
 #include <trackjoint/error_codes.h>
 #include <trackjoint/joint_trajectory.h>
 #include <trackjoint/trajectory_generator.h>
-#include <fstream>
 
 int main(int argc, char** argv) {
   const int kNumDof = 3;
@@ -21,7 +22,7 @@ int main(int argc, char** argv) {
   const double kDesiredDuration = 2.5;
   const double kMaxDuration = 5;
   const std::string kOutputPathBase =
-      "../trackjoint_data/output_joint";
+     "../trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   trackjoint::KinematicState joint_state;
@@ -58,11 +59,19 @@ int main(int argc, char** argv) {
                                            goal_joint_states, limits);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+
+  // Measure runtime
+  auto start = std::chrono::system_clock::now();
   trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end-start;
+
+  std::cout << "Runtime: " << elapsed_seconds.count() << std::endl;
+  std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << std::endl;
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
-  // traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
+  //traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
