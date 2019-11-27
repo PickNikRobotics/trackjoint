@@ -127,15 +127,11 @@ TEST_F(TrajectoryGenerationTest, LimitCompensationTrajectory)
   // Position error
   double position_tolerance = 1e-4;
   double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
-  SCOPED_TRACE(output_trajectories[0].positions( output_trajectories[0].positions.size()-1 ));
-  SCOPED_TRACE(position_error);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
-  uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
-  SCOPED_TRACE(output_trajectories[0].positions.size());
+  uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
   EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
-  EXPECT_EQ(true, false);
 }
 }  // namespace trackjoint
 
