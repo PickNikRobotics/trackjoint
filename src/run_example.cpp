@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
   const double kDesiredDuration = 2.5;
   const double kMaxDuration = 2.5;
   const std::string kOutputPathBase =
-      "/home/andyz/ws_tp/src/trackjoint/plots/output_joint";
+      "../trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   trackjoint::KinematicState joint_state;

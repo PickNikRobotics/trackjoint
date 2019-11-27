@@ -198,9 +198,4 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
 
   return error_code;
 }
-
-ErrorCodeEnum TrajectoryGenerator::GetErrorCode()
-{
-  return error_code_;
-}
 }  // end namespace trackjoint

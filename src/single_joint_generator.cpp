@@ -118,7 +118,7 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       waypoints_.accelerations(index) = waypoints_.accelerations(index) + delta_j * kTimestep;
       delta_v = 0.5 * delta_j * kTimestep * kTimestep;
       waypoints_.velocities(index) = waypoints_.velocities(index) + delta_v;
-      // Try adjusting the veloicty in previous timesteps to compensate for this limit, if needed
+      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       successful_compensation = VelocityCompensation(index, delta_v);
     }
   }
@@ -163,31 +163,33 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
     }
   }
 
-  // Compensate for velocity limits at each timestep, starting near the beginning
-  // Do not want to affect the velocity at the first/last timestep
-  for (size_t index = 1; index < (num_waypoints-1); ++index)
-  {
-    successful_compensation = false;
+  // // Compensate for velocity limits at each timestep, starting near the beginning
+  // // Do not want to affect the velocity at the first/last timestep
+  // for (size_t index = 1; index < (num_waypoints-1); ++index)
+  // {
+  //   successful_compensation = false;
 
-    // If the velocity limit would be exceeded
-    if (fabs(waypoints_.velocities(index)) > kLimits.velocity_limit)
-    {
-      delta_v = std::copysign(1.0, waypoints_.velocities(index)) * kLimits.velocity_limit - waypoints_.velocities(index);
-      waypoints_.velocities(index) = std::copysign(1.0, waypoints_.velocities(index)) * kLimits.velocity_limit;
-      waypoints_.accelerations(index) = 0;
-      waypoints_.jerks(index) = 0;
+  //   // If the velocity limit would be exceeded
+  //   if (fabs(waypoints_.velocities(index)) > kLimits.velocity_limit)
+  //   {
+  //     delta_v = std::copysign(1.0, waypoints_.velocities(index)) * kLimits.velocity_limit - waypoints_.velocities(index);
+  //     waypoints_.velocities(index) = std::copysign(1.0, waypoints_.velocities(index)) * kLimits.velocity_limit;
+  //     waypoints_.accelerations(index) = 0;
+  //     waypoints_.jerks(index) = 0;
 
-      // If a velocity adjustment was made
-      if (delta_v != 0)
-      {
-        // Try decreasing the velocity in previous timesteps to compensate for this limit
-        // Do not mess with previous timesteps if the velocity is greater than the limit
-        successful_compensation = VelocityCompensation(index, -delta_v);
-        if (!successful_compensation)
-          RecordFailureTime(index, index_last_successful);
-      }
-    }
-  }
+  //     // If a velocity adjustment was made
+  //     if (delta_v != 0)
+  //     {
+  //       // Try decreasing the velocity in previous timesteps to compensate for this limit
+  //       // Do not mess with previous timesteps if the velocity is greater than the limit
+  //       successful_compensation = VelocityCompensation(index, -delta_v);
+  //       if (!successful_compensation)
+  //       {
+  //         RecordFailureTime(index, index_last_successful);
+  //       }
+  //     }
+  //   }
+  // }
 
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
   return error_code;
@@ -209,8 +211,9 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
 
   bool successful_compensation = false;
 
-  // Add a bit of velocity at step i to compensate for the limit at timestep i+1
-  for (size_t index = limited_index; limited_index>0; --limited_index)
+  // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
+  // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
+  for (size_t index = limited_index; limited_index>2; --limited_index)
   {
     // if there is some room to increase the velocity at timestep i
     if (fabs(waypoints_.velocities(index)) < kLimits.velocity_limit)
@@ -226,7 +229,6 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
         // Accel and jerk, calculated from upcoming waypoints
         double forward_accel = (waypoints_.velocities(index+1) - new_velocity) / kTimestep;
         double forward_jerk = (forward_accel - (new_velocity - waypoints_.velocities(index-1)) / kTimestep) / kTimestep;
-
         // Calculate this new velocity if it would not violate accel/jerk limits
         if ((fabs(backward_jerk) < kLimits.jerk_limit) &&
             (fabs(backward_accel) < kLimits.acceleration_limit) &&
@@ -265,6 +267,7 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
     // Clip velocities at min/max due to small rounding errors
     waypoints_.velocities(index) = std::min(std::max(waypoints_.velocities(index), -kLimits.velocity_limit), kLimits.velocity_limit);
   }
+
   return successful_compensation;
 }
 
