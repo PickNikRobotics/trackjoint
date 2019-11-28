@@ -30,7 +30,7 @@ function plot_one_joint(filename, plot_title)
   ylabel('Velocity')
 
   subplot(4,1,3)
-  plot(time, velocity)
+  plot(time, acceleration)
   xlabel('Time')
   ylabel('Acceleration')
 
