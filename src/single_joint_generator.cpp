@@ -231,7 +231,6 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
            waypoints_.velocities(index) >
                -kLimits.velocity_limit - excess_velocity))
       {
-/*
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel =
@@ -251,10 +250,11 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
             (fabs(forward_jerk) < kLimits.jerk_limit) &&
             (fabs(forward_accel) < kLimits.acceleration_limit)) {
           waypoints_.velocities(index) = new_velocity;
+          waypoints_.accelerations(index) = backward_accel;
+          waypoints_.jerks(index) = backward_jerk;
           successful_compensation = true;
           break;
         }
-*/
       }
       // else, can't make all of the correction in this timestep, so make as
       // much of a change as possible
