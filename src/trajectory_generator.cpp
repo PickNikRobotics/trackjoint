@@ -143,7 +143,8 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
 
   // If any of the component durations need to be extended, run them again
   if (new_desired_duration > desired_duration_) {
-    for (size_t joint = 0; joint < kNumDof; ++joint) {
+    for (size_t joint = 0; joint < kNumDof; ++joint)
+    {
       if (joint != index_of_longest_duration)
       {
         single_joint_generators_[joint].UpdateTrajectoryDuration(

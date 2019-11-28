@@ -21,8 +21,7 @@ int main(int argc, char** argv) {
   const double kTimestep = 0.001;
   const double kDesiredDuration = 2.5;
   const double kMaxDuration = 5;
-  const std::string kOutputPathBase =
-     "../trackjoint_data/output_joint";
+  const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states;
   trackjoint::KinematicState joint_state;
@@ -71,7 +70,7 @@ int main(int argc, char** argv) {
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
-  //traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
+  traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)

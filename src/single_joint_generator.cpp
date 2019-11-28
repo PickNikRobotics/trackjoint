@@ -163,8 +163,7 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
     }
   }
 
-  // Compensate for velocity limits at each timestep, starting near the
-  // beginning
+  // Compensate for velocity limits at each timestep, starting near the beginning
   // Do not want to affect the velocity at the first/last timestep
   for (size_t index = 1; index < (num_waypoints - 1); ++index) {
     successful_compensation = false;
@@ -195,7 +194,6 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t *index_last_success
       }
     }
   }
-
   return ErrorCodeEnum::kNoError;
 }
 
@@ -231,7 +229,9 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
                kLimits.velocity_limit - excess_velocity) ||
           (excess_velocity < 0 &&
            waypoints_.velocities(index) >
-               -kLimits.velocity_limit - excess_velocity)) {
+               -kLimits.velocity_limit - excess_velocity))
+      {
+/*
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel =
@@ -254,6 +254,7 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
           successful_compensation = true;
           break;
         }
+*/
       }
       // else, can't make all of the correction in this timestep, so make as
       // much of a change as possible
