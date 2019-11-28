@@ -104,6 +104,8 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
                   << " " << output_trajectories.at(joint).velocities(waypoint)
                   << " "
                   << output_trajectories.at(joint).accelerations(waypoint)
+                  << " "
+                  << output_trajectories.at(joint).jerks(waypoint)
                   << std::endl;
     }
     output_file.close();
