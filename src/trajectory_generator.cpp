@@ -116,13 +116,17 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
 ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
 {
   size_t longest_num_waypoints = 0;
+  size_t index_of_longest_duration = 0;
 
   // Extend to the longest duration across all components
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() >
         longest_num_waypoints)
+    {
       longest_num_waypoints =
           single_joint_generators_[joint].GetLastSuccessfulIndex();
+      index_of_longest_duration = joint;
+    }
   }
 
   // This indicates that a successful trajectory wasn't found, even when the
@@ -140,11 +144,20 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   // If any of the component durations need to be extended, run them again
   if (new_desired_duration > desired_duration_) {
     for (size_t joint = 0; joint < kNumDof; ++joint) {
-      single_joint_generators_[joint].UpdateTrajectoryDuration(
-          new_desired_duration);
-      single_joint_generators_[joint].ExtendTrajectoryDuration();
-      output_trajectories->at(joint) =
+      if (joint != index_of_longest_duration)
+      {
+        single_joint_generators_[joint].UpdateTrajectoryDuration(
+            new_desired_duration);
+        single_joint_generators_[joint].ExtendTrajectoryDuration();
+        output_trajectories->at(joint) =
+            single_joint_generators_[joint].GetTrajectory();
+      }
+      // If this was the index of longest duration, don't need to re-generate a trajectory
+      else
+      {
+        output_trajectories->at(joint) =
           single_joint_generators_[joint].GetTrajectory();
+      }
     }
   } else {
     for (size_t joint = 0; joint < kNumDof; ++joint) {

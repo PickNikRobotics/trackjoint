@@ -74,7 +74,8 @@ int main(int argc, char** argv) {
   //traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
 
   // Print the synchronized trajectories
-  for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
+  for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
+  {
     std::cout << "==========" << std::endl;
     std::cout << std::endl;
     std::cout << std::endl;
@@ -88,7 +89,11 @@ int main(int argc, char** argv) {
          ++waypoint) {
       std::cout << "Elapsed time: "
                  << output_trajectories.at(joint).elapsed_times(waypoint)
-                 << "  Position: " << output_trajectories.at(joint).positions(waypoint) << std::endl;
+                 << "  Position: " << output_trajectories.at(joint).positions(waypoint)
+                 << "  Velocity: " << output_trajectories.at(joint).velocities(waypoint)
+                 << "  Acceleration: " << output_trajectories.at(joint).accelerations(waypoint)
+                 << "  Jerk: " << output_trajectories.at(joint).jerks(waypoint)
+                 << std::endl;
     }
   }
 
