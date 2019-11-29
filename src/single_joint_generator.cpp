@@ -250,8 +250,19 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
             (fabs(forward_jerk) < kLimits.jerk_limit) &&
             (fabs(forward_accel) < kLimits.acceleration_limit)) {
           waypoints_.velocities(index) = new_velocity;
-          waypoints_.accelerations(index) = backward_accel;
-          waypoints_.jerks(index) = backward_jerk;
+
+          // if at the velocity limit, must stop accelerating
+          if (fabs(waypoints_.velocities(index)) >= kLimits.velocity_limit)
+          {
+            waypoints_.accelerations(index) = 0;
+            waypoints_.jerks(index) = 0;
+          }
+          else
+          {
+            waypoints_.accelerations(index) = backward_accel;
+            waypoints_.jerks(index) = backward_jerk;
+          }
+
           successful_compensation = true;
           break;
         }
@@ -287,6 +298,18 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
             (fabs(forward_jerk) < kLimits.jerk_limit)) {
           double delta_v = new_velocity - waypoints_.velocities(index);
           waypoints_.velocities(index) = new_velocity;
+
+          // if at the velocity limit, must stop accelerating
+          if (fabs(waypoints_.velocities(index)) >= kLimits.velocity_limit)
+          {
+            waypoints_.accelerations(index) = 0;
+            waypoints_.jerks(index) = 0;
+          }
+          else
+          {
+            waypoints_.accelerations(index) = backward_accel;
+            waypoints_.jerks(index) = backward_jerk;
+          }
           excess_velocity = excess_velocity - delta_v;
         }
       }
