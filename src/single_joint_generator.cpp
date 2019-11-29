@@ -34,7 +34,7 @@ ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
   CalculateDerivatives();
 
-  ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
+  ErrorCodeEnum error_code = PositionVectorLimitLookAhead(&index_last_successful_);
   if (error_code)
   {
     return error_code;
@@ -364,7 +364,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
     ////////////////////////////////////////////////////////////
     waypoints_.positions = Interpolate(waypoints_.elapsed_times);
     CalculateDerivatives();
-    PositionVectorLimitLookAhead();
+    PositionVectorLimitLookAhead(&index_last_successful_);
   }
 
   // Error if we extended the duration to the maximum and it still wasn't
@@ -377,7 +377,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
   return error_code;
 }
 
-ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead()
+ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t *index_last_successful)
 {
   ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
   if (error_code)
