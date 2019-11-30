@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <test pkg="trackjoint" type="trajectory_generation_test" test-name="trajectory_generation_test" time-limit="300" args=""/>
+</launch>

@@ -76,15 +76,13 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking() {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping duration at 100 waypoints to maintain determinism."
-              << std::endl;
+    std::cout << "Capping desired duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping duration at 100 waypoints to maintain determinism."
-              << std::endl;
+    std::cout << "Capping max duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
@@ -113,9 +111,8 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
-bool TrajectoryGenerator::SynchronizeTrajComponents(
-    std::vector<JointTrajectory> *output_trajectories) {
-  bool has_error = false;
+ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
+{
   size_t longest_num_waypoints = 0;
 
   // Extend to the longest duration across all components
@@ -130,9 +127,7 @@ bool TrajectoryGenerator::SynchronizeTrajComponents(
   // trajectory was extended to max_duration.
   if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_)) {
     SetFinalStateToCurrentState();
-    has_error = true;
-    error_code_ = ErrorCodeEnum::kMaxDurationExceeded;
-    return has_error;
+    return ErrorCodeEnum::kMaxDurationExceeded;
   }
 
   // Subtract one from longest_num_waypoints because the first index doesn't
@@ -156,20 +151,32 @@ bool TrajectoryGenerator::SynchronizeTrajComponents(
     }
   }
 
-  return has_error;
+  return ErrorCodeEnum::kNoError;
 }
 
-void TrajectoryGenerator::SetFinalStateToCurrentState() { ; }
+void TrajectoryGenerator::SetFinalStateToCurrentState()
+{
+  // TODO(andyz)
+  ;
+}
 
-void TrajectoryGenerator::GenerateTrajectories(
-    std::vector<JointTrajectory> *output_trajectories) {
+ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
+  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint) {
-    single_joint_generators_[joint].GenerateTrajectory();
+    error_code = single_joint_generators_[joint].GenerateTrajectory();
+    if (error_code)
+    {
+      return error_code;
+    }
   }
 
   // Synchronize trajectory components
-  SynchronizeTrajComponents(output_trajectories);
+  error_code = SynchronizeTrajComponents(output_trajectories);
+  if (error_code)
+  {
+    return error_code;
+  }
 
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
@@ -186,6 +193,6 @@ void TrajectoryGenerator::GenerateTrajectories(
 
   // TODO(andyz): Final error checking
 
-  return;
+  return error_code;
 }
 }  // end namespace trackjoint
