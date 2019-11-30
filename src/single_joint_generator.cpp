@@ -225,10 +225,10 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index,
     if (fabs(waypoints_.velocities(index)) < kLimits.velocity_limit) {
       // If the full change can be made in this timestep
       if ((excess_velocity > 0 &&
-           waypoints_.velocities(index) <
+           waypoints_.velocities(index) <=
                kLimits.velocity_limit - excess_velocity) ||
           (excess_velocity < 0 &&
-           waypoints_.velocities(index) >
+           waypoints_.velocities(index) >=
                -kLimits.velocity_limit - excess_velocity))
       {
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
@@ -379,7 +379,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
 
 ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t *index_last_successful)
 {
-  ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
+  ErrorCodeEnum error_code = LimitCompensation(index_last_successful);
   if (error_code)
     return error_code;
 
