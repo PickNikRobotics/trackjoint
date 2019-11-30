@@ -57,7 +57,8 @@ class SingleJointGenerator {
    * excess velocity at limited_index. */
   bool VelocityCompensation(size_t limited_index, double excess_velocity);
 
-  /** \brief This uses VelocityCompensation() but it starts from a position vector */
+  /** \brief This uses VelocityCompensation() but it starts from a position
+   * vector */
   ErrorCodeEnum PositionVectorLimitLookAhead(size_t *index_last_successful);
 
   /** \brief Record the index when compensation first failed */

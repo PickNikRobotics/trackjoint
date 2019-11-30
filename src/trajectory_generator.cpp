@@ -76,13 +76,15 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking() {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping desired duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping desired duration at " << kMaxNumWaypoints
+              << " waypoints to maintain determinism." << std::endl;
     desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping max duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping max duration at " << kMaxNumWaypoints
+              << " waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
@@ -104,8 +106,7 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
                   << " " << output_trajectories.at(joint).velocities(waypoint)
                   << " "
                   << output_trajectories.at(joint).accelerations(waypoint)
-                  << " "
-                  << output_trajectories.at(joint).jerks(waypoint)
+                  << " " << output_trajectories.at(joint).jerks(waypoint)
                   << std::endl;
     }
     output_file.close();
@@ -113,16 +114,15 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
-ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
-{
+ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(
+    std::vector<JointTrajectory> *output_trajectories) {
   size_t longest_num_waypoints = 0;
   size_t index_of_longest_duration = 0;
 
   // Extend to the longest duration across all components
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() >
-        longest_num_waypoints)
-    {
+        longest_num_waypoints) {
       longest_num_waypoints =
           single_joint_generators_[joint].GetLastSuccessfulIndex();
       index_of_longest_duration = joint;
@@ -143,21 +143,19 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
 
   // If any of the component durations need to be extended, run them again
   if (new_desired_duration > desired_duration_) {
-    for (size_t joint = 0; joint < kNumDof; ++joint)
-    {
-      if (joint != index_of_longest_duration)
-      {
+    for (size_t joint = 0; joint < kNumDof; ++joint) {
+      if (joint != index_of_longest_duration) {
         single_joint_generators_[joint].UpdateTrajectoryDuration(
             new_desired_duration);
         single_joint_generators_[joint].ExtendTrajectoryDuration();
         output_trajectories->at(joint) =
             single_joint_generators_[joint].GetTrajectory();
       }
-      // If this was the index of longest duration, don't need to re-generate a trajectory
-      else
-      {
+      // If this was the index of longest duration, don't need to re-generate a
+      // trajectory
+      else {
         output_trajectories->at(joint) =
-          single_joint_generators_[joint].GetTrajectory();
+            single_joint_generators_[joint].GetTrajectory();
       }
     }
   } else {
@@ -170,27 +168,25 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   return ErrorCodeEnum::kNoError;
 }
 
-void TrajectoryGenerator::SetFinalStateToCurrentState()
-{
+void TrajectoryGenerator::SetFinalStateToCurrentState() {
   // TODO(andyz)
   ;
 }
 
-ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
+ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(
+    std::vector<JointTrajectory> *output_trajectories) {
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     error_code = single_joint_generators_[joint].GenerateTrajectory();
-    if (error_code)
-    {
+    if (error_code) {
       return error_code;
     }
   }
 
   // Synchronize trajectory components
   error_code = SynchronizeTrajComponents(output_trajectories);
-  if (error_code)
-  {
+  if (error_code) {
     return error_code;
   }
 
