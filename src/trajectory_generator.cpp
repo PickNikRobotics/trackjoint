@@ -67,7 +67,9 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
     downsampled_vector.resize(expected_size);
     downsampled_vector[0] = temp_vector[0];
     if (temp_vector.size() > 3)
+    {
       downsampled_index = 3;
+    }
     for (size_t upsampled_index = 3; upsampled_index < temp_vector.size();
          upsampled_index = upsampled_index + 2) {
       downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
