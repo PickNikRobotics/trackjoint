@@ -53,14 +53,23 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
   size_t expected_size = 0;
   size_t downsampled_index = 0;
 
+  if (vector_to_downsample.size() < 3)
+  {
+    std::cout << "Warning: invalid vector length in DownSample()" << std::endl;
+    return vector_to_downsample;
+  }
+
   // Remove every other sample from the vector for each round of sampling
   // e.g. 1,2,3,4,5,6 gets downsampled to 1,3,5
   for (size_t round = 0; round < upsample_rounds_; ++round) {
     Eigen::VectorXd temp_vector = downsampled_vector;
-    expected_size = 1 + floor((downsampled_vector.size() - 1) / 2);
+    expected_size = 1 + (downsampled_vector.size() - 1) / 2;
     downsampled_vector.resize(expected_size);
     downsampled_vector[0] = temp_vector[0];
-    if (temp_vector.size() > 3) downsampled_index = 3;
+    if (temp_vector.size() > 3)
+    {
+      downsampled_index = 3;
+    }
     for (size_t upsampled_index = 3; upsampled_index < temp_vector.size();
          upsampled_index = upsampled_index + 2) {
       downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
@@ -76,13 +85,15 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking() {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping desired duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping desired duration at " << kMaxNumWaypoints
+              << " waypoints to maintain determinism." << std::endl;
     desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping max duration at " << kMaxNumWaypoints <<" waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping max duration at " << kMaxNumWaypoints
+              << " waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 }
@@ -104,8 +115,7 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
                   << " " << output_trajectories.at(joint).velocities(waypoint)
                   << " "
                   << output_trajectories.at(joint).accelerations(waypoint)
-                  << " "
-                  << output_trajectories.at(joint).jerks(waypoint)
+                  << " " << output_trajectories.at(joint).jerks(waypoint)
                   << std::endl;
     }
     output_file.close();
@@ -113,21 +123,24 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
   }
 }
 
-ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories)
-{
+ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(
+    std::vector<JointTrajectory> *output_trajectories) {
   size_t longest_num_waypoints = 0;
+  size_t index_of_longest_duration = 0;
 
   // Extend to the longest duration across all components
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() >
-        longest_num_waypoints)
+        longest_num_waypoints) {
       longest_num_waypoints =
           single_joint_generators_[joint].GetLastSuccessfulIndex();
+      index_of_longest_duration = joint;
+    }
   }
 
   // This indicates that a successful trajectory wasn't found, even when the
   // trajectory was extended to max_duration.
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_)) {
+  if (longest_num_waypoints < (1 + desired_duration_ / upsampled_timestep_)) {
     SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationExceeded;
   }
@@ -140,11 +153,19 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   // If any of the component durations need to be extended, run them again
   if (new_desired_duration > desired_duration_) {
     for (size_t joint = 0; joint < kNumDof; ++joint) {
-      single_joint_generators_[joint].UpdateTrajectoryDuration(
-          new_desired_duration);
-      single_joint_generators_[joint].ExtendTrajectoryDuration();
-      output_trajectories->at(joint) =
-          single_joint_generators_[joint].GetTrajectory();
+      if (joint != index_of_longest_duration) {
+        single_joint_generators_[joint].UpdateTrajectoryDuration(
+            new_desired_duration);
+        single_joint_generators_[joint].ExtendTrajectoryDuration();
+        output_trajectories->at(joint) =
+            single_joint_generators_[joint].GetTrajectory();
+      }
+      // If this was the index of longest duration, don't need to re-generate a
+      // trajectory
+      else {
+        output_trajectories->at(joint) =
+            single_joint_generators_[joint].GetTrajectory();
+      }
     }
   } else {
     for (size_t joint = 0; joint < kNumDof; ++joint) {
@@ -156,27 +177,25 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   return ErrorCodeEnum::kNoError;
 }
 
-void TrajectoryGenerator::SetFinalStateToCurrentState()
-{
+void TrajectoryGenerator::SetFinalStateToCurrentState() {
   // TODO(andyz)
   ;
 }
 
-ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories) {
+ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(
+    std::vector<JointTrajectory> *output_trajectories) {
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint) {
     error_code = single_joint_generators_[joint].GenerateTrajectory();
-    if (error_code)
-    {
+    if (error_code) {
       return error_code;
     }
   }
 
   // Synchronize trajectory components
   error_code = SynchronizeTrajComponents(output_trajectories);
-  if (error_code)
-  {
+  if (error_code) {
     return error_code;
   }
 

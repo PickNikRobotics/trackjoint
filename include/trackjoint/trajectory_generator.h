@@ -36,7 +36,8 @@ class TrajectoryGenerator {
                       const std::vector<Limits> &limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum GenerateTrajectories(
+      std::vector<JointTrajectory> *output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(
@@ -54,7 +55,8 @@ class TrajectoryGenerator {
   Eigen::VectorXd DownSample(const Eigen::VectorXd &vector_to_downsample);
 
   /** \brief Synchronize all trajectories with the one of longest duration. */
-  ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum SynchronizeTrajComponents(
+      std::vector<JointTrajectory> *output_trajectories);
 
   /** \brief Set the output state equal to the current state. Used if an error
    * is encountered. */
@@ -63,8 +65,10 @@ class TrajectoryGenerator {
   const uint kNumDof;
   double desired_duration_, max_duration_;
   // TODO(andyz): set this back to a small number when done testing
-  const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
-  const size_t kMinNumWaypoints = 49;  // Upsample for better accuracy if fewer than this many waypoints
+  const size_t kMaxNumWaypoints =
+      10000;  // A relatively small number, to run fast
+  const size_t kMinNumWaypoints =
+      49;  // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   double upsampled_timestep_;
   size_t upsample_rounds_ =
