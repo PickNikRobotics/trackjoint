@@ -53,14 +53,23 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
   size_t expected_size = 0;
   size_t downsampled_index = 0;
 
+  if (vector_to_downsample.size() < 3)
+  {
+    std::cout << "Warning: invalid vector length in DownSample()" << std::endl;
+    return vector_to_downsample;
+  }
+
   // Remove every other sample from the vector for each round of sampling
   // e.g. 1,2,3,4,5,6 gets downsampled to 1,3,5
   for (size_t round = 0; round < upsample_rounds_; ++round) {
     Eigen::VectorXd temp_vector = downsampled_vector;
-    expected_size = 1 + floor((downsampled_vector.size() - 1) / 2);
+    expected_size = 1 + (downsampled_vector.size() - 1) / 2;
     downsampled_vector.resize(expected_size);
     downsampled_vector[0] = temp_vector[0];
-    if (temp_vector.size() > 3) downsampled_index = 3;
+    if (temp_vector.size() > 3)
+    {
+      downsampled_index = 3;
+    }
     for (size_t upsampled_index = 3; upsampled_index < temp_vector.size();
          upsampled_index = upsampled_index + 2) {
       downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
@@ -131,7 +140,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(
 
   // This indicates that a successful trajectory wasn't found, even when the
   // trajectory was extended to max_duration.
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_)) {
+  if (longest_num_waypoints < (1 + desired_duration_ / upsampled_timestep_)) {
     SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationExceeded;
   }
