@@ -191,10 +191,11 @@ TEST_F(TrajectoryGenerationTest, DurationExtension) {
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   const double kExpectedDuration = 3.752;
-  EXPECT_LE(output_trajectories[0].elapsed_times(
-                output_trajectories[0].elapsed_times.size() - 1) -
-                kExpectedDuration,
-            kExpectedDuration);
+  const double kDurationTolerance = 5e-3;
+  size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
+  EXPECT_LE(
+      output_trajectories[0].elapsed_times(vector_length) - kExpectedDuration,
+      kDurationTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
@@ -226,10 +227,11 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   const double kExpectedDuration = kDesiredDuration;
-  EXPECT_LE(output_trajectories[0].elapsed_times(
-                output_trajectories[0].elapsed_times.size() - 1) -
-                kExpectedDuration,
-            kExpectedDuration);
+  const double kDurationTolerance = 5e-3;
+  size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
+  EXPECT_LE(
+      output_trajectories[0].elapsed_times(vector_length) - kExpectedDuration,
+      kDurationTolerance);
 }
 }  // namespace trackjoint
 
