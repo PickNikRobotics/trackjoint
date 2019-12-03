@@ -71,6 +71,8 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
       downsampled_vector(index) =
           vector_to_downsample(num_waypoints_to_skip * index);
     }
+  } else {
+    downsampled_vector = vector_to_downsample;
   }
 
   return downsampled_vector;
