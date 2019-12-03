@@ -31,14 +31,14 @@ public:
   {
     // Default test parameters for 3 joints
     trackjoint::KinematicState joint_state;
-    joint_state.position = 0;
+    joint_state.position = -1;
     joint_state.velocity = 0;
     joint_state.acceleration = 0;
     current_joint_states_.push_back(joint_state);
     current_joint_states_.push_back(joint_state);
     current_joint_states_.push_back(joint_state);
 
-    joint_state.position = 0.1;
+    joint_state.position = -0.995;
     joint_state.velocity = 0;
     joint_state.acceleration = 0;
     goal_joint_states_.push_back(joint_state);
@@ -46,9 +46,9 @@ public:
     goal_joint_states_.push_back(joint_state);
 
     trackjoint::Limits single_joint_limits;
-    single_joint_limits.velocity_limit = 1;
-    single_joint_limits.acceleration_limit = 10;
-    single_joint_limits.jerk_limit = 100;
+    single_joint_limits.velocity_limit = 20;
+    single_joint_limits.acceleration_limit = 200;
+    single_joint_limits.jerk_limit = 20000;
     limits_.push_back(single_joint_limits);
     limits_.push_back(single_joint_limits);
     limits_.push_back(single_joint_limits);
@@ -93,17 +93,17 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   joint_state.position = -1;
   joint_state.velocity = -0.1;
   joint_state.acceleration = 0;
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
+  current_joint_states[0] = joint_state;
+  current_joint_states[1] = joint_state;
+  current_joint_states[2] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
   joint_state.position = 3;
   joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
-  goal_joint_states.push_back(joint_state);
-  goal_joint_states.push_back(joint_state);
-  goal_joint_states.push_back(joint_state);
+  goal_joint_states[0] = joint_state;
+  goal_joint_states[1] = joint_state;
+  goal_joint_states[2] = joint_state;
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
@@ -143,20 +143,20 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   joint_state.position = -1;
   joint_state.velocity = -0.1;
   joint_state.acceleration = 0;
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
+  current_joint_states[0] = joint_state;
+  current_joint_states[1] = joint_state;
+  current_joint_states[2] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
   // No position change for the first two joints
   joint_state.position = -1;
   joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
-  goal_joint_states.push_back(joint_state);
-  goal_joint_states.push_back(joint_state);
+  goal_joint_states[0] = joint_state;
+  goal_joint_states[1] = joint_state;
   // Big position change for the third joint
   joint_state.position = 4;
-  goal_joint_states.push_back(joint_state);
+  goal_joint_states[2] = joint_state;
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
@@ -182,9 +182,37 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
-  uint num_waypoint_tolerance = 1;
-  uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
-  EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
+  const double kExpectedDuration = 3.752;
+  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration, kExpectedDuration );
+}
+
+TEST_F(TrajectoryGenerationTest, SingleTimestepDuration)
+{
+  // Request a duration of just one timestep. The duration will need to be extended.
+
+  const double kTimestep = 0.01;
+  const double kDesiredDuration = kTimestep;
+  const double kMaxDuration = 1;
+
+  trackjoint::KinematicState joint_state;
+  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  joint_state.position = -0.995;
+  goal_joint_states[0] = joint_state;
+  goal_joint_states[1] = joint_state;
+  goal_joint_states[2] = joint_state;
+
+  EXPECT_EQ(true, true);
+
+  // // This short duration requires higher limits or a smaller pose change
+  // DynamicCartesianState goal_state_input = goal_state_input_;
+  // goal_state_input.pose =
+  //     Eigen::Translation3d(-0.999, -0.999, 0.999) * Eigen::Quaterniond(0.9996875, 0.0249974, 0, 0);
+
+  // EXPECT_EQ(ErrorCodeEnum::NO_ERROR, trackpose_.run(timestep_, DESIRED_DURATION, max_duration_, current_state_input_,
+  //                                                   goal_state_input, cartesian_limits_, output_trajectory_));
+  // VerifyNumWaypoints(output_trajectory_.size(), DESIRED_DURATION, timestep_);
+  // VerifyDesiredDuration(DESIRED_DURATION, output_trajectory_.back(), 2 * timestep_);
+  // VerifyFinalStateAccuracy(goal_state_input, output_trajectory_.back());
 }
 }  // namespace trackjoint
 
