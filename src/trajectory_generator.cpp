@@ -49,23 +49,15 @@ void TrajectoryGenerator::UpSample() {
 
 Eigen::VectorXd TrajectoryGenerator::DownSample(
     const Eigen::VectorXd &vector_to_downsample) {
-  Eigen::VectorXd downsampled_vector = vector_to_downsample;
-  size_t expected_size = 0;
-  size_t downsampled_index = 0;
 
-  // Remove every other sample from the vector for each round of sampling
-  // e.g. 1,2,3,4,5,6 gets downsampled to 1,3,5
-  for (size_t round = 0; round < upsample_rounds_; ++round) {
-    Eigen::VectorXd temp_vector = downsampled_vector;
-    expected_size = 1 + floor((downsampled_vector.size() - 1) / 2);
-    downsampled_vector.resize(expected_size);
-    downsampled_vector[0] = temp_vector[0];
-    if (temp_vector.size() > 3) downsampled_index = 3;
-    for (size_t upsampled_index = 3; upsampled_index < temp_vector.size();
-         upsampled_index = upsampled_index + 2) {
-      downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
-      ++downsampled_index;
-    }
+  // Skip every (2 ^ upsample_rounds_) waypoints, starting after the first index
+  uint num_waypoints_to_skip = pow(2, upsample_rounds_);
+  size_t new_vector_size = 1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
+  Eigen::VectorXd downsampled_vector(new_vector_size);
+  downsampled_vector(0) = vector_to_downsample(0);
+
+  for (size_t index = 1; index < new_vector_size; ++index) {
+    downsampled_vector(index) = vector_to_downsample(1 + num_waypoints_to_skip * index);
   }
 
   return downsampled_vector;

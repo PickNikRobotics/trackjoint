@@ -75,9 +75,9 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double position_tolerance = 1e-4;
-  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states_, output_trajectories);
-  EXPECT_LT(position_error, position_tolerance);
+  double kPositionTolerance = 1e-4;
+  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states_, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
@@ -125,9 +125,9 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double position_tolerance = 1e-4;
-  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
-  EXPECT_LT(position_error, position_tolerance);
+  double kPositionTolerance = 1e-4;
+  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
@@ -178,41 +178,44 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double position_tolerance = 1e-4;
-  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
-  EXPECT_LT(position_error, position_tolerance);
+  double kPositionTolerance = 1e-4;
+  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   const double kExpectedDuration = 3.752;
-  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration, kExpectedDuration );
+  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration,
+    kExpectedDuration );
 }
 
-TEST_F(TrajectoryGenerationTest, SingleTimestepDuration)
+TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
 {
   // Request a duration of just one timestep. The duration will need to be extended.
 
   const double kTimestep = 0.01;
-  const double kDesiredDuration = kTimestep;
-  const double kMaxDuration = 1;
+  const double kDesiredDuration = 4 * kTimestep;
+  const double kMaxDuration = kDesiredDuration;
 
   trackjoint::KinematicState joint_state;
   std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
-  joint_state.position = -0.995;
+  joint_state.position = -0.998;
   goal_joint_states[0] = joint_state;
   goal_joint_states[1] = joint_state;
   goal_joint_states[2] = joint_state;
 
-  EXPECT_EQ(true, true);
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
+                                           kMaxDuration, current_joint_states_,
+                                           goal_joint_states, limits_);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  traj_gen.GenerateTrajectories(&output_trajectories);
 
-  // // This short duration requires higher limits or a smaller pose change
-  // DynamicCartesianState goal_state_input = goal_state_input_;
-  // goal_state_input.pose =
-  //     Eigen::Translation3d(-0.999, -0.999, 0.999) * Eigen::Quaterniond(0.9996875, 0.0249974, 0, 0);
-
-  // EXPECT_EQ(ErrorCodeEnum::NO_ERROR, trackpose_.run(timestep_, DESIRED_DURATION, max_duration_, current_state_input_,
-  //                                                   goal_state_input, cartesian_limits_, output_trajectory_));
-  // VerifyNumWaypoints(output_trajectory_.size(), DESIRED_DURATION, timestep_);
-  // VerifyDesiredDuration(DESIRED_DURATION, output_trajectory_.back(), 2 * timestep_);
-  // VerifyFinalStateAccuracy(goal_state_input, output_trajectory_.back());
+  // Position error
+  double kPositionTolerance = 1e-3;
+  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
+  // Duration
+  const double kExpectedDuration = kDesiredDuration;
+  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration,
+    kExpectedDuration );
 }
 }  // namespace trackjoint
 
