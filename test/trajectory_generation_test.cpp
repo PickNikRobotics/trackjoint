@@ -11,8 +11,8 @@
 */
 
 // C++
-#include <iostream>
 #include <math.h>
+#include <iostream>
 #include <string>
 
 // Testing
@@ -22,13 +22,10 @@
 // Target testing library
 #include <trackjoint/trajectory_generator.h>
 
-namespace trackjoint
-{
-class TrajectoryGenerationTest : public ::testing::Test
-{
-public:
-  TrajectoryGenerationTest()
-  {
+namespace trackjoint {
+class TrajectoryGenerationTest : public ::testing::Test {
+ public:
+  TrajectoryGenerationTest() {
     // Default test parameters for 3 joints
     trackjoint::KinematicState joint_state;
     joint_state.position = -1;
@@ -54,41 +51,45 @@ public:
     limits_.push_back(single_joint_limits);
   }
 
-protected:
+ protected:
   // Default test parameters for 3 joints
   double timestep_ = 0.01;
   double desired_duration_ = 1;
   int num_dof_ = 3;
   double max_duration_ = 10;
-  std::vector<trackjoint::KinematicState> current_joint_states_, goal_joint_states_;
+  std::vector<trackjoint::KinematicState> current_joint_states_,
+      goal_joint_states_;
   std::vector<trackjoint::Limits> limits_;
 };  // class TrajectoryGenerationTest
 
-TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
-{
-  // Use the class defaults. This trajectory is easy, does not require limit compensation or trajectory extension
+TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory) {
+  // Use the class defaults. This trajectory is easy, does not require limit
+  // compensation or trajectory extension
 
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_,
-                                           max_duration_, current_joint_states_,
-                                           goal_joint_states_, limits_);
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, timestep_, desired_duration_, max_duration_,
+      current_joint_states_, goal_joint_states_, limits_);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double kPositionTolerance = 1e-4;
-  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states_, output_trajectories);
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states_, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
-  EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
+  EXPECT_LE(uint(fabs(output_trajectories[0].positions.size() -
+                      expected_num_waypoints)),
+            num_waypoint_tolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, LimitCompensation)
-{
+TEST_F(TrajectoryGenerationTest, LimitCompensation) {
   // These test parameters require limit compensation
 
-  std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
+  std::vector<trackjoint::KinematicState> current_joint_states =
+      current_joint_states_;
   trackjoint::KinematicState joint_state;
   joint_state.position = -1;
   joint_state.velocity = -0.1;
@@ -97,7 +98,8 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   current_joint_states[1] = joint_state;
   current_joint_states[2] = joint_state;
 
-  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  std::vector<trackjoint::KinematicState> goal_joint_states =
+      goal_joint_states_;
   joint_state.position = 3;
   joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
@@ -118,27 +120,31 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   const double kMaxDuration = kDesiredDuration;
   const double kTimestep = 0.001;
 
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
-                                           kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits);
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+      goal_joint_states, limits);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double kPositionTolerance = 1e-4;
-  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
-  EXPECT_LE( uint(fabs(output_trajectories[0].positions.size() - expected_num_waypoints)), num_waypoint_tolerance );
+  EXPECT_LE(uint(fabs(output_trajectories[0].positions.size() -
+                      expected_num_waypoints)),
+            num_waypoint_tolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, DurationExtension)
-{
-  // The third joint cannot reach in the desired time, so trajectories must be extended
+TEST_F(TrajectoryGenerationTest, DurationExtension) {
+  // The third joint cannot reach in the desired time, so trajectories must be
+  // extended
 
-  std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
+  std::vector<trackjoint::KinematicState> current_joint_states =
+      current_joint_states_;
   trackjoint::KinematicState joint_state;
   joint_state.position = -1;
   joint_state.velocity = -0.1;
@@ -147,7 +153,8 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   current_joint_states[1] = joint_state;
   current_joint_states[2] = joint_state;
 
-  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  std::vector<trackjoint::KinematicState> goal_joint_states =
+      goal_joint_states_;
   // No position change for the first two joints
   joint_state.position = -1;
   joint_state.velocity = 1.9;
@@ -171,56 +178,62 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   const double kMaxDuration = 5;
   const double kTimestep = 0.001;
 
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
-                                           kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits);
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+      goal_joint_states, limits);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double kPositionTolerance = 1e-4;
-  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   const double kExpectedDuration = 3.752;
-  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration,
-    kExpectedDuration );
+  EXPECT_LE(output_trajectories[0].elapsed_times(
+                output_trajectories[0].elapsed_times.size() - 1) -
+                kExpectedDuration,
+            kExpectedDuration);
 }
 
-TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
-{
-  // Request a duration of just one timestep. The duration will need to be extended.
+TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
+  // Request a duration of just one timestep. The duration will need to be
+  // extended.
 
   const double kTimestep = 0.01;
   const double kDesiredDuration = 4 * kTimestep;
   const double kMaxDuration = kDesiredDuration;
 
   trackjoint::KinematicState joint_state;
-  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  std::vector<trackjoint::KinematicState> goal_joint_states =
+      goal_joint_states_;
   joint_state.position = -0.998;
   goal_joint_states[0] = joint_state;
   goal_joint_states[1] = joint_state;
   goal_joint_states[2] = joint_state;
 
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
-                                           kMaxDuration, current_joint_states_,
-                                           goal_joint_states, limits_);
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, kTimestep, kDesiredDuration, kMaxDuration,
+      current_joint_states_, goal_joint_states, limits_);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
   traj_gen.GenerateTrajectories(&output_trajectories);
 
   // Position error
-  double kPositionTolerance = 1e-3;
-  double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  const double kPositionTolerance = 1e-3;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
   const double kExpectedDuration = kDesiredDuration;
-  EXPECT_LE( output_trajectories[0].elapsed_times( output_trajectories[0].elapsed_times.size()-1 ) - kExpectedDuration,
-    kExpectedDuration );
+  EXPECT_LE(output_trajectories[0].elapsed_times(
+                output_trajectories[0].elapsed_times.size() - 1) -
+                kExpectedDuration,
+            kExpectedDuration);
 }
 }  // namespace trackjoint
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
 
   int result = RUN_ALL_TESTS();

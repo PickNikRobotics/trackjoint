@@ -72,7 +72,6 @@ class TrajectoryGenerator {
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   double upsampled_timestep_;
-  size_t upsample_rounds_ =
-      0;
-};        // end class TrajectoryGenerator
+  size_t upsample_rounds_ = 0;
+};  // end class TrajectoryGenerator
 }  // namespace trackjoint

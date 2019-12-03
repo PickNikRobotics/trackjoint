@@ -40,8 +40,10 @@ void TrajectoryGenerator::UpSample() {
   // Upsample algorithm:
   // Keep the first and last waypoint.
   // Insert a new waypoint between every pre-existing waypoint.
-  // The formula for the new number of waypoints is new_num_waypoints = 2*num_waypoints-1
-  // Upsample_rounds_ tracks how many times this was applied so we can reverse it later.
+  // The formula for the new number of waypoints is new_num_waypoints =
+  // 2*num_waypoints-1
+  // Upsample_rounds_ tracks how many times this was applied so we can reverse
+  // it later.
 
   upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
@@ -55,19 +57,19 @@ void TrajectoryGenerator::UpSample() {
 
 Eigen::VectorXd TrajectoryGenerator::DownSample(
     const Eigen::VectorXd &vector_to_downsample) {
-
   Eigen::VectorXd downsampled_vector;
 
   // Keep every (2 ^ upsample_rounds_) waypoints, starting after the first index
-  if (vector_to_downsample.size() > 2)
-  {
+  if (vector_to_downsample.size() > 2) {
     uint num_waypoints_to_skip = pow(2, upsample_rounds_);
-    size_t new_vector_size = 1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
+    size_t new_vector_size =
+        1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
     downsampled_vector.resize(new_vector_size);
     downsampled_vector(0) = vector_to_downsample(0);
 
     for (size_t index = 1; index < new_vector_size; ++index) {
-      downsampled_vector(index) = vector_to_downsample(num_waypoints_to_skip * index);
+      downsampled_vector(index) =
+          vector_to_downsample(num_waypoints_to_skip * index);
     }
   }
 

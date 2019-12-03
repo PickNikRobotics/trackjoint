@@ -25,8 +25,8 @@ SingleJointGenerator::SingleJointGenerator(
       kLimits(limits),
       kMaxNumWaypoints(max_num_waypoints) {
   // Waypoint times
-  nominal_times_ = Eigen::VectorXd::LinSpaced(
-      desired_num_waypoints, 0, desired_duration_);
+  nominal_times_ =
+      Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
