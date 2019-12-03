@@ -31,33 +31,44 @@ TrajectoryGenerator::TrajectoryGenerator(
     single_joint_generators_.push_back(SingleJointGenerator(
         upsampled_timestep_, desired_duration_, max_duration_,
         current_joint_states[joint], goal_joint_states[joint], limits[joint],
-        kMaxNumWaypoints));
+        upsampled_num_waypoints_, kMaxNumWaypoints));
   }
 }
 
 void TrajectoryGenerator::UpSample() {
-  // Halve the timestep until there are at least kMinNumWaypoints
+  // Decrease the timestep to improve accuracy.
+  // Upsample algorithm:
+  // Keep the first and last waypoint.
+  // Insert a new waypoint between every pre-existing waypoint.
+  // The formula for the new number of waypoints is new_num_waypoints = 2*num_waypoints-1
+  // Upsample_rounds_ tracks how many times this was applied so we can reverse it later.
 
-  size_t num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
+  upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
-  while (num_waypoints < kMinNumWaypoints) {
-    upsampled_timestep_ = 0.5 * upsampled_timestep_;
+  while (upsampled_num_waypoints_ < kMinNumWaypoints) {
+    upsampled_num_waypoints_ = 2 * upsampled_num_waypoints_ - 1;
+
+    upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
     ++upsample_rounds_;
-    num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
   }
 }
 
 Eigen::VectorXd TrajectoryGenerator::DownSample(
     const Eigen::VectorXd &vector_to_downsample) {
 
-  // Skip every (2 ^ upsample_rounds_) waypoints, starting after the first index
-  uint num_waypoints_to_skip = pow(2, upsample_rounds_);
-  size_t new_vector_size = 1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
-  Eigen::VectorXd downsampled_vector(new_vector_size);
-  downsampled_vector(0) = vector_to_downsample(0);
+  Eigen::VectorXd downsampled_vector;
 
-  for (size_t index = 1; index < new_vector_size; ++index) {
-    downsampled_vector(index) = vector_to_downsample(1 + num_waypoints_to_skip * index);
+  // Keep every (2 ^ upsample_rounds_) waypoints, starting after the first index
+  if (vector_to_downsample.size() > 2)
+  {
+    uint num_waypoints_to_skip = pow(2, upsample_rounds_);
+    size_t new_vector_size = 1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
+    downsampled_vector.resize(new_vector_size);
+    downsampled_vector(0) = vector_to_downsample(0);
+
+    for (size_t index = 1; index < new_vector_size; ++index) {
+      downsampled_vector(index) = vector_to_downsample(num_waypoints_to_skip * index);
+    }
   }
 
   return downsampled_vector;

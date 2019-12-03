@@ -70,8 +70,9 @@ class TrajectoryGenerator {
   const size_t kMinNumWaypoints =
       49;  // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
+  size_t upsampled_num_waypoints_;
   double upsampled_timestep_;
   size_t upsample_rounds_ =
-      0;  // Every time we upsample, timestep is halved. Track this.
+      0;
 };        // end class TrajectoryGenerator
 }  // namespace trackjoint

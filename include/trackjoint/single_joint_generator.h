@@ -27,6 +27,7 @@ class SingleJointGenerator {
                        const KinematicState &current_joint_state,
                        const KinematicState &goal_joint_state,
                        const trackjoint::Limits &limits,
+                       const size_t desired_num_waypoints,
                        const size_t max_num_waypoints);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
