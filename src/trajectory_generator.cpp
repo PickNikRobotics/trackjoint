@@ -138,7 +138,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(
 
   // This indicates that a successful trajectory wasn't found, even when the
   // trajectory was extended to max_duration.
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_)) {
+  if (longest_num_waypoints < (1 + desired_duration_ / upsampled_timestep_)) {
     SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationExceeded;
   }

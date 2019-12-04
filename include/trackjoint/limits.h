@@ -19,12 +19,5 @@ struct Limits {
   double acceleration_limit;
   // Scalar limit on angular jerk [rad/s^3]
   double jerk_limit;
-
-  // Tolerance on successful velocity matching [rad/s]
-  double angular_velocity_tolerance;
-  // Tolerance on successful acceleration matching [rad/s^2]
-  double angular_acceleration_tolerance;
-  // Tolerance on successful jerk matching [rad/s^3]
-  double angular_jerk_tolerance;
 };
 }  // namespace trackjoint
