@@ -19,18 +19,7 @@ TrajectoryGenerator::TrajectoryGenerator(
       desired_duration_(desired_duration),
       max_duration_(max_duration),
       // Default timestep
-      upsampled_timestep_(timestep),
-      // Nominal timestep
-      nominal_timestep_(timestep) {
-  // Input error checking
-  try{
-    InputChecking(current_joint_states, goal_joint_states, limits);
-  }
-  catch(std::string &e){
-    std::cout << e << std::endl;
-    std::exit(EXIT_FAILURE);
-  }
-
+      upsampled_timestep_(timestep) {
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
 
@@ -90,10 +79,7 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
 
   ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
       const std::vector<trackjoint::KinematicState> &goal_joint_states,
-      const std::vector<Limits> &limits) {
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
-
-  double duration_goal_ = round(desired_duration_ / upsampled_timestep_ ) * upsampled_timestep_;
+      const std::vector<Limits> &limits, double nominal_timestep) {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
@@ -109,65 +95,54 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
+  double rounded_duration = std::round(desired_duration_ / upsampled_timestep_ ) * upsampled_timestep_;
+
   // Need at least 1 timestep
-  if(duration_goal_ < nominal_timestep_){
+  if(rounded_duration < nominal_timestep){
     SetFinalStateToCurrentState();
-    error_code  = ErrorCodeEnum::kDesiredDurationTooShort;
+    return ErrorCodeEnum::kDesiredDurationTooShort;
   }
 
   // Maximum duration must be equal to or longer than the nominal, goal duration
-  if(max_duration_ < duration_goal_){
+  if(max_duration_ < rounded_duration){
     SetFinalStateToCurrentState();
-    error_code  = ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
+    return ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
   }
 
   // Check that current vels. are less than the limits.
   for(size_t joint = 0; joint < kNumDof; ++joint){
     if(abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
       SetFinalStateToCurrentState();
-      error_code  = ErrorCodeEnum::kVelocityExceedsLimit;
+      return  ErrorCodeEnum::kVelocityExceedsLimit;
     }
-  }
 
-  // Check that goal vels. are less than the limits.
-  for(size_t joint = 0; joint < kNumDof; ++joint){
+    // Check that goal vels. are less than the limits.
     if(abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit){
       SetFinalStateToCurrentState();
-      error_code  = ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::kVelocityExceedsLimit;
     }
-  }
 
-  // Check that current accels. are less than the limits.
-  for(size_t joint = 0; joint < kNumDof; ++joint){
+    // Check that current accels. are less than the limits.
     if(abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
       SetFinalStateToCurrentState();
-      error_code  = ErrorCodeEnum::kAccelExceedsLimit;
+      return ErrorCodeEnum::kAccelExceedsLimit;
     }
-  }
 
-  // Check that goal accels. are less than the limits.
-  for(size_t joint = 0; joint < kNumDof; ++joint){
+    // Check that goal accels. are less than the limits.
     if(abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
       SetFinalStateToCurrentState();
-      error_code  = ErrorCodeEnum::kAccelExceedsLimit;
+      return ErrorCodeEnum::kAccelExceedsLimit;
     }
-  }
 
-  // Check that goal accels. are less than the limits.
-  for(size_t joint = 0; joint < kNumDof; ++joint){
+    // Check for positive limits.
     if(limits[joint].velocity_limit <= 0 || limits[joint].acceleration_limit <= 0 ||
        limits[joint].jerk_limit <= 0){
       SetFinalStateToCurrentState();
-      error_code  = ErrorCodeEnum::kLimitNotPositive;
+      return ErrorCodeEnum::kLimitNotPositive;
     }
   }
 
-  if(error_code){
-    std::string error_message = "Input error occurred: " + trackjoint::kErrorCodeMap.at(error_code);
-    throw error_message;
-  }
-
-  return error_code;
+  return ErrorCodeEnum::kNoError;
 }
 
 void TrajectoryGenerator::SaveTrajectoriesToFile(

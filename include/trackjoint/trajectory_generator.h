@@ -44,12 +44,12 @@ class TrajectoryGenerator {
       const std::vector<JointTrajectory> &output_trajectories,
       const std::string &base_filepath) const;
 
- private:
   /** \brief Check user input for errors */
   ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
       const std::vector<trackjoint::KinematicState> &goal_joint_states,
-      const std::vector<Limits> &limits);
+      const std::vector<Limits> &limits, double nominal_timestep);
 
+ private:
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
@@ -72,7 +72,7 @@ class TrajectoryGenerator {
   const size_t kMinNumWaypoints =
       49;  // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
-  double upsampled_timestep_, nominal_timestep_;
+  double upsampled_timestep_;
   size_t upsample_rounds_ =
       0;  // Every time we upsample, timestep is halved. Track this.
 };        // end class TrajectoryGenerator

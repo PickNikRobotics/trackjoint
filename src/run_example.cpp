@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   std::vector<trackjoint::KinematicState> goal_joint_states;
   // No position change for the first two joints
   joint_state.position = -1;
-  joint_state.velocity = 2.1;
+  joint_state.velocity = 1.9;
   joint_state.acceleration = 0;
   goal_joint_states.push_back(joint_state);
   goal_joint_states.push_back(joint_state);
@@ -72,6 +72,11 @@ int main(int argc, char** argv) {
             << std::endl;
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code)
             << std::endl;
+
+  // error handling
+  if (error_code != trackjoint::ErrorCodeEnum::kNoError) {
+    return 0;
+  }
 
   // Save the synchronized trajectories to .csv files
   traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
