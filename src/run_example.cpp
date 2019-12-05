@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
   // Input error handling - if an error is found, the trajectory is not generated.
   if (error_code != trackjoint::ErrorCodeEnum::kNoError) {
     std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
-    return 0;
+    return -1;
   }
 
   // Measure runtime
