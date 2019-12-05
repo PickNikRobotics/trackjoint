@@ -80,9 +80,7 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory) {
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
-  EXPECT_LE(uint(fabs(output_trajectories[0].positions.size() -
-                      expected_num_waypoints)),
-            num_waypoint_tolerance);
+  EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, LimitCompensation) {
@@ -134,9 +132,7 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation) {
   // Duration
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
-  EXPECT_LE(uint(fabs(output_trajectories[0].positions.size() -
-                      expected_num_waypoints)),
-            num_waypoint_tolerance);
+  EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, DurationExtension) {
@@ -193,14 +189,11 @@ TEST_F(TrajectoryGenerationTest, DurationExtension) {
   const double kExpectedDuration = 3.752;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_LE(
-      output_trajectories[0].elapsed_times(vector_length) - kExpectedDuration,
-      kDurationTolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kExpectedDuration, kDurationTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
-  // Request a duration of just one timestep. The duration will need to be
-  // extended.
+  // Request a duration of just four timesteps. The duration will need to be extended.
 
   const double kTimestep = 0.01;
   const double kDesiredDuration = 4 * kTimestep;
@@ -229,9 +222,7 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
   const double kExpectedDuration = kDesiredDuration;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_LE(
-      output_trajectories[0].elapsed_times(vector_length) - kExpectedDuration,
-      kDurationTolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kExpectedDuration, kDurationTolerance);
 }
 }  // namespace trackjoint
 
