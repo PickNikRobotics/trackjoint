@@ -193,7 +193,7 @@ ErrorCodeEnum TrajectoryGenerator::OutputChecking(const std::vector<JointTraject
      || (output_trajectories[joint].velocities.array() < -limits_[joint].velocity_limit);
     if ((result.array() != false).any())
     {
-      return ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::kInternalLimitViolation;
     }
 
     // Acceleration
@@ -201,7 +201,7 @@ ErrorCodeEnum TrajectoryGenerator::OutputChecking(const std::vector<JointTraject
      || (output_trajectories[joint].accelerations.array() < -limits_[joint].acceleration_limit);
     if ((result.array() != false).any())
     {
-      return ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::kInternalLimitViolation;
     }
 
     // Jerk
@@ -209,7 +209,7 @@ ErrorCodeEnum TrajectoryGenerator::OutputChecking(const std::vector<JointTraject
      || (output_trajectories[joint].jerks.array() < -limits_[joint].jerk_limit);
     if ((result.array() != false).any())
     {
-      return ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::kInternalLimitViolation;
     }
   }
 
