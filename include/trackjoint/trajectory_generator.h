@@ -44,10 +44,12 @@ class TrajectoryGenerator {
       const std::vector<JointTrajectory> &output_trajectories,
       const std::string &base_filepath) const;
 
- private:
   /** \brief Check user input for errors */
-  ErrorCodeEnum InputChecking();
+  ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
+      const std::vector<trackjoint::KinematicState> &goal_joint_states,
+      const std::vector<Limits> &limits, double nominal_timestep);
 
+ private:
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 

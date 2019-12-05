@@ -20,9 +20,6 @@ TrajectoryGenerator::TrajectoryGenerator(
       max_duration_(max_duration),
       // Default timestep
       upsampled_timestep_(timestep) {
-  // Input error checking
-  InputChecking();
-
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
 
@@ -80,8 +77,9 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
   return downsampled_vector;
 }
 
-ErrorCodeEnum TrajectoryGenerator::InputChecking() {
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
+      const std::vector<trackjoint::KinematicState> &goal_joint_states,
+      const std::vector<Limits> &limits, double nominal_timestep) {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
@@ -96,6 +94,55 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking() {
               << " waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
+
+  double rounded_duration = std::round(desired_duration_ / upsampled_timestep_ ) * upsampled_timestep_;
+
+  // Need at least 1 timestep
+  if(rounded_duration < nominal_timestep){
+    SetFinalStateToCurrentState();
+    return ErrorCodeEnum::kDesiredDurationTooShort;
+  }
+
+  // Maximum duration must be equal to or longer than the nominal, goal duration
+  if(max_duration_ < rounded_duration){
+    SetFinalStateToCurrentState();
+    return ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
+  }
+
+  // Check that current vels. are less than the limits.
+  for(size_t joint = 0; joint < kNumDof; ++joint){
+    if(abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
+      SetFinalStateToCurrentState();
+      return  ErrorCodeEnum::kVelocityExceedsLimit;
+    }
+
+    // Check that goal vels. are less than the limits.
+    if(abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kVelocityExceedsLimit;
+    }
+
+    // Check that current accels. are less than the limits.
+    if(abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kAccelExceedsLimit;
+    }
+
+    // Check that goal accels. are less than the limits.
+    if(abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kAccelExceedsLimit;
+    }
+
+    // Check for positive limits.
+    if(limits[joint].velocity_limit <= 0 || limits[joint].acceleration_limit <= 0 ||
+       limits[joint].jerk_limit <= 0){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kLimitNotPositive;
+    }
+  }
+
+  return ErrorCodeEnum::kNoError;
 }
 
 void TrajectoryGenerator::SaveTrajectoriesToFile(
