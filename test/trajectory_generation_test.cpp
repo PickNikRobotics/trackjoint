@@ -62,9 +62,55 @@ class TrajectoryGenerationTest : public ::testing::Test {
   std::vector<trackjoint::Limits> limits_;
 };  // class TrajectoryGenerationTest
 
-TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory) {
-  // Use the class defaults. This trajectory is easy, does not require limit
-  // compensation or trajectory extension
+TEST_F(TrajectoryGenerationTest, OneTimestep)
+{
+  const double kDesiredDuration = 1 * timestep_;
+  const double kMaxDuration = 4 * timestep_;
+
+  std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
+  trackjoint::KinematicState joint_state;
+  joint_state.position = 0;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+  current_joint_states.push_back(joint_state);
+
+  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  joint_state.position = 0.0001;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+  goal_joint_states.push_back(joint_state);
+
+  std::vector<trackjoint::Limits> limits;
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 20;
+  single_joint_limits.jerk_limit = 2000;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, kDesiredDuration,
+                                           kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  traj_gen.GenerateTrajectories(&output_trajectories);
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+
+  //ROS_INFO(std::to_string(position_error));
+  std::cout << "The position error is: " << position_error << std::endl; 
+  EXPECT_LT(position_error, position_tolerance);
+}
+
+TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
+{
+  // Use the class defaults. This trajectory is easy, does not require limit compensation or trajectory extension
 
   trackjoint::TrajectoryGenerator traj_gen(
       num_dof_, timestep_, desired_duration_, max_duration_,
