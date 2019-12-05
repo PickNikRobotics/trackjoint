@@ -48,6 +48,9 @@ class TrajectoryGenerator {
   /** \brief Check user input for errors */
   ErrorCodeEnum InputChecking();
 
+  /** \brief Check limits aren't exceeded before returning. */
+  ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory> &output_trajectories);
+
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
@@ -73,5 +76,6 @@ class TrajectoryGenerator {
   double upsampled_timestep_;
   size_t upsample_rounds_ =
       0;  // Every time we upsample, timestep is halved. Track this.
+  const std::vector<Limits> limits_;
 };        // end class TrajectoryGenerator
 }  // namespace trackjoint

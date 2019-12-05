@@ -72,7 +72,7 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
                                            max_duration_, current_joint_states_,
                                            goal_joint_states_, limits_);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
 
   // Position error
   double position_tolerance = 1e-4;
@@ -122,7 +122,7 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
                                            kMaxDuration, current_joint_states,
                                            goal_joint_states, limits);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
 
   // Position error
   double position_tolerance = 1e-4;
@@ -175,7 +175,7 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
                                            kMaxDuration, current_joint_states,
                                            goal_joint_states, limits);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
 
   // Position error
   double position_tolerance = 1e-4;
