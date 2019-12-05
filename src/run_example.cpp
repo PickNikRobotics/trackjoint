@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
   // Trajectory generation error handling
   if (error_code != trackjoint::ErrorCodeEnum::kNoError) {
     std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
-    return 0;
+    return -1;
   }
 
   std::chrono::duration<double> elapsed_seconds = end-start;
