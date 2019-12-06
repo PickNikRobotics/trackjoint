@@ -15,7 +15,8 @@ SingleJointGenerator::SingleJointGenerator(
     double timestep, double desired_duration, double max_duration,
     const trackjoint::KinematicState &current_joint_state,
     const trackjoint::KinematicState &goal_joint_state,
-    const trackjoint::Limits &limits, size_t max_num_waypoints)
+    const trackjoint::Limits &limits, size_t desired_num_waypoints,
+    size_t max_num_waypoints)
     : kTimestep(timestep),
       desired_duration_(desired_duration),
       max_duration_(max_duration),
@@ -24,8 +25,8 @@ SingleJointGenerator::SingleJointGenerator(
       kLimits(limits),
       kMaxNumWaypoints(max_num_waypoints) {
   // Waypoint times
-  nominal_times_ = Eigen::VectorXd::LinSpaced(
-      int(desired_duration_ / kTimestep), 0, desired_duration_);
+  nominal_times_ =
+      Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
 
 ErrorCodeEnum SingleJointGenerator::GenerateTrajectory() {
