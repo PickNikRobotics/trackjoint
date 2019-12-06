@@ -21,8 +21,6 @@ TrajectoryGenerator::TrajectoryGenerator(
       // Default timestep
       upsampled_timestep_(timestep),
       limits_(limits) {
-  // Input error checking
-  InputChecking();
 
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
@@ -32,57 +30,56 @@ TrajectoryGenerator::TrajectoryGenerator(
     single_joint_generators_.push_back(SingleJointGenerator(
         upsampled_timestep_, desired_duration_, max_duration_,
         current_joint_states[joint], goal_joint_states[joint], limits[joint],
-        kMaxNumWaypoints));
+        upsampled_num_waypoints_, kMaxNumWaypoints));
   }
 }
 
 void TrajectoryGenerator::UpSample() {
-  // Halve the timestep until there are at least kMinNumWaypoints
+  // Decrease the timestep to improve accuracy.
+  // Upsample algorithm:
+  // Keep the first and last waypoint.
+  // Insert a new waypoint between every pre-existing waypoint.
+  // The formula for the new number of waypoints is new_num_waypoints =
+  // 2*num_waypoints-1
+  // Upsample_rounds_ tracks how many times this was applied so we can reverse
+  // it later.
 
-  size_t num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
+  upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
-  while (num_waypoints < kMinNumWaypoints) {
-    upsampled_timestep_ = 0.5 * upsampled_timestep_;
+  while (upsampled_num_waypoints_ < kMinNumWaypoints) {
+    upsampled_num_waypoints_ = 2 * upsampled_num_waypoints_ - 1;
+
+    upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
     ++upsample_rounds_;
-    num_waypoints = 1 + desired_duration_ / upsampled_timestep_;
   }
 }
 
 Eigen::VectorXd TrajectoryGenerator::DownSample(
     const Eigen::VectorXd &vector_to_downsample) {
-  Eigen::VectorXd downsampled_vector = vector_to_downsample;
-  size_t expected_size = 0;
-  size_t downsampled_index = 0;
+  Eigen::VectorXd downsampled_vector;
 
-  if (vector_to_downsample.size() < 3)
-  {
-    std::cout << "Warning: invalid vector length in DownSample()" << std::endl;
-    return vector_to_downsample;
-  }
+  // Keep every (2 ^ upsample_rounds_) waypoints, starting after the first index
+  if (vector_to_downsample.size() > 2) {
+    uint num_waypoints_to_skip = pow(2, upsample_rounds_);
+    size_t new_vector_size =
+        1 + (vector_to_downsample.size() - 1) / num_waypoints_to_skip;
+    downsampled_vector.resize(new_vector_size);
+    downsampled_vector(0) = vector_to_downsample(0);
 
-  // Remove every other sample from the vector for each round of sampling
-  // e.g. 1,2,3,4,5,6 gets downsampled to 1,3,5
-  for (size_t round = 0; round < upsample_rounds_; ++round) {
-    Eigen::VectorXd temp_vector = downsampled_vector;
-    expected_size = 1 + (downsampled_vector.size() - 1) / 2;
-    downsampled_vector.resize(expected_size);
-    downsampled_vector[0] = temp_vector[0];
-    if (temp_vector.size() > 3)
-    {
-      downsampled_index = 3;
+    for (size_t index = 1; index < new_vector_size; ++index) {
+      downsampled_vector(index) =
+          vector_to_downsample(num_waypoints_to_skip * index);
     }
-    for (size_t upsampled_index = 3; upsampled_index < temp_vector.size();
-         upsampled_index = upsampled_index + 2) {
-      downsampled_vector[downsampled_index] = temp_vector[upsampled_index];
-      ++downsampled_index;
-    }
+  } else {
+    downsampled_vector = vector_to_downsample;
   }
 
   return downsampled_vector;
 }
 
-ErrorCodeEnum TrajectoryGenerator::InputChecking() {
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
+      const std::vector<trackjoint::KinematicState> &goal_joint_states,
+      const std::vector<Limits> &limits, double nominal_timestep) {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
@@ -97,6 +94,55 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking() {
               << " waypoints to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
+
+  double rounded_duration = std::round(desired_duration_ / upsampled_timestep_ ) * upsampled_timestep_;
+
+  // Need at least 1 timestep
+  if(rounded_duration < nominal_timestep){
+    SetFinalStateToCurrentState();
+    return ErrorCodeEnum::kDesiredDurationTooShort;
+  }
+
+  // Maximum duration must be equal to or longer than the nominal, goal duration
+  if(max_duration_ < rounded_duration){
+    SetFinalStateToCurrentState();
+    return ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
+  }
+
+  // Check that current vels. are less than the limits.
+  for(size_t joint = 0; joint < kNumDof; ++joint){
+    if(abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
+      SetFinalStateToCurrentState();
+      return  ErrorCodeEnum::kVelocityExceedsLimit;
+    }
+
+    // Check that goal vels. are less than the limits.
+    if(abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kVelocityExceedsLimit;
+    }
+
+    // Check that current accels. are less than the limits.
+    if(abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kAccelExceedsLimit;
+    }
+
+    // Check that goal accels. are less than the limits.
+    if(abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kAccelExceedsLimit;
+    }
+
+    // Check for positive limits.
+    if(limits[joint].velocity_limit <= 0 || limits[joint].acceleration_limit <= 0 ||
+       limits[joint].jerk_limit <= 0){
+      SetFinalStateToCurrentState();
+      return ErrorCodeEnum::kLimitNotPositive;
+    }
+  }
+
+  return ErrorCodeEnum::kNoError;
 }
 
 void TrajectoryGenerator::SaveTrajectoriesToFile(
