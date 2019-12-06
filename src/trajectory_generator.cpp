@@ -19,7 +19,9 @@ TrajectoryGenerator::TrajectoryGenerator(
       desired_duration_(desired_duration),
       max_duration_(max_duration),
       // Default timestep
-      upsampled_timestep_(timestep) {
+      upsampled_timestep_(timestep),
+      limits_(limits) {
+
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
 
@@ -227,6 +229,39 @@ void TrajectoryGenerator::SetFinalStateToCurrentState() {
   ;
 }
 
+ErrorCodeEnum TrajectoryGenerator::OutputChecking(const std::vector<JointTrajectory> &output_trajectories)
+{
+  for (size_t joint = 0; joint < kNumDof; ++joint) {
+    // error if any element was greater than the limit
+
+    // Velocity
+    Eigen::Matrix<bool, Eigen::Dynamic, 1> result = (output_trajectories[joint].velocities.array() > limits_[joint].velocity_limit)
+     || (output_trajectories[joint].velocities.array() < -limits_[joint].velocity_limit);
+    if ((result.array() != false).any())
+    {
+      return ErrorCodeEnum::kInternalLimitViolation;
+    }
+
+    // Acceleration
+    result = (output_trajectories[joint].accelerations.array() > limits_[joint].acceleration_limit)
+     || (output_trajectories[joint].accelerations.array() < -limits_[joint].acceleration_limit);
+    if ((result.array() != false).any())
+    {
+      return ErrorCodeEnum::kInternalLimitViolation;
+    }
+
+    // Jerk
+    result = (output_trajectories[joint].jerks.array() > limits_[joint].jerk_limit)
+     || (output_trajectories[joint].jerks.array() < -limits_[joint].jerk_limit);
+    if ((result.array() != false).any())
+    {
+      return ErrorCodeEnum::kInternalLimitViolation;
+    }
+  }
+
+  return ErrorCodeEnum::kNoError;
+}
+
 ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(
     std::vector<JointTrajectory> *output_trajectories) {
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
@@ -257,7 +292,8 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(
           DownSample(output_trajectories->at(joint).elapsed_times);
     }
 
-  // TODO(andyz): Final error checking
+  // Check for limits before returning
+  error_code = OutputChecking(*output_trajectories);
 
   return error_code;
 }

@@ -49,7 +49,9 @@ class TrajectoryGenerator {
       const std::vector<trackjoint::KinematicState> &goal_joint_states,
       const std::vector<Limits> &limits, double nominal_timestep);
 
- private:
+  /** \brief Check limits aren't exceeded before returning. */
+  ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory> &output_trajectories);
+
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
@@ -74,6 +76,8 @@ class TrajectoryGenerator {
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   double upsampled_timestep_;
-  size_t upsample_rounds_ = 0;
-};  // end class TrajectoryGenerator
+  size_t upsample_rounds_ =
+      0;  // Every time we upsample, timestep is halved. Track this.
+  const std::vector<Limits> limits_;
+};        // end class TrajectoryGenerator
 }  // namespace trackjoint
