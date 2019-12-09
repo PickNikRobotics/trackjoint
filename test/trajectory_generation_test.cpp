@@ -326,6 +326,62 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
   EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
 
+TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
+{
+  // Test a "corner" trajectory.
+  // Velocity flips from (0.01,0,0) to (0,0,-0.01)
+
+  const double kDesiredDuration = 4 * timestep_;
+  const double kMaxDuration = 1;
+
+  std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
+  trackjoint::KinematicState joint_state;
+  joint_state.position = 0;
+  joint_state.velocity = 0.01;
+  joint_state.acceleration = 0;
+  current_joint_states[0] = joint_state;
+  joint_state.velocity = 0;
+  current_joint_states[1] = joint_state;
+  current_joint_states[2] = joint_state;
+
+  std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
+  joint_state.position = 0.01;
+  joint_state.velocity = 0;
+  goal_joint_states[0] = joint_state;
+  joint_state.position = 0;
+  goal_joint_states[1] = joint_state;
+  joint_state.position = -0.01;
+  joint_state.velocity = -0.01;
+  goal_joint_states[2] = joint_state;
+
+  std::vector<trackjoint::Limits> limits;
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 20;
+  single_joint_limits.acceleration_limit = 200;
+  single_joint_limits.jerk_limit = 20000;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, kDesiredDuration,
+                                           kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  traj_gen.GenerateTrajectories(&output_trajectories);
+
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  EXPECT_LT(position_error, position_tolerance);
+  // Duration
+  const double kExpectedDuration = kDesiredDuration;
+  const double kDurationTolerance = 5e-3;
+  size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kExpectedDuration, kDurationTolerance);
+}
+
 TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
 {
   // Use the class defaults. This trajectory is easy, does not require limit compensation or trajectory extension
