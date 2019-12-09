@@ -201,8 +201,6 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
 {
   // Test a "corner" trajectory.
   // Velocity flips from (0.01,0,0) to (0,0,-0.01)
-  // Orientation flips 90* about Y
-  // (This is known as a singularity for 1,2,3-Euler angle order, so it also tests that)
 
   const double kDesiredDuration = 4 * timestep_;
   const double kMaxDuration = 1;
@@ -213,11 +211,13 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
   joint_state.velocity = 0.01;
   joint_state.acceleration = 0;
   current_joint_states[0] = joint_state;
+  joint_state.velocity = 0;
   current_joint_states[1] = joint_state;
   current_joint_states[2] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states = goal_joint_states_;
   joint_state.position = 0.01;
+  joint_state.velocity = 0;
   goal_joint_states[0] = joint_state;
   joint_state.position = 0;
   goal_joint_states[1] = joint_state;
