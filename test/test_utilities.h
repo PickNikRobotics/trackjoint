@@ -41,4 +41,15 @@ double CalculatePositionAccuracy(
 
   return error;
 }
+
+void VerifyVelAccelJerkLimits(
+    std::vector<trackjoint::JointTrajectory> &trajectory,
+    const std::vector<trackjoint::Limits> &limits){
+  for (size_t joint = 0; joint < trajectory.size(); ++joint) {
+    EXPECT_LE(trajectory.at(joint).velocities.cwiseAbs().maxCoeff(), limits[joint].velocity_limit);
+    EXPECT_LE(trajectory.at(joint).accelerations.cwiseAbs().maxCoeff(), limits[joint].acceleration_limit);
+    EXPECT_LE(trajectory.at(joint).jerks.cwiseAbs().maxCoeff(), limits[joint].jerk_limit);
+  }
+}
+
 }  // namespace trackjoint
