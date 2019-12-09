@@ -289,10 +289,10 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
 
   double time = 0;
 
-  for(size_t index = 0; index < kNumWaypoints; index++){
-    time = index * kTimestep;
+  for(size_t waypoint = 0; waypoint < kNumWaypoints; ++waypoint){
+    time = waypoint * kTimestep;
 
-    time_vector(index) = time;
+    time_vector(waypoint) = time;
 
     joint_state.position = 0.1 * sin(time) + 0.05 * random_distribution(random_generator);
 
@@ -300,7 +300,7 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
     goal_joint_states[1] = joint_state;
     goal_joint_states[2] = joint_state;
 
-    x_desired(index) = goal_joint_states[0].position;
+    x_desired(waypoint) = goal_joint_states[0].position;
 
     trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration,
                                           kMaxDuration, current_joint_states,
@@ -308,8 +308,12 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
     std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
     traj_gen.GenerateTrajectories(&output_trajectories);
 
-    x_smoothed(index) = output_trajectories.at(0).positions(1);
-    joint_state.position = x_smoothed(index);
+    VerifyVelAccelJerkLimits(output_trajectories, limits);
+
+    // Save the first waypoint in x_smoothed...
+    x_smoothed(waypoint) = output_trajectories.at(0).positions(1);
+    // ... and setting the next current position as the updated x_smoothed 
+    joint_state.position = x_smoothed(waypoint);
 
     current_joint_states[0] = joint_state;
     current_joint_states[1] = joint_state;
