@@ -48,7 +48,7 @@ include_directories(
 )
 
 # Declare a C++ library with project namespace to avoid naming collision
-set(LIBRARY_NAME trajectory_generator)
+set(LIBRARY_NAME trackjoint)
 add_library(${LIBRARY_NAME} SHARED
   src/trajectory_generator.cpp
   src/single_joint_generator.cpp
