@@ -36,3 +36,10 @@ See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/
 ## Formatting
 
 Use `clang_this_directory_google`
+
+## Third Party Open Source Software Licenses
+
+The following libraries are used in TrackJoint:
+
+ - [Boost](https://www.boost.org/users/license.html)
+ - [Library1]()
