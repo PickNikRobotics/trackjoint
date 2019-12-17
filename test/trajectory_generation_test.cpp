@@ -521,12 +521,14 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits) {
   std::vector<trackjoint::KinematicState> current_joint_states =
       current_joint_states_;
   trackjoint::KinematicState joint_state;
-  joint_state.position = 0;
+  joint_state.position = -1;
   joint_state.velocity = -0.2;
   joint_state.acceleration = 0;
   current_joint_states[0] = joint_state;
+  joint_state.position = -1;
   joint_state.velocity = 0.1;
   current_joint_states[1] = joint_state;
+  joint_state.position = 1;
   joint_state.velocity = 0.2;
   current_joint_states[2] = joint_state;
 
@@ -552,8 +554,8 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits) {
   limits.push_back(single_joint_limits);
 
   const double kTimestep = 0.001;
-  const double kDesiredDuration = 9001 * kTimestep;
-  const double kMaxDuration = 9001 * kTimestep;
+  const double kDesiredDuration = 1800 * kTimestep;
+  const double kMaxDuration = 1800 * kTimestep;
 
   trackjoint::TrajectoryGenerator traj_gen(
       num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
