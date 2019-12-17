@@ -515,9 +515,6 @@ TEST_F(TrajectoryGenerationTest, DurationExtension) {
 TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits) {
   // This test encounters negative and positive velocity limits and negative jerk limits
 
-  // TODO(andyz): this test can complete within a much shorter desired_duration in Matlab.
-  // It has to do with limits being encountered at index 1 in VelocityCompensation().
-  // Not sure how to fix it.
   std::vector<trackjoint::KinematicState> current_joint_states =
       current_joint_states_;
   trackjoint::KinematicState joint_state;
