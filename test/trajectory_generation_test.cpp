@@ -24,6 +24,10 @@
 // Target testing library
 #include <trackjoint/trajectory_generator.h>
 
+// To be reconsidered afterwards - GSN CHANGE
+#include <fstream>
+std::string base_filepath = "/home/guilesn/trackjoint_data/UR5-oscillating-experiment/tj_output_joint";
+
 namespace trackjoint {
 class TrajectoryGenerationTest : public ::testing::Test {
  public:
@@ -324,6 +328,109 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = kNumWaypoints;
   EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
+}
+
+TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase)
+{
+  const int kNumDof = 6;
+  const double kMaxDuration = 10;
+  const double kTimestep = 0.0075;
+
+  std::vector<trackjoint::Limits> limits(kNumDof);
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 0.5;
+  single_joint_limits.acceleration_limit = 2;
+  single_joint_limits.jerk_limit = 100;
+  limits[0] = single_joint_limits;
+  limits[1] = single_joint_limits;
+  limits[2] = single_joint_limits;
+  limits[3] = single_joint_limits;
+  limits[4] = single_joint_limits;
+  limits[5] = single_joint_limits;
+
+  ////////////////////////////////////////////////
+  // Get TrackJoint initial states and goal states
+  ////////////////////////////////////////////////
+
+  // Vector of start states - for each waypoint, for each joint
+  std::vector<std::vector<trackjoint::KinematicState>> trackjt_current_joint_states;
+  // Vector of goal states - for each waypoint, for each joint
+  std::vector<std::vector<trackjoint::KinematicState>> trackjt_goal_joint_states;
+  // Vector of goal states - for each waypoint
+  std::vector<double> trackjt_desired_durations;
+
+  trackjoint::KinematicState joint_state;
+
+  trackjoint::ErrorCodeEnum error_code;
+
+  // CREATE VARIABLES THAT WILL RECEIVE DATA FROM .TXT FILES
+  std::vector<std::vector<double>> moveit_des_positions;
+  std::vector<std::vector<double>> moveit_des_velocities;
+  std::vector<std::vector<double>> moveit_des_accelerations;
+  std::vector<std::vector<double>> moveit_times_from_start;
+
+  // CALL FUNCTION THAT READS DATA FROM .TXT FILES BELOW
+  moveit_des_positions = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_pos.txt");
+  moveit_des_velocities = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_vel.txt");
+  moveit_des_accelerations = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_acc.txt");
+  moveit_times_from_start = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_time_from_start.txt");
+
+  // For each MoveIt waypoint
+  for (std::size_t point = 0; point < moveit_times_from_start.size() - 1; ++point)
+  {
+    std::vector<trackjoint::KinematicState> current_joint_states;
+    std::vector<trackjoint::KinematicState> goal_joint_states;
+
+    // for each joint
+    for (std::size_t joint = 0; joint<kNumDof; ++joint)
+    {
+      // Save the start state of the robot
+      joint_state.position = moveit_des_positions[point][joint];
+      joint_state.velocity = moveit_des_velocities[point][joint];
+      joint_state.acceleration = moveit_des_accelerations[point][joint];
+
+      current_joint_states.push_back(joint_state);
+
+      // Save the goal state of the robot
+      joint_state.position = moveit_des_positions[point+1][joint];
+      joint_state.velocity = moveit_des_velocities[point+1][joint];
+      joint_state.acceleration = moveit_des_accelerations[point+1][joint];
+
+      goal_joint_states.push_back(joint_state);
+    }
+
+    trackjt_current_joint_states.push_back(current_joint_states);
+    trackjt_goal_joint_states.push_back(goal_joint_states);
+    trackjt_desired_durations.push_back(moveit_times_from_start[point+1][0] - moveit_times_from_start[point][0]);
+  }
+
+  // Step through the saved waypoints and smooth them with TrackJoint
+  for (std::size_t point=0; point<trackjt_desired_durations.size(); ++point)
+  {
+    trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[point],
+                                        kMaxDuration, trackjt_current_joint_states[point],
+                                        trackjt_goal_joint_states[point], limits);
+    std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+
+    traj_gen.GenerateTrajectories(&output_trajectories);
+
+    traj_gen.SaveTrajectoriesToFile(output_trajectories, base_filepath);
+
+    EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+  }
+    // debugging file writing
+    size_t number_of_lines = 0;
+    std::string line;
+    std::ifstream input_file("/home/guilesn/trackjoint_data/UR5-oscillating-experiment/tj_output_joint3.txt");
+    while (std::getline(input_file, line)) ++number_of_lines;
+    std::cout << "Number of lines in text file: " << number_of_lines << std::endl;
+
+  // EXPECT_EQ(x_desired.size(), x_smoothed.size());
+  // // Duration
+  // uint num_waypoint_tolerance = 1;
+  // uint expected_num_waypoints = kNumWaypoints;
+  // EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // EXPECT_EQ(true, true);
 }
 
 TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)

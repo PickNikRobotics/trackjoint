@@ -23,6 +23,12 @@
 #include <cmath>
 #include <vector>
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <sstream>
+#include <string>
+
 namespace trackjoint {
 double CalculatePositionAccuracy(
     std::vector<trackjoint::KinematicState> goal_joint_states,
@@ -52,4 +58,24 @@ void VerifyVelAccelJerkLimits(
   }
 }
 
+std::vector<std::vector<double>> LoadWaypointsFromFile(const std::string &file_name) {
+  std::ifstream input_file(file_name);
+  std::string line;
+  std::vector<std::vector<double>> v;
+
+  std::string tempstr;
+  double tempdouble;
+  char delimiter;
+
+  while (std::getline(input_file, tempstr)) {
+      std::istringstream iss(tempstr);
+      std::vector<double> tempv;
+      while (iss >> tempdouble) {
+          tempv.push_back(tempdouble);
+          iss >> delimiter;
+      }
+      v.push_back(tempv);
+  }
+  return v;
+}
 }  // namespace trackjoint

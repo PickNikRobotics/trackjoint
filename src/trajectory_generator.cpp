@@ -153,20 +153,19 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(
 
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
     output_path = base_filepath + std::to_string(joint + 1) + ".csv";
-    output_file.open(output_path);
+    output_file.open(output_path, std::ofstream::app);
     for (size_t waypoint = 0;
-         waypoint < output_trajectories.at(joint).positions.size();
-         ++waypoint) {
-      output_file << output_trajectories.at(joint).elapsed_times(waypoint)
+        waypoint < output_trajectories.at(joint).positions.size();
+        ++waypoint) {
+        output_file << output_trajectories.at(joint).elapsed_times(waypoint)
                   << " " << output_trajectories.at(joint).positions(waypoint)
                   << " " << output_trajectories.at(joint).velocities(waypoint)
-                  << " "
-                  << output_trajectories.at(joint).accelerations(waypoint)
+                  << " " << output_trajectories.at(joint).accelerations(waypoint)
                   << " " << output_trajectories.at(joint).jerks(waypoint)
                   << std::endl;
     }
-    output_file.close();
     output_file.clear();
+    output_file.close();
   }
 }
 
