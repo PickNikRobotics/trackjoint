@@ -37,7 +37,7 @@ See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/
 
 Use `clang_this_directory_google`
 
-## Hints for tuning
+## Hints for Tuning
 
 Usually a robot manufacturer provides joint velocity limits. It can be difficult to set joint acceleration or jerk limits when the manufacturer does not provide them. Here are some hints to help choose reasonable values:
 
