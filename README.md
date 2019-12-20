@@ -41,5 +41,6 @@ Use `clang_this_directory_google`
 
 The following libraries are used in TrackJoint:
 
- - [Boost](https://www.boost.org/users/license.html)
- - [Library1]()
+ - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page#License)
+ - [googletest](https://github.com/google/googletest/blob/master/googletest/LICENSE)
+ - [Standard Template Library "algorithm"](https://github.com/google/libcxx/blob/master/LICENSE.TXT)
