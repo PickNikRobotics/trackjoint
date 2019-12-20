@@ -42,7 +42,8 @@ class TrajectoryGenerator {
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(
       const std::vector<JointTrajectory> &output_trajectories,
-      const std::string &base_filepath) const;
+      const std::string &base_filepath,
+      bool appendToFile = false) const;
 
   /** \brief Check user input for errors */
   ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,

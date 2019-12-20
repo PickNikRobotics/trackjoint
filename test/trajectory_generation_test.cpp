@@ -23,10 +23,13 @@
 
 // Target testing library
 #include <trackjoint/trajectory_generator.h>
+#include "ros/ros.h"
+#include "ros/package.h"
 
-// To be reconsidered afterwards - GSN CHANGE
+// Preparing data file handling
 #include <fstream>
-std::string base_filepath = "/home/guilesn/trackjoint_data/UR5-oscillating-experiment/tj_output_joint";
+std::string ref_path = ros::package::getPath("trackjoint");
+std::string base_filepath = ref_path + "/test/data/tj_output_joint";
 
 namespace trackjoint {
 class TrajectoryGenerationTest : public ::testing::Test {
@@ -363,17 +366,16 @@ TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase)
 
   trackjoint::ErrorCodeEnum error_code;
 
-  // CREATE VARIABLES THAT WILL RECEIVE DATA FROM .TXT FILES
   std::vector<std::vector<double>> moveit_des_positions;
   std::vector<std::vector<double>> moveit_des_velocities;
   std::vector<std::vector<double>> moveit_des_accelerations;
   std::vector<std::vector<double>> moveit_times_from_start;
 
-  // CALL FUNCTION THAT READS DATA FROM .TXT FILES BELOW
-  moveit_des_positions = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_pos.txt");
-  moveit_des_velocities = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_vel.txt");
-  moveit_des_accelerations = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_des_acc.txt");
-  moveit_times_from_start = LoadWaypointsFromFile("/home/guilesn/trackjoint_ws/src/trackjoint/test/moveit_time_from_start.txt");
+  // Reading MoveIt experimental data from .txt files
+  moveit_des_positions = LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_pos.txt");
+  moveit_des_velocities = LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_vel.txt");
+  moveit_des_accelerations = LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_acc.txt");
+  moveit_times_from_start = LoadWaypointsFromFile(ref_path + "/test/data/moveit_time_from_start.txt");
 
   // For each MoveIt waypoint
   for (std::size_t point = 0; point < moveit_times_from_start.size() - 1; ++point)
@@ -414,23 +416,12 @@ TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase)
 
     traj_gen.GenerateTrajectories(&output_trajectories);
 
-    traj_gen.SaveTrajectoriesToFile(output_trajectories, base_filepath);
+    // Saving Trackjoint output to .csv files for plotting
+    traj_gen.SaveTrajectoriesToFile(output_trajectories, base_filepath, point != 0);
 
     EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
   }
-    // debugging file writing
-    size_t number_of_lines = 0;
-    std::string line;
-    std::ifstream input_file("/home/guilesn/trackjoint_data/UR5-oscillating-experiment/tj_output_joint3.txt");
-    while (std::getline(input_file, line)) ++number_of_lines;
-    std::cout << "Number of lines in text file: " << number_of_lines << std::endl;
-
-  // EXPECT_EQ(x_desired.size(), x_smoothed.size());
-  // // Duration
-  // uint num_waypoint_tolerance = 1;
-  // uint expected_num_waypoints = kNumWaypoints;
-  // EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
-  // EXPECT_EQ(true, true);
+  EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
 }
 
 TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
