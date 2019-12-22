@@ -61,21 +61,21 @@ void VerifyVelAccelJerkLimits(
 std::vector<std::vector<double>> LoadWaypointsFromFile(const std::string &file_name) {
   std::ifstream input_file(file_name);
   std::string line;
-  std::vector<std::vector<double>> v;
+  std::vector<std::vector<double>> waypoint_vector;
 
   std::string tempstr;
   double tempdouble;
   char delimiter;
 
   while (std::getline(input_file, tempstr)) {
-      std::istringstream iss(tempstr);
+      std::istringstream input_stream(tempstr);
       std::vector<double> tempv;
-      while (iss >> tempdouble) {
+      while (input_stream >> tempdouble) {
           tempv.push_back(tempdouble);
-          iss >> delimiter;
+          input_stream >> delimiter;
       }
-      v.push_back(tempv);
+      waypoint_vector.push_back(tempv);
   }
-  return v;
+  return waypoint_vector;
 }
 }  // namespace trackjoint

@@ -148,13 +148,13 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
 void TrajectoryGenerator::SaveTrajectoriesToFile(
     const std::vector<JointTrajectory> &output_trajectories,
     const std::string &base_filepath,
-    bool appendToFile) const {
+    bool append_to_file) const {
   std::ofstream output_file;
   std::string output_path;
 
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint) {
     output_path = base_filepath + std::to_string(joint + 1) + ".csv";
-    if (appendToFile) {
+    if (append_to_file) {
       output_file.open(output_path, std::ofstream::out | std::ofstream::app);
     } else {
       output_file.open(output_path, std::ofstream::out);
