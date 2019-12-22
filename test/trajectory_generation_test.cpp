@@ -570,6 +570,85 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits) {
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
+
+TEST_F(TrajectoryGenerationTest, MoveItMaxDurationExceeded1) {
+  // Max duration was exceeded when trying to smooth this MoveIt-generated trajectory
+
+  std::vector<trackjoint::KinematicState> current_joint_states(6);
+  trackjoint::KinematicState joint_state;
+  joint_state.position = -0.000658968;
+  joint_state.velocity = -0.0138324;
+  joint_state.acceleration = -0.240404;
+  current_joint_states[0] = joint_state;
+  joint_state.position = 0.00596041;
+  joint_state.velocity = -0.176232;
+  joint_state.acceleration = -3.06289;
+  current_joint_states[1] = joint_state;
+  joint_state.position = 0.000459907;
+  joint_state.velocity = 0.000265355;
+  joint_state.acceleration = 0.00461183;
+  current_joint_states[2] = joint_state;
+  joint_state.position = 0.00622855;
+  joint_state.velocity = 0.136179;
+  joint_state.acceleration = 2.36676;
+  current_joint_states[3] = joint_state;
+  joint_state.position = -2.89022e-05;
+  joint_state.velocity = -9.12999e-05;
+  joint_state.acceleration = -0.00158678;
+  current_joint_states[4] = joint_state;
+  joint_state.position = 0.00224438;
+  joint_state.velocity = 0.0543747;
+  joint_state.acceleration = 0.945024;
+  current_joint_states[5] = joint_state;
+
+  std::vector<trackjoint::KinematicState> goal_joint_states(6);
+  joint_state.position = -0.00122219;
+  joint_state.velocity = -0.0227317;
+  joint_state.acceleration = -0.226066;
+  goal_joint_states[0] = joint_state;
+  joint_state.position = -0.00121542;
+  joint_state.velocity = -0.289615;
+  joint_state.acceleration = -2.88021;
+  goal_joint_states[1] = joint_state;
+  joint_state.position = 0.000470711;
+  joint_state.velocity = 0.000436077;
+  joint_state.acceleration = 0.00433677;
+  goal_joint_states[2] = joint_state;
+  joint_state.position = 0.0117735;
+  joint_state.velocity = 0.223792;
+  joint_state.acceleration = 2.2256;
+  goal_joint_states[3] = joint_state;
+  joint_state.position = -3.26198e-05;
+  joint_state.velocity = -0.00015004;
+  joint_state.acceleration = -0.00149214;
+  goal_joint_states[4] = joint_state;
+  joint_state.position = 0.00445841;
+  joint_state.velocity = 0.0893579;
+  joint_state.acceleration = 0.888661;
+  goal_joint_states[5] = joint_state;
+
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 3.15;
+  single_joint_limits.acceleration_limit = 5;
+  single_joint_limits.jerk_limit = 500;
+  std::vector<trackjoint::Limits> limits(6, single_joint_limits);
+
+  const double kTimestep = 0.0075;
+  const double kDesiredDuration = 0.028322;
+  const double kMaxDuration = 10;
+
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+      goal_joint_states, limits);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+
+  // Position error
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
+}
 }  // namespace trackjoint
 
 int main(int argc, char** argv) {
