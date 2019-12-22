@@ -351,6 +351,9 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand) {
 }
 
 TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase) {
+  // This test comes from a MoveIt trajectory.
+  // It was successful but there was a position oscillation.
+
   const int kNumDof = 6;
   const double kMaxDuration = 10;
   const double kTimestep = 0.0075;
@@ -391,13 +394,13 @@ TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase) {
 
   // Reading MoveIt experimental data from .txt files
   moveit_des_positions =
-      LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_pos.txt");
+      LoadWaypointsFromFile(ref_path + "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt");
   moveit_des_velocities =
-      LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_vel.txt");
+      LoadWaypointsFromFile(ref_path + "/test/data/30_percent_speed_oscillation/moveit_des_vel.txt");
   moveit_des_accelerations =
-      LoadWaypointsFromFile(ref_path + "/test/data/moveit_des_acc.txt");
+      LoadWaypointsFromFile(ref_path + "/test/data/30_percent_speed_oscillation/moveit_des_acc.txt");
   moveit_times_from_start =
-      LoadWaypointsFromFile(ref_path + "/test/data/moveit_time_from_start.txt");
+      LoadWaypointsFromFile(ref_path + "/test/data/30_percent_speed_oscillation/moveit_time_from_start.txt");
 
   // For each MoveIt waypoint
   for (std::size_t point = 0; point < moveit_times_from_start.size() - 1;
