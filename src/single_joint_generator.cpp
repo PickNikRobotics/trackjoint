@@ -348,8 +348,11 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
 
   // Iterate over new durations until the position error is acceptable or the
   // maximum duration is reached
+  std::cout << index_last_successful_ << std::endl;
+  std::cout << waypoints_.positions.size() << std::endl;
   while ((index_last_successful_ < waypoints_.positions.size()) &&
          (desired_duration_ < max_duration_)) {
+    std::cout << "Extending duration" << std::endl;
     // Try increasing the duration, based on fraction of states that weren't
     // reached successfully
     // TODO(andyz): Ensure at least one new timestep is added
@@ -384,7 +387,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach() {
 
   // Error if we extended the duration to the maximum and it still wasn't
   // successful
-  if (index_last_successful_ < waypoints_.elapsed_times.size()) {
+  if (index_last_successful_ < waypoints_.positions.size()) {
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
   }
 

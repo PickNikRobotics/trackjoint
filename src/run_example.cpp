@@ -17,41 +17,31 @@
 #include <fstream>
 
 int main(int argc, char** argv) {
-  const int kNumDof = 3;
-  const double kTimestep = 0.001;
-  const double kDesiredDuration = 2.5;
-  const double kMaxDuration = 5;
+  const int kNumDof = 1;
+  const double kTimestep = 0.0075;
+  const double kDesiredDuration = 0.028322;
+  const double kMaxDuration = 10;
   const std::string kOutputPathBase =
       "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
-  std::vector<trackjoint::KinematicState> current_joint_states;
+  std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
-  joint_state.position = -1;
-  joint_state.velocity = -0.1;
-  joint_state.acceleration = 0;
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
-  current_joint_states.push_back(joint_state);
+  joint_state.position = 0.00596041;
+  joint_state.velocity = -0.176232;
+  joint_state.acceleration = -3.06289;
+  current_joint_states[0] = joint_state;
 
-  std::vector<trackjoint::KinematicState> goal_joint_states;
-  // No position change for the first two joints
-  joint_state.position = -1;
-  joint_state.velocity = 1.9;
-  joint_state.acceleration = 0;
-  goal_joint_states.push_back(joint_state);
-  goal_joint_states.push_back(joint_state);
-  // Big position change for the third joint
-  joint_state.position = 4;
-  goal_joint_states.push_back(joint_state);
+  std::vector<trackjoint::KinematicState> goal_joint_states(1);
+  joint_state.position = -0.00121542;
+  joint_state.velocity = -0.289615;
+  joint_state.acceleration = -2.88021;
+  goal_joint_states[0] = joint_state;
 
-  std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 2;
-  single_joint_limits.acceleration_limit = 1e4;
-  single_joint_limits.jerk_limit = 1e6;
-  limits.push_back(single_joint_limits);
-  limits.push_back(single_joint_limits);
-  limits.push_back(single_joint_limits);
+  single_joint_limits.velocity_limit = 3.15;
+  single_joint_limits.acceleration_limit = 5;
+  single_joint_limits.jerk_limit = 500;
+  std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration,

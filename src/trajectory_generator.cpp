@@ -77,9 +77,9 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
   return downsampled_vector;
 }
 
-  ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
-      const std::vector<trackjoint::KinematicState> &goal_joint_states,
-      const std::vector<Limits> &limits, double nominal_timestep) {
+ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
+    const std::vector<trackjoint::KinematicState> &goal_joint_states,
+    const std::vector<Limits> &limits, double nominal_timestep) {
 
   if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
@@ -111,25 +111,29 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(
 
   // Check that current vels. are less than the limits.
   for(size_t joint = 0; joint < kNumDof; ++joint){
-    if(abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
+    if(fabs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
+      std::cout << joint << std::endl;
+      std::cout << current_joint_states[0].velocity << std::endl;
+      std::cout << fabs(current_joint_states[0].velocity) << std::endl;
+      std::cout << limits[0].velocity_limit << std::endl;
       SetFinalStateToCurrentState();
       return  ErrorCodeEnum::kVelocityExceedsLimit;
     }
 
     // Check that goal vels. are less than the limits.
-    if(abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit){
+    if(fabs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit){
       SetFinalStateToCurrentState();
       return ErrorCodeEnum::kVelocityExceedsLimit;
     }
 
     // Check that current accels. are less than the limits.
-    if(abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+    if(fabs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
       SetFinalStateToCurrentState();
       return ErrorCodeEnum::kAccelExceedsLimit;
     }
 
     // Check that goal accels. are less than the limits.
-    if(abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
+    if(fabs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit){
       SetFinalStateToCurrentState();
       return ErrorCodeEnum::kAccelExceedsLimit;
     }
