@@ -42,16 +42,17 @@ class TrajectoryGenerator {
   /** \brief Save generated trajectory to a .csv file */
   void SaveTrajectoriesToFile(
       const std::vector<JointTrajectory> &output_trajectories,
-      const std::string &base_filepath,
-      bool append_to_file = false) const;
+      const std::string &base_filepath, bool append_to_file = false) const;
 
   /** \brief Check user input for errors */
-  ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
+  ErrorCodeEnum InputChecking(
+      const std::vector<trackjoint::KinematicState> &current_joint_states,
       const std::vector<trackjoint::KinematicState> &goal_joint_states,
       const std::vector<Limits> &limits, double nominal_timestep);
 
   /** \brief Check limits aren't exceeded before returning. */
-  ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory> &output_trajectories);
+  ErrorCodeEnum OutputChecking(
+      const std::vector<JointTrajectory> &output_trajectories);
 
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
@@ -80,5 +81,5 @@ class TrajectoryGenerator {
   size_t upsample_rounds_ =
       0;  // Every time we upsample, timestep is halved. Track this.
   const std::vector<Limits> limits_;
-};        // end class TrajectoryGenerator
+};  // end class TrajectoryGenerator
 }  // namespace trackjoint
