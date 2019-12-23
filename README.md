@@ -43,6 +43,6 @@ Usually a robot manufacturer provides joint velocity limits. It can be difficult
 
 * The jerk limit is usually greater than the acceleration limit, which is greater than the velocity limit: jerk_limit > acceleration_limit > velocity_limit.
 
-* The jerk limit should be less than (acceleration_limit / controller_timestep). Otherwise, acceleration could jump to maximum in one timestep and there would be no reason for a jerk limit.
+* It is not unusual to have jerk limits that seem very large, in the range of 5,000-10,000 rad/s^3.
 
-* For tuning the acceleration limit, think about how long it should take the robot to accelerate to maximum velocity in your application. For example, if it takes approximately 0.5 seconds to accelerate to full speed, an estimate is:  acceleration_limit = velocity_limit / 0.5.
+* For tuning the acceleration limit, think about how long it should take the robot to accelerate to maximum velocity in your application. For example, if it should take approximately 0.5 seconds to accelerate to full speed, an estimate is:  acceleration_limit = velocity_limit / 0.5.
