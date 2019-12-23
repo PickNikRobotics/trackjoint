@@ -24,43 +24,39 @@
 #include <memory>  // shared_ptr
 #include <vector>
 
-namespace trackjoint {
-
-class TrajectoryGenerator {
- public:
+namespace trackjoint
+{
+class TrajectoryGenerator
+{
+public:
   /** \brief Constructor */
-  TrajectoryGenerator(uint num_dof, double timestep, double desired_duration,
-                      double max_duration,
-                      const std::vector<KinematicState> &current_joint_states,
-                      const std::vector<KinematicState> &goal_joint_states,
-                      const std::vector<Limits> &limits);
+  TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
+                      const std::vector<KinematicState>& current_joint_states,
+                      const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits);
 
   /** \brief Generate and return trajectories for every joint*/
-  ErrorCodeEnum GenerateTrajectories(
-      std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory>* output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
-  void SaveTrajectoriesToFile(
-      const std::vector<JointTrajectory> &output_trajectories,
-      const std::string &base_filepath) const;
+  void SaveTrajectoriesToFile(const std::vector<JointTrajectory>& output_trajectories,
+                              const std::string& base_filepath) const;
 
   /** \brief Check user input for errors */
-  ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState> &current_joint_states,
-      const std::vector<trackjoint::KinematicState> &goal_joint_states,
-      const std::vector<Limits> &limits, double nominal_timestep);
+  ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
+                              const std::vector<trackjoint::KinematicState>& goal_joint_states,
+                              const std::vector<Limits>& limits, double nominal_timestep);
 
   /** \brief Check limits aren't exceeded before returning. */
-  ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory> &output_trajectories);
+  ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory>& output_trajectories);
 
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
   /** \brief Undo UpSample() to output waypoints with the correct spacing. */
-  Eigen::VectorXd DownSample(const Eigen::VectorXd &vector_to_downsample);
+  Eigen::VectorXd DownSample(const Eigen::VectorXd& vector_to_downsample);
 
   /** \brief Synchronize all trajectories with the one of longest duration. */
-  ErrorCodeEnum SynchronizeTrajComponents(
-      std::vector<JointTrajectory> *output_trajectories);
+  ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
   /** \brief Set the output state equal to the current state. Used if an error
    * is encountered. */
@@ -69,15 +65,12 @@ class TrajectoryGenerator {
   const uint kNumDof;
   double desired_duration_, max_duration_;
   // TODO(andyz): set this back to a small number when done testing
-  const size_t kMaxNumWaypoints =
-      10000;  // A relatively small number, to run fast
-  const size_t kMinNumWaypoints =
-      49;  // Upsample for better accuracy if fewer than this many waypoints
+  const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
+  const size_t kMinNumWaypoints = 49;     // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   double upsampled_timestep_;
-  size_t upsample_rounds_ =
-      0;  // Every time we upsample, timestep is halved. Track this.
+  size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
   const std::vector<Limits> limits_;
-};        // end class TrajectoryGenerator
+};  // end class TrajectoryGenerator
 }  // namespace trackjoint

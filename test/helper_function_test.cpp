@@ -22,16 +22,24 @@
 // Target testing library
 #include <trackjoint/trajectory_generator.h>
 
-namespace trackjoint {
-class HelperFunctionTest : public ::testing::Test {
- public:
-  HelperFunctionTest() {}
+namespace trackjoint
+{
+class HelperFunctionTest : public ::testing::Test
+{
+public:
+  HelperFunctionTest()
+  {
+  }
 };  // class HelperFunctionTest
 
-TEST_F(HelperFunctionTest, Placeholder) { EXPECT_EQ(true, true); }
+TEST_F(HelperFunctionTest, Placeholder)
+{
+  EXPECT_EQ(true, true);
+}
 }  // namespace trackjoint
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
   testing::InitGoogleTest(&argc, argv);
 
   int result = RUN_ALL_TESTS();

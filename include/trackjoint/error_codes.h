@@ -11,9 +11,10 @@
 #include <string>
 #include <unordered_map>
 
-namespace trackjoint {
-
-enum ErrorCodeEnum {
+namespace trackjoint
+{
+enum ErrorCodeEnum
+{
   kNoError = 0,
   kDesiredDurationTooShort = 1,
   kMaxDurationExceeded = 2,
@@ -26,19 +27,14 @@ enum ErrorCodeEnum {
 };
 
 const std::unordered_map<uint, std::string> kErrorCodeMap(
-    {{kNoError, "No error, trajectory generation was successful"},
-     {kDesiredDurationTooShort,
-      "Desired duration is too short, cannot have less than one timestep in a "
-      "trajectory"},
-     {kMaxDurationExceeded, "Max duration was exceeded"},
-     {kVelocityExceedsLimit, "A velocity input exceeds the velocity limit"},
-     {kAccelExceedsLimit,
-      "An acceleration input exceeds the acceleration limit"},
-     {kMaxDurationLessThanDesiredDuration,
-      "max_duration should not be less than desired_duration"},
-     {kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero"},
-     {kGoalPositionMismatch,
-      "Mismatch between the final position and the goal position"},
-     {kInternalLimitViolation,
-      "Internal error: kinematic limits were violated during trajectory generation"}});
+    { { kNoError, "No error, trajectory generation was successful" },
+      { kDesiredDurationTooShort, "Desired duration is too short, cannot have less than one timestep in a "
+                                  "trajectory" },
+      { kMaxDurationExceeded, "Max duration was exceeded" },
+      { kVelocityExceedsLimit, "A velocity input exceeds the velocity limit" },
+      { kAccelExceedsLimit, "An acceleration input exceeds the acceleration limit" },
+      { kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration" },
+      { kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero" },
+      { kGoalPositionMismatch, "Mismatch between the final position and the goal position" },
+      { kInternalLimitViolation, "Internal error: kinematic limits were violated during trajectory generation" } });
 }  // end namespace trackjoint
