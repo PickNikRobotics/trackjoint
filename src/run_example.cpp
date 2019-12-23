@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   trackjoint::Limits single_joint_limits;
   single_joint_limits.velocity_limit = 3.15;
   single_joint_limits.acceleration_limit = 5;
-  single_joint_limits.jerk_limit = 500;
+  single_joint_limits.jerk_limit = 5000;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // Initialize main class

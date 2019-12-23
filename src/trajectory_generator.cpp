@@ -90,8 +90,8 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
 
   if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_) {
     // Print a warning but do not exit
-    std::cout << "Capping max duration at " << kMaxNumWaypoints
-              << " waypoints to maintain determinism." << std::endl;
+    std::cout << "Capping max duration at " << kMaxNumWaypoints * upsampled_timestep_
+              << " to maintain determinism." << std::endl;
     max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
   }
 
@@ -112,10 +112,6 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
   // Check that current vels. are less than the limits.
   for(size_t joint = 0; joint < kNumDof; ++joint){
     if(fabs(current_joint_states[joint].velocity) > limits[joint].velocity_limit){
-      std::cout << joint << std::endl;
-      std::cout << current_joint_states[0].velocity << std::endl;
-      std::cout << fabs(current_joint_states[0].velocity) << std::endl;
-      std::cout << limits[0].velocity_limit << std::endl;
       SetFinalStateToCurrentState();
       return  ErrorCodeEnum::kVelocityExceedsLimit;
     }

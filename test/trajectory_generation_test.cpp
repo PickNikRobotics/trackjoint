@@ -590,7 +590,7 @@ TEST_F(TrajectoryGenerationTest, MoveItMaxDurationExceeded1) {
   trackjoint::Limits single_joint_limits;
   single_joint_limits.velocity_limit = 3.15;
   single_joint_limits.acceleration_limit = 5;
-  single_joint_limits.jerk_limit = 500;
+  single_joint_limits.jerk_limit = 5000;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   const double kTimestep = 0.0075;
@@ -601,7 +601,7 @@ TEST_F(TrajectoryGenerationTest, MoveItMaxDurationExceeded1) {
   trackjoint::TrajectoryGenerator traj_gen(
       kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
       goal_joint_states, limits);
-  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
   EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep));
   EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
@@ -609,7 +609,7 @@ TEST_F(TrajectoryGenerationTest, MoveItMaxDurationExceeded1) {
   // Position error
   const double kPositionTolerance = 2e-3;
   const double kPositionError = trackjoint::CalculatePositionAccuracy(
-      goal_joint_states, output_trajectories);
+       goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
 }
 }  // namespace trackjoint
