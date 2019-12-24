@@ -21,8 +21,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <vector>
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
