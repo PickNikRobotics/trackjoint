@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<launch>
-  <test pkg="trackjoint" type="helper_function_test" test-name="helper_function_test" time-limit="300" args=""/>
-</launch>
