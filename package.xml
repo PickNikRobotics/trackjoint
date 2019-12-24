@@ -22,7 +22,6 @@
   <depend>eigen</depend>
   <depend version_eq="3.9">clang-format</depend>
 
-
   <export>
   </export>
 </package>
