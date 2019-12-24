@@ -40,5 +40,6 @@ const std::unordered_map<uint, std::string> kErrorCodeMap(
      {kGoalPositionMismatch,
       "Mismatch between the final position and the goal position"},
      {kInternalLimitViolation,
-      "Internal error: kinematic limits were violated during trajectory generation"}});
+      "Internal error: kinematic limits were violated during trajectory "
+      "generation"}});
 }  // end namespace trackjoint

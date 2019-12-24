@@ -12,6 +12,8 @@ add_definitions(-W -Wall -Wextra
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  roslib
   roslint
 )
 
@@ -23,6 +25,8 @@ find_package(Eigen3 REQUIRED)
 ###################################
 catkin_package(
   CATKIN_DEPENDS
+    roscpp
+    roslib
   INCLUDE_DIRS
     include
   LIBRARIES
