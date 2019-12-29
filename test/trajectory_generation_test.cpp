@@ -556,9 +556,10 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, MoveItMaxDurationExceeded1)
+TEST_F(TrajectoryGenerationTest, LimitExceededAtIndex2)
 {
-  // Max duration was exceeded when trying to smooth this MoveIt-generated trajectory
+  // A limit is exceeded at the second index. This used to cause a failure because stepping back to compensate did not
+  // work (we were already near the beginning).
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
