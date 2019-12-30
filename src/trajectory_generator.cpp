@@ -54,9 +54,6 @@ void TrajectoryGenerator::UpSample()
     upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
     ++upsample_rounds_;
   }
-  std::cout << "New duration: " << upsampled_timestep_ * (upsampled_num_waypoints_-1) << std::endl;
-  std::cout << "New num waypoints: " << upsampled_num_waypoints_ << std::endl;
-  std::cout << "Upsampled timestep: " << upsampled_timestep_ << std::endl;
 }
 
 void TrajectoryGenerator::DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector,
@@ -70,35 +67,51 @@ void TrajectoryGenerator::DownSample(Eigen::VectorXd* time_vector, Eigen::Vector
     size_t new_vector_size = 1 + final_time / kDesiredTimestep;
     // Time downsampling:
     time_vector->setLinSpaced(new_vector_size, 0., final_time);
-    std::cout << "Downsampled time vector size: " << time_vector->size() << std::endl;
-    std::cout << "Downsampled end time: " << (*time_vector)[time_vector->size() - 1] << std::endl;
 
     // Determine length of position/velocity/acceleration from length of time vector:
-    size_t num_elements_to_skip = position_vector->size() / time_vector->size();
-    std::cout << "num_elements_to_skip: " << num_elements_to_skip << std::endl;
-
     Eigen::VectorXd new_positions(new_vector_size);
     Eigen::VectorXd new_velocities(new_vector_size);
     Eigen::VectorXd new_accelerations(new_vector_size);
 
+    // Keep the first and last elements since they should match exactly
     new_positions[0] = (*position_vector)[0];
     new_velocities[0] = (*velocity_vector)[0];
     new_accelerations[0] = (*acceleration_vector)[0];
+    new_positions[new_positions.size() - 1] = (*position_vector)[position_vector->size() - 1];
+    new_velocities[new_velocities.size() - 1] = (*velocity_vector)[velocity_vector->size() - 1];
+    new_accelerations[new_accelerations.size() - 1] = (*acceleration_vector)[acceleration_vector->size() - 1];
 
-    // Position/velocity/acceleration:
-    for (size_t index = 1; index < new_vector_size; ++index)
+    // Position/velocity/acceleration
+    // Do not replace first and last elements.
+    // March inward from the first and last elements, meeting in the middle.
+    // We know when to stop based on the number of elements filled.
+
+    size_t num_elements_to_skip = position_vector->size() / time_vector->size();
+
+    // Total number of elements filled in the new vector
+    size_t num_elements_filled_in_new_vector = 0;
+    // Number of elements traversed in the upsampled vector
+    size_t num_upsampled_elements_traversed = 0;
+    for (size_t count = 1; num_elements_filled_in_new_vector < new_vector_size - 2; ++count)
     {
-      new_positions[index] = (*position_vector)[index * num_elements_to_skip];
-      new_velocities[index] = (*velocity_vector)[index * num_elements_to_skip];
-      new_accelerations[index] = (*acceleration_vector)[index * num_elements_to_skip];
-      std::cout << new_positions[index] << std::endl;
-      std::cout << "index: " << index << std::endl;
+      // Update num_elements_to_skip based on:
+      // (num_elements_remaining_in_upsampled_vector) / (num_elements_remaining_in_new_vector)
+      num_elements_to_skip = (position_vector->size() - 2 - num_upsampled_elements_traversed) / (new_vector_size - 1 - num_elements_filled_in_new_vector);
+
+      new_positions[count] = (*position_vector)[count * num_elements_to_skip];
+      ++num_elements_filled_in_new_vector;
+      num_upsampled_elements_traversed = num_upsampled_elements_traversed + num_elements_to_skip;
+
+      // Count down if we need to fill more elements. Subtract two because first and last element are already filled.
+      if (num_elements_filled_in_new_vector < new_vector_size - 2)
+      {
+        // Start filling at (end-1) because the last element is already filled
+        new_positions[new_positions.size() - 1 - count] =
+          (*position_vector)[position_vector->size() - 1 - count * num_elements_to_skip];
+        ++num_elements_filled_in_new_vector;
+        num_upsampled_elements_traversed = num_upsampled_elements_traversed + num_elements_to_skip;
+      }
     }
-    std::cout << "Final downsampled position: " << new_positions[new_positions.size()-1] << std::endl;
-    std::cout << "Final upsampled position: " << (*position_vector)[position_vector->size()-1] << std::endl;
-    //std::cout << (*position_vector)[504] << std::endl;
-    std::cout << (*position_vector)[position_vector->size() - 2] << std::endl;
-    std::cout << (*position_vector)[position_vector->size() - 1] << std::endl;
 
     *position_vector = new_positions;
     *velocity_vector = new_velocities;
