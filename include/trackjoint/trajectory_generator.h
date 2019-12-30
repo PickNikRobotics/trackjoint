@@ -59,11 +59,9 @@ private:
   /** \brief Set the output state equal to the current state. Used if an error is encountered. */
   void SetFinalStateToCurrentState();
 
-  /** \brief Undo UpSample() to output a position or velocity or acceleration series with the correct spacing. */
-  Eigen::VectorXd DownSamplePositionVelAccel(const Eigen::VectorXd& vector_to_downsample);
-
-  /** \brief Undo UpSample() to output a time series with the correct spacing. */
-  Eigen::VectorXd DownSampleElapsedTimes(const Eigen::VectorXd& time_vector);
+  /** \brief Undo UpSample() to output a time/position/velocity series with the correct spacing. */
+  void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector,
+    Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector);
 
   const uint kNumDof;
   double desired_duration_, max_duration_;
