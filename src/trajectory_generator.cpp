@@ -18,6 +18,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   : kNumDof(num_dof)
   , desired_duration_(desired_duration)
   , max_duration_(max_duration)
+  , kDesiredTimestep(timestep)
   ,
   // Default timestep
   upsampled_timestep_(timestep)
@@ -41,10 +42,8 @@ void TrajectoryGenerator::UpSample()
   // Upsample algorithm:
   // Keep the first and last waypoint.
   // Insert a new waypoint between every pre-existing waypoint.
-  // The formula for the new number of waypoints is new_num_waypoints =
-  // 2*num_waypoints-1
-  // Upsample_rounds_ tracks how many times this was applied so we can reverse
-  // it later.
+  // The formula for the new number of waypoints is new_num_waypoints = 2*num_waypoints-1
+  // Upsample_rounds_ tracks how many times this was applied so we can reverse it later.
 
   upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
@@ -56,13 +55,16 @@ void TrajectoryGenerator::UpSample()
     ++upsample_rounds_;
   }
   std::cout << "New duration: " << upsampled_timestep_ * (upsampled_num_waypoints_-1) << std::endl;
+  std::cout << "New num waypoints: " << upsampled_num_waypoints_ << std::endl;
+  std::cout << "Upsampled timestep: " << upsampled_timestep_ << std::endl;
 }
 
-Eigen::VectorXd TrajectoryGenerator::DownSample(const Eigen::VectorXd& vector_to_downsample)
+Eigen::VectorXd TrajectoryGenerator::DownSamplePositionVelAccel(const Eigen::VectorXd& vector_to_downsample)
 {
   Eigen::VectorXd downsampled_vector;
 
   // Keep every (2 ^ upsample_rounds_) waypoints, starting after the first index
+  // Need at least 2 waypoints
   if (vector_to_downsample.size() > 2)
   {
     uint num_waypoints_to_skip = pow(2, upsample_rounds_);
@@ -78,6 +80,28 @@ Eigen::VectorXd TrajectoryGenerator::DownSample(const Eigen::VectorXd& vector_to
   else
   {
     downsampled_vector = vector_to_downsample;
+  }
+
+  return downsampled_vector;
+}
+
+Eigen::VectorXd TrajectoryGenerator::DownSampleElapsedTimes(const Eigen::VectorXd& time_vector)
+{
+  // The formula for this is different from position/velocity/acceleration.
+  Eigen::VectorXd downsampled_vector;
+
+  // Need at least 2 waypoints
+  if (time_vector.size() > 2)
+  {
+    // Eigen::VectorXd does not provide .back(), so get the final time like this:
+    double final_time = time_vector[time_vector.size() - 1];
+    size_t new_vector_size = 1 + final_time / kDesiredTimestep;
+    downsampled_vector.setLinSpaced(new_vector_size, 0., final_time);
+    std::cout << "Downsampled end time: " << downsampled_vector[downsampled_vector.size() - 1] << std::endl;
+  }
+  else
+  {
+    downsampled_vector = time_vector;
   }
 
   return downsampled_vector;
@@ -289,10 +313,10 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
   if (upsample_rounds_ > 0)
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
-      std::cout << "Final position before DownSample(): " << output_trajectories->at(joint).positions[ output_trajectories->at(joint).positions.size()-1 ] << std::endl;
-      output_trajectories->at(joint).positions = DownSample(output_trajectories->at(joint).positions);
-      output_trajectories->at(joint).velocities = DownSample(output_trajectories->at(joint).velocities);
-      output_trajectories->at(joint).accelerations = DownSample(output_trajectories->at(joint).accelerations);
+      std::cout << "Final position before DownSamplePositionVelAccel(): " << output_trajectories->at(joint).positions[ output_trajectories->at(joint).positions.size()-1 ] << std::endl;
+      output_trajectories->at(joint).positions = DownSamplePositionVelAccel(output_trajectories->at(joint).positions);
+      output_trajectories->at(joint).velocities = DownSamplePositionVelAccel(output_trajectories->at(joint).velocities);
+      output_trajectories->at(joint).accelerations = DownSamplePositionVelAccel(output_trajectories->at(joint).accelerations);
 
       std::cout << "UPSAMPLE ROUNDS:" << std::endl;
       std::cout << upsample_rounds_ << std::endl;
@@ -301,12 +325,12 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
       std::cout << "TIMESTEP BEFORE DOWNSAMPLING: " << std::endl;
       std::cout << output_trajectories->at(joint).elapsed_times[1] - output_trajectories->at(joint).elapsed_times[0] << std::endl;
       std::cout << "SEQUENCE BEFORE DOWNSAMPLING: " << std::endl;
-      std::cout << output_trajectories->at(joint).elapsed_times[0] << "  "
-      << output_trajectories->at(joint).elapsed_times[1] << "  "
-      << output_trajectories->at(joint).elapsed_times[2] << "  "
+      std::cout << output_trajectories->at(joint).elapsed_times[14] << "  "
+      << output_trajectories->at(joint).elapsed_times[15] << "  "
+      << output_trajectories->at(joint).elapsed_times[16] << "  "
       << std::endl;
 
-      output_trajectories->at(joint).elapsed_times = DownSample(output_trajectories->at(joint).elapsed_times);
+      output_trajectories->at(joint).elapsed_times = DownSampleElapsedTimes(output_trajectories->at(joint).elapsed_times);
 
       std::cout << "===" << std::endl;
       std::cout << "LENGTH AFTER DOWNSAMPLING:" << std::endl;

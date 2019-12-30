@@ -46,21 +46,24 @@ public:
                               const std::vector<trackjoint::KinematicState>& goal_joint_states,
                               const std::vector<Limits>& limits, double nominal_timestep);
 
+private:
   /** \brief Check limits aren't exceeded before returning. */
   ErrorCodeEnum OutputChecking(const std::vector<JointTrajectory>& output_trajectories);
 
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
-  /** \brief Undo UpSample() to output waypoints with the correct spacing. */
-  Eigen::VectorXd DownSample(const Eigen::VectorXd& vector_to_downsample);
-
   /** \brief Synchronize all trajectories with the one of longest duration. */
   ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
-  /** \brief Set the output state equal to the current state. Used if an error
-   * is encountered. */
+  /** \brief Set the output state equal to the current state. Used if an error is encountered. */
   void SetFinalStateToCurrentState();
+
+  /** \brief Undo UpSample() to output a position or velocity or acceleration series with the correct spacing. */
+  Eigen::VectorXd DownSamplePositionVelAccel(const Eigen::VectorXd& vector_to_downsample);
+
+  /** \brief Undo UpSample() to output a time series with the correct spacing. */
+  Eigen::VectorXd DownSampleElapsedTimes(const Eigen::VectorXd& time_vector);
 
   const uint kNumDof;
   double desired_duration_, max_duration_;
@@ -69,6 +72,7 @@ public:
   const size_t kMinNumWaypoints = 49;     // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
+  const double kDesiredTimestep;
   double upsampled_timestep_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
   const std::vector<Limits> limits_;
