@@ -55,6 +55,7 @@ void TrajectoryGenerator::UpSample()
     upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
     ++upsample_rounds_;
   }
+  std::cout << "New duration: " << upsampled_timestep_ * (upsampled_num_waypoints_-1) << std::endl;
 }
 
 Eigen::VectorXd TrajectoryGenerator::DownSample(const Eigen::VectorXd& vector_to_downsample)
@@ -86,22 +87,6 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
                                                  const std::vector<trackjoint::KinematicState>& goal_joint_states,
                                                  const std::vector<Limits>& limits, double nominal_timestep)
 {
-  if (desired_duration_ > kMaxNumWaypoints * upsampled_timestep_)
-  {
-    // Print a warning but do not exit
-    std::cout << "Capping desired duration at " << kMaxNumWaypoints << " waypoints to maintain determinism."
-              << std::endl;
-    desired_duration_ = kMaxNumWaypoints * upsampled_timestep_;
-  }
-
-  if (max_duration_ > kMaxNumWaypoints * upsampled_timestep_)
-  {
-    // Print a warning but do not exit
-    std::cout << "Capping max duration at " << kMaxNumWaypoints * upsampled_timestep_ << " to maintain determinism."
-              << std::endl;
-    max_duration_ = kMaxNumWaypoints * upsampled_timestep_;
-  }
-
   double rounded_duration = std::round(desired_duration_ / upsampled_timestep_) * upsampled_timestep_;
 
   // Need at least 1 timestep
@@ -304,10 +289,30 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
   if (upsample_rounds_ > 0)
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
+      std::cout << "Final position before DownSample(): " << output_trajectories->at(joint).positions[ output_trajectories->at(joint).positions.size()-1 ] << std::endl;
       output_trajectories->at(joint).positions = DownSample(output_trajectories->at(joint).positions);
       output_trajectories->at(joint).velocities = DownSample(output_trajectories->at(joint).velocities);
       output_trajectories->at(joint).accelerations = DownSample(output_trajectories->at(joint).accelerations);
+
+      std::cout << "UPSAMPLE ROUNDS:" << std::endl;
+      std::cout << upsample_rounds_ << std::endl;
+      std::cout << "LENGTH BEFORE DOWNSAMPLING:" << std::endl;
+      std::cout << output_trajectories->at(joint).elapsed_times.size() << std::endl;
+      std::cout << "TIMESTEP BEFORE DOWNSAMPLING: " << std::endl;
+      std::cout << output_trajectories->at(joint).elapsed_times[1] - output_trajectories->at(joint).elapsed_times[0] << std::endl;
+      std::cout << "SEQUENCE BEFORE DOWNSAMPLING: " << std::endl;
+      std::cout << output_trajectories->at(joint).elapsed_times[0] << "  "
+      << output_trajectories->at(joint).elapsed_times[1] << "  "
+      << output_trajectories->at(joint).elapsed_times[2] << "  "
+      << std::endl;
+
       output_trajectories->at(joint).elapsed_times = DownSample(output_trajectories->at(joint).elapsed_times);
+
+      std::cout << "===" << std::endl;
+      std::cout << "LENGTH AFTER DOWNSAMPLING:" << std::endl;
+      std::cout << output_trajectories->at(joint).elapsed_times.size() << std::endl;
+      std::cout << "TIMESTEP AFTER DOWNSAMPLING: " << std::endl;
+      std::cout << output_trajectories->at(joint).elapsed_times[1] - output_trajectories->at(joint).elapsed_times[0] << std::endl;
     }
 
   // Check for limits before returning
