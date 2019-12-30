@@ -710,6 +710,51 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits) {
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()),
               expected_num_waypoints, num_waypoint_tolerance);
 }
+
+TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
+{
+  // This test comes from MoveIt. Originally, the final timestep did not match the desired timestep.
+
+  std::vector<trackjoint::KinematicState> current_joint_states(1);
+  trackjoint::KinematicState joint_state;
+  joint_state.position = 0.00596041;
+  joint_state.velocity = -0.176232;
+  joint_state.acceleration = -3.06289;
+  current_joint_states[0] = joint_state;
+
+  std::vector<trackjoint::KinematicState> goal_joint_states(1);
+  joint_state.position = -0.00121542;
+  joint_state.velocity = -0.289615;
+  joint_state.acceleration = -2.88021;
+  goal_joint_states[0] = joint_state;
+
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 3.15;
+  single_joint_limits.acceleration_limit = 5;
+  single_joint_limits.jerk_limit = 5000;
+  std::vector<trackjoint::Limits> limits(1, single_joint_limits);
+
+  const double kTimestep = 0.0075;
+  const double kDesiredDuration = 0.028322;
+  const double kMaxDuration = 10;
+  const int kNumDof = 1;
+
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+
+  EXPECT_EQ(ErrorCodeEnum::kNoError,
+            traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep));
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+
+  // Position error
+  const double kPositionTolerance = 2e-3;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep, kTimestepTolerance);
+}
 }  // namespace trackjoint
 
 int main(int argc, char** argv) {
