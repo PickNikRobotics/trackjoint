@@ -46,3 +46,11 @@ Usually a robot manufacturer provides joint velocity limits. It can be difficult
 * The jerk limit should be less than (acceleration_limit / controller_timestep). Otherwise, acceleration could jump to maximum in one timestep and there would be no reason for a jerk limit.
 
 * For tuning the acceleration limit, think about how long it should take the robot to accelerate to maximum velocity in your application. For example, if it takes approximately 0.5 seconds to accelerate to full speed, an estimate is:  acceleration_limit = velocity_limit / 0.5.
+
+## Third Party Open Source Software Licenses
+
+The following libraries are used in TrackJoint:
+
+ - [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page#License)
+ - [googletest](https://github.com/google/googletest/blob/master/googletest/LICENSE)
+ - [Standard Template Library "algorithm"](https://github.com/google/libcxx/blob/master/LICENSE.TXT)
