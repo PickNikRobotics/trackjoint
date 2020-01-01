@@ -58,69 +58,71 @@ void TrajectoryGenerator::DownSample(Eigen::VectorXd* time_vector, Eigen::Vector
   Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector)
 {
   // Need at least 2 waypoints
-  if (time_vector->size() > 2)
+  if (time_vector->size() <= 2)
   {
-    // Eigen::VectorXd does not provide .back(), so get the final time like this:
-    double final_time = (*time_vector)[time_vector->size() - 1];
-    size_t new_vector_size = 1 + final_time / kDesiredTimestep;
-    // Time downsampling:
-    time_vector->setLinSpaced(new_vector_size, 0., final_time);
+    return;
+  }
 
-    // Determine length of position/velocity/acceleration from length of time vector:
-    Eigen::VectorXd new_positions(new_vector_size);
-    Eigen::VectorXd new_velocities(new_vector_size);
-    Eigen::VectorXd new_accelerations(new_vector_size);
+  // Eigen::VectorXd does not provide .back(), so get the final time like this:
+  double final_time = (*time_vector)[time_vector->size() - 1];
+  size_t new_vector_size = 1 + round(final_time / kDesiredTimestep);
+  // Time downsampling:
+  time_vector->setLinSpaced(new_vector_size, 0., final_time);
 
-    // Keep the first and last elements since they should match exactly
-    new_positions[0] = (*position_vector)[0];
-    new_velocities[0] = (*velocity_vector)[0];
-    new_accelerations[0] = (*acceleration_vector)[0];
-    new_positions[new_positions.size() - 1] = (*position_vector)[position_vector->size() - 1];
-    new_velocities[new_velocities.size() - 1] = (*velocity_vector)[velocity_vector->size() - 1];
-    new_accelerations[new_accelerations.size() - 1] = (*acceleration_vector)[acceleration_vector->size() - 1];
+  // Determine length of position/velocity/acceleration from length of time vector:
+  Eigen::VectorXd new_positions(new_vector_size);
+  Eigen::VectorXd new_velocities(new_vector_size);
+  Eigen::VectorXd new_accelerations(new_vector_size);
 
-    // Position/velocity/acceleration
-    // Do not replace first and last elements.
-    // March inward from the first and last elements, meeting in the middle.
-    // We know when to stop based on the number of elements filled.
+  // Keep the first and last elements since they should match exactly
+  new_positions[0] = (*position_vector)[0];
+  new_velocities[0] = (*velocity_vector)[0];
+  new_accelerations[0] = (*acceleration_vector)[0];
+  new_positions[new_positions.size() - 1] = (*position_vector)[position_vector->size() - 1];
+  new_velocities[new_velocities.size() - 1] = (*velocity_vector)[velocity_vector->size() - 1];
+  new_accelerations[new_accelerations.size() - 1] = (*acceleration_vector)[acceleration_vector->size() - 1];
 
-    size_t num_elements_to_skip = position_vector->size() / time_vector->size();
+  // Position/velocity/acceleration
+  // Do not replace first and last elements.
+  // March inward from the first and last elements, meeting in the middle.
+  // We know when to stop based on the number of elements filled.
 
-    // Total number of elements filled in the new vector
-    size_t num_elements_filled_in_new_vector = 0;
-    // Number of elements traversed in the upsampled vector
-    size_t num_upsampled_elements_traversed = 0;
-    for (size_t count = 1; num_elements_filled_in_new_vector < new_vector_size - 2; ++count)
+  size_t num_elements_to_skip;
+
+  // Total number of elements filled in the new vector
+  size_t num_elements_filled_in_new_vector = 0;
+  // Number of elements traversed in the upsampled vector
+  size_t num_upsampled_elements_traversed = 0;
+  for (size_t count = 1; num_elements_filled_in_new_vector < new_vector_size - 2; ++count)
+  {
+    // Update num_elements_to_skip based on:
+    // (num_elements_remaining_in_upsampled_vector) / (num_elements_remaining_in_new_vector)
+    num_elements_to_skip = (position_vector->size() - 2 - num_upsampled_elements_traversed) / (new_vector_size - 1 - num_elements_filled_in_new_vector);
+
+    new_positions[count] = (*position_vector)[count * num_elements_to_skip];
+    new_velocities[count] = (*velocity_vector)[count * num_elements_to_skip];
+    new_accelerations[count] = (*acceleration_vector)[count * num_elements_to_skip];
+    ++num_elements_filled_in_new_vector;
+    num_upsampled_elements_traversed = num_upsampled_elements_traversed + num_elements_to_skip;
+
+    // Count down if we need to fill more elements. Subtract two because first and last element are already filled.
+    if (num_elements_filled_in_new_vector < new_vector_size - 2)
     {
-      // Update num_elements_to_skip based on:
-      // (num_elements_remaining_in_upsampled_vector) / (num_elements_remaining_in_new_vector)
-      num_elements_to_skip = (position_vector->size() - 2 - num_upsampled_elements_traversed) / (new_vector_size - 1 - num_elements_filled_in_new_vector);
-
-      new_positions[count] = (*position_vector)[count * num_elements_to_skip];
-      new_velocities[count] = (*velocity_vector)[count * num_elements_to_skip];
-      new_accelerations[count] = (*velocity_vector)[count * num_elements_to_skip];
+      // Start filling at (end-1) because the last element is already filled
+      new_positions[new_positions.size() - 1 - count] =
+        (*position_vector)[position_vector->size() - 1 - count * num_elements_to_skip];
+      new_velocities[new_velocities.size() - 1 - count] =
+        (*velocity_vector)[velocity_vector->size() - 1 - count * num_elements_to_skip];
+      new_accelerations[new_accelerations.size() - 1 - count] =
+        (*acceleration_vector)[acceleration_vector->size() - 1 - count * num_elements_to_skip];
       ++num_elements_filled_in_new_vector;
       num_upsampled_elements_traversed = num_upsampled_elements_traversed + num_elements_to_skip;
-
-      // Count down if we need to fill more elements. Subtract two because first and last element are already filled.
-      if (num_elements_filled_in_new_vector < new_vector_size - 2)
-      {
-        // Start filling at (end-1) because the last element is already filled
-        new_positions[new_positions.size() - 1 - count] =
-          (*position_vector)[position_vector->size() - 1 - count * num_elements_to_skip];
-        new_velocities[new_velocities.size() - 1 - count] =
-          (*velocity_vector)[velocity_vector->size() - 1 - count * num_elements_to_skip];
-        new_accelerations[new_accelerations.size() - 1 - count] =
-          (*acceleration_vector)[acceleration_vector->size() - 1 - count * num_elements_to_skip];
-        ++num_elements_filled_in_new_vector;
-        num_upsampled_elements_traversed = num_upsampled_elements_traversed + num_elements_to_skip;
-      }
     }
-
-    *position_vector = new_positions;
-    *velocity_vector = new_velocities;
-    *acceleration_vector = new_accelerations;
   }
+
+  *position_vector = new_positions;
+  *velocity_vector = new_velocities;
+  *acceleration_vector = new_accelerations;
 }
 
 ErrorCodeEnum TrajectoryGenerator::InputChecking(
