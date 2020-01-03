@@ -120,11 +120,52 @@ TEST_F(TrajectoryGenerationTest, OneTimestepDuration) {
       goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
-  const double kExpectedDuration = kDesiredDuration;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length),
-              kExpectedDuration, kDurationTolerance);
+              kDesiredDuration, kDurationTolerance);
+}
+
+TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration) {
+  // Request a duration of approximately two timesteps
+
+  const double kTimestep = 0.01;
+  const double kDesiredDuration = 0.019;
+  const double kMaxDuration = kDesiredDuration;
+
+  trackjoint::KinematicState joint_state;
+  std::vector<trackjoint::KinematicState> goal_joint_states =
+      goal_joint_states_;
+  joint_state.position = -0.998;
+  goal_joint_states[0] = joint_state;
+  goal_joint_states[1] = joint_state;
+  goal_joint_states[2] = joint_state;
+
+  trackjoint::TrajectoryGenerator traj_gen(
+      num_dof_, kTimestep, kDesiredDuration, kMaxDuration,
+      current_joint_states_, goal_joint_states, limits_);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  traj_gen.GenerateTrajectories(&output_trajectories);
+
+  EXPECT_EQ(ErrorCodeEnum::kNoError,
+            traj_gen.GenerateTrajectories(&output_trajectories));
+
+  // Position error
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(
+      goal_joint_states, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
+  // Duration
+  const double kDurationTolerance = 5e-4;
+  size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length),
+              kDesiredDuration, kDurationTolerance);
+  // Number of waypoints
+  EXPECT_EQ(output_trajectories[0].elapsed_times.size(), 3);
+  // Timestep
+  double kTimestepTolerance = 0.003;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0],
+    kTimestep, kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
@@ -157,11 +198,10 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration) {
       goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
-  const double kExpectedDuration = kDesiredDuration;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length),
-              kExpectedDuration, kDurationTolerance);
+              kDesiredDuration, kDurationTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, SixTimestepDuration) {
@@ -213,11 +253,10 @@ TEST_F(TrajectoryGenerationTest, SixTimestepDuration) {
       goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
-  const double kExpectedDuration = kDesiredDuration;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length),
-              kExpectedDuration, kDurationTolerance);
+              kDesiredDuration, kDurationTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, TestVelAccelJerkLimit) {
@@ -506,11 +545,10 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection) {
       goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
-  const double kExpectedDuration = kDesiredDuration;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length),
-              kExpectedDuration, kDurationTolerance);
+              kDesiredDuration, kDurationTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory) {
