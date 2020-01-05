@@ -50,11 +50,14 @@ int main(int argc, char** argv) {
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
-  trackjoint::ErrorCodeEnum error_code = traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
+  trackjoint::ErrorCodeEnum error_code = traj_gen.InputChecking(
+      current_joint_states, goal_joint_states, limits, kTimestep);
 
-  // Input error handling - if an error is found, the trajectory is not generated.
+  // Input error handling - if an error is found, the trajectory is not
+  // generated.
   if (error_code != trackjoint::ErrorCodeEnum::kNoError) {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code)
+              << std::endl;
     return -1;
   }
 
@@ -65,18 +68,18 @@ int main(int argc, char** argv) {
 
   // Trajectory generation error handling
   if (error_code != trackjoint::ErrorCodeEnum::kNoError) {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code)
+              << std::endl;
     return -1;
   }
 
-  std::chrono::duration<double> elapsed_seconds = end-start;
+  std::chrono::duration<double> elapsed_seconds = end - start;
 
   std::cout << "Runtime: " << elapsed_seconds.count() << std::endl;
   std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size()
             << std::endl;
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code)
             << std::endl;
-
 
   // Save the synchronized trajectories to .csv files
   traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);

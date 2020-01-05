@@ -50,8 +50,7 @@ class TrajectoryGenerator {
       const std::vector<trackjoint::KinematicState> &goal_joint_states,
       const std::vector<Limits> &limits, double nominal_timestep);
 
-private:
-
+ private:
   /** \brief Check limits aren't exceeded before returning. */
   ErrorCodeEnum OutputChecking(
       const std::vector<JointTrajectory> &output_trajectories);
@@ -59,9 +58,12 @@ private:
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
-  /** \brief Undo UpSample() to output a time/position/velocity series with the correct spacing. */
-  void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector,
-    Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector);
+  /** \brief Undo UpSample() to output a time/position/velocity series with the
+   * correct spacing. */
+  void DownSample(Eigen::VectorXd *time_vector,
+                  Eigen::VectorXd *position_vector,
+                  Eigen::VectorXd *velocity_vector,
+                  Eigen::VectorXd *acceleration_vector);
 
   /** \brief Synchronize all trajectories with the one of longest duration. */
   ErrorCodeEnum SynchronizeTrajComponents(
