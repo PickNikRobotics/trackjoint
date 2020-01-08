@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
   roslint
+  rospy
 )
 
 # System dependencies are found with CMake's conventions
@@ -26,7 +27,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   CATKIN_DEPENDS
     roscpp
-    roslib
+    rospy
   INCLUDE_DIRS
     include
   LIBRARIES
@@ -53,7 +54,7 @@ include_directories(
 
 # Declare a C++ library with project namespace to avoid naming collision
 set(LIBRARY_NAME trackjoint)
-add_library(${LIBRARY_NAME} SHARED
+add_library(${LIBRARY_NAME}
   src/trajectory_generator.cpp
   src/single_joint_generator.cpp
 )
@@ -82,6 +83,30 @@ target_link_libraries(
   ${PROJECT_NAME}_run_example
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
+)
+
+#############
+## Install ##
+#############
+
+# Mark executables and/or libraries for installation
+install(
+  TARGETS
+    ${PROJECT_NAME} ${PROJECT_NAME}_run_example
+  ARCHIVE DESTINATION
+    ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION
+    ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION
+    ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+# Mark cpp header files for installation
+install(
+  DIRECTORY
+    include/${PROJECT_NAME}/
+  DESTINATION
+    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
 )
 
 #############

@@ -18,16 +18,15 @@
 #include "trackjoint/kinematic_state.h"
 #include "trackjoint/limits.h"
 
-namespace trackjoint {
-class SingleJointGenerator {
- public:
+namespace trackjoint
+{
+class SingleJointGenerator
+{
+public:
   /** \brief Constructor */
-  SingleJointGenerator(double timestep, double desired_duration,
-                       double max_duration,
-                       const KinematicState &current_joint_state,
-                       const KinematicState &goal_joint_state,
-                       const trackjoint::Limits &limits,
-                       size_t desired_num_waypoints, size_t max_num_waypoints);
+  SingleJointGenerator(double timestep, double desired_duration, double max_duration,
+                       const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
+                       const trackjoint::Limits& limits, int desired_num_waypoints, int max_num_waypoints);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
@@ -41,28 +40,28 @@ class SingleJointGenerator {
 
   /** \brief Get the last index that successfully matched the polynomial
    * interpolation */
-  size_t GetLastSuccessfulIndex();
+  int GetLastSuccessfulIndex();
 
   /** \brief Update desired_duration_ for this joint */
   void UpdateTrajectoryDuration(double new_trajectory_duration);
 
- private:
+private:
   /** \brief Interpolate from start to end state with a polynomial */
-  Eigen::VectorXd Interpolate(Eigen::VectorXd &times);
+  Eigen::VectorXd Interpolate(Eigen::VectorXd& times);
 
   /** \brief Step through a vector of velocities, compensating for limits */
-  ErrorCodeEnum LimitCompensation(size_t *index_last_successful);
+  ErrorCodeEnum LimitCompensation(int* index_last_successful);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool VelocityCompensation(size_t limited_index, double excess_velocity);
+  bool VelocityCompensation(int limited_index, double excess_velocity);
 
   /** \brief This uses VelocityCompensation() but it starts from a position
    * vector */
-  ErrorCodeEnum PositionVectorLimitLookAhead(size_t *index_last_successful);
+  ErrorCodeEnum PositionVectorLimitLookAhead(int* index_last_successful);
 
   /** \brief Record the index when compensation first failed */
-  void RecordFailureTime(size_t current_index, size_t *index_last_successful);
+  void RecordFailureTime(int current_index, int* index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum PredictTimeToReach();
@@ -74,11 +73,11 @@ class SingleJointGenerator {
   const KinematicState kCurrentJointState;
   const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
-  const size_t kMaxNumWaypoints;
+  const int kMaxNumWaypoints;
 
   double desired_duration_, max_duration_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
-  size_t index_last_successful_;
+  int index_last_successful_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
