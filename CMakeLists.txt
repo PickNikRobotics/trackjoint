@@ -53,7 +53,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# Declare a C++ library with project namespace to avoid naming collision
 set(LIBRARY_NAME trackjoint)
 add_library(${LIBRARY_NAME}
   src/trajectory_generator.cpp
@@ -95,6 +94,23 @@ set_target_properties(
 )
 target_link_libraries(
   ${PROJECT_NAME}_streaming_example
+  ${LIBRARY_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(
+  ${PROJECT_NAME}_three_dof_examples
+  src/three_dof_examples.cpp
+)
+
+set_target_properties(
+  ${PROJECT_NAME}_three_dof_examples
+  PROPERTIES
+    OUTPUT_NAME three_dof_examples PREFIX ""
+)
+
+target_link_libraries(
+  ${PROJECT_NAME}_three_dof_examples
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
