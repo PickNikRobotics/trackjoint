@@ -22,8 +22,8 @@ env:
       - TEST=clang-format    # check code formatting for compliance to .clang-format rules
       - TEST=clang-tidy-fix  # perform static code analysis and compliance check against .clang-tidy rules
       - TEST=catkin_lint     # perform catkin_lint checks
-      # pull in packages from a local .rosinstall file
       - UPSTREAM_WORKSPACE=trackjoint.rosinstall
+      # pull in packages from a local .rosinstall file
 
 matrix:
   include: # Add a separate config to the matrix, using clang as compiler

@@ -27,6 +27,7 @@ find_package(Eigen3 REQUIRED)
 catkin_package(
   CATKIN_DEPENDS
     roscpp
+    roslib
     rospy
   INCLUDE_DIRS
     include
