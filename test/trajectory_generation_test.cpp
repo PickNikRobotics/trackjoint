@@ -272,7 +272,7 @@ TEST_F(TrajectoryGenerationTest, TestVelAccelJerkLimit)
   trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, kMaxDuration, current_joint_states,
                                            goal_joint_states, limits);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  // traj_gen.GenerateTrajectories(&output_trajectories);
 
   EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
 
