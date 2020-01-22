@@ -33,7 +33,7 @@ matrix:
            CXXFLAGS="-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls -Wno-unused-parameter -Wno-unused-function -Wno-overloaded-virtual"
 
 before_script:
-    - git clone -q --depth=1 https://github.com/ros-planning/moveit_ci.git .moveit_ci
+    - git clone -q --depth=1 -b debug-travis https://github.com/JafarAbdi/moveit_ci.git .moveit_ci
 
 script:
   - .moveit_ci/travis.sh
