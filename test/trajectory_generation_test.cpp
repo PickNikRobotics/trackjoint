@@ -399,8 +399,6 @@ TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase)
 
   trackjoint::KinematicState joint_state;
 
-  trackjoint::ErrorCodeEnum error_code;
-
   std::vector<std::vector<double>> moveit_des_positions;
   std::vector<std::vector<double>> moveit_des_velocities;
   std::vector<std::vector<double>> moveit_des_accelerations;

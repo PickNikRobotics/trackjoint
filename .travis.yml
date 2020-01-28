@@ -28,7 +28,8 @@ env:
 matrix:
   include: # Add a separate config to the matrix, using clang as compiler
     - compiler: clang
-      env: TEST=clang-tidy-check  # run static code analysis, but don't check for available auto-fixes
+      # run static code analysis, but don't check for available auto-fixes
+      env: TEST=clang-tidy-check
            CXXFLAGS="-Wall -Wextra -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls -Wno-unused-parameter -Wno-unused-function -Wno-overloaded-virtual"
 
 before_script:
