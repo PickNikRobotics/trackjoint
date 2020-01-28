@@ -17,12 +17,12 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
                                            const trackjoint::Limits& limits, size_t desired_num_waypoints,
                                            size_t max_num_waypoints)
   : kTimestep(timestep)
-  , desired_duration_(desired_duration)
-  , max_duration_(max_duration)
   , kCurrentJointState(current_joint_state)
   , kGoalJointState(goal_joint_state)
   , kLimits(limits)
   , kMaxNumWaypoints(max_num_waypoints)
+  , desired_duration_(desired_duration)
+  , max_duration_(max_duration)
 {
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -80,7 +80,7 @@ Eigen::VectorXd SingleJointGenerator::Interpolate(Eigen::VectorXd& times)
 
   // TODO(andyz): vectorize this calculation
   Eigen::VectorXd interpolated_position(tao.size());
-  for (size_t index = 0; index < tao.size(); ++index)
+  for (size_t index = 0; index < static_cast<size_t>(tao.size()); ++index)
   {
     interpolated_position(index) =
         pow((1. - tao(index)), 3) *
@@ -352,7 +352,8 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
 
   // Iterate over new durations until the position error is acceptable or the
   // maximum duration is reached
-  while ((index_last_successful_ < waypoints_.positions.size()) && (desired_duration_ < max_duration_))
+  while ((index_last_successful_ < static_cast<size_t>(waypoints_.positions.size())) &&
+         (desired_duration_ < max_duration_))
   {
     // Try increasing the duration, based on fraction of states that weren't
     // reached successfully
@@ -384,7 +385,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
 
   // Error if we extended the duration to the maximum and it still wasn't
   // successful
-  if (index_last_successful_ < waypoints_.elapsed_times.size())
+  if (index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size()))
   {
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
   }
@@ -404,7 +405,7 @@ ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t* index_l
   double kOneSixth = 0.166667;
   // Initial waypoint
   waypoints_.positions(0) = kCurrentJointState.position;
-  for (size_t index = 1; index < waypoints_.positions.size() - 1; ++index)
+  for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()) - 1; ++index)
     waypoints_.positions(index) = waypoints_.positions(index - 1) + waypoints_.velocities(index - 1) * kTimestep +
                                   0.5 * waypoints_.accelerations(index - 1) * pow(kTimestep, 2) +
                                   kOneSixth * waypoints_.jerks(index - 1) * pow(kTimestep, 3);
