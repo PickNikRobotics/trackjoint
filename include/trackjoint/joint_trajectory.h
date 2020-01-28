@@ -14,11 +14,13 @@
 
 #include <Eigen/Dense>
 
-namespace trackjoint {
+namespace trackjoint
+{
 /**
  * \brief Vectors of position, velocity, acceleration, and time
  */
-struct JointTrajectory {
+struct JointTrajectory
+{
   Eigen::VectorXd positions;      // rad
   Eigen::VectorXd velocities;     // rad/s
   Eigen::VectorXd accelerations;  // rad/s^2

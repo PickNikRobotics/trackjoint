@@ -10,12 +10,14 @@
 
 #include <iostream>
 
-namespace trackjoint {
+namespace trackjoint
+{
 /**
  * \brief Joint position, velocity, and acceleration
  */
-class KinematicState {
- public:
+class KinematicState
+{
+public:
   // State at this waypoint in a global, inertial reference frame
   double position = 0.0;  // radians
   double velocity = 0.0;
@@ -23,7 +25,8 @@ class KinematicState {
 
   /** \brief Print this state
    */
-  void print() {
+  void print()
+  {
     std::cout << "Position:" << std::endl;
     std::cout << this->position << std::endl << std::endl;
 
