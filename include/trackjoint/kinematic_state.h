@@ -17,9 +17,9 @@ namespace trackjoint {
 class KinematicState {
  public:
   // State at this waypoint in a global, inertial reference frame
-  double position;  // radians
-  double velocity;
-  double acceleration;
+  double position = 0.0;  // radians
+  double velocity = 0.0;
+  double acceleration = 0.0;
 
   /** \brief Print this state
    */
