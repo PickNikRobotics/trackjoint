@@ -7,7 +7,7 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for three joints.
+   Desc: A minimal example of smoothing a trajectory for one joint.
 */
 
 #include <trackjoint/error_codes.h>

@@ -59,29 +59,41 @@ add_library(${LIBRARY_NAME}
   src/trajectory_generator.cpp
   src/single_joint_generator.cpp
 )
-
-# Specify libraries to link a library or executable target against
 target_link_libraries(
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
 
-# Declare a C++ executable
+# A minimal, single-trajectory example
 add_executable(
   ${PROJECT_NAME}_simple_example
   src/simple_example.cpp
 )
-
 # Rename C++ executable without namespace
 set_target_properties(
   ${PROJECT_NAME}_simple_example
   PROPERTIES
     OUTPUT_NAME simple_example PREFIX ""
 )
-
-# Specify libraries to link a library or executable target against
 target_link_libraries(
   ${PROJECT_NAME}_simple_example
+  ${LIBRARY_NAME}
+  ${catkin_LIBRARIES}
+)
+
+# A streaming example (update within a loop)
+add_executable(
+  ${PROJECT_NAME}_streaming_example
+  src/streaming_example.cpp
+)
+# Rename C++ executable without namespace
+set_target_properties(
+  ${PROJECT_NAME}_streaming_example
+  PROPERTIES
+    OUTPUT_NAME streaming_example PREFIX ""
+)
+target_link_libraries(
+  ${PROJECT_NAME}_streaming_example
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
@@ -93,7 +105,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example
+    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION
