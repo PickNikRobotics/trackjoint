@@ -68,20 +68,20 @@ target_link_libraries(
 
 # Declare a C++ executable
 add_executable(
-  ${PROJECT_NAME}_run_example
-  src/run_example.cpp
+  ${PROJECT_NAME}_simple_example
+  src/simple_example.cpp
 )
 
 # Rename C++ executable without namespace
 set_target_properties(
-  ${PROJECT_NAME}_run_example
+  ${PROJECT_NAME}_simple_example
   PROPERTIES
-    OUTPUT_NAME run_example PREFIX ""
+    OUTPUT_NAME simple_example PREFIX ""
 )
 
 # Specify libraries to link a library or executable target against
 target_link_libraries(
-  ${PROJECT_NAME}_run_example
+  ${PROJECT_NAME}_simple_example
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
@@ -93,7 +93,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_run_example
+    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION
