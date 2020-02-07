@@ -34,5 +34,5 @@ const std::unordered_map<uint, std::string> kErrorCodeMap(
       { kAccelExceedsLimit, "An acceleration input exceeds the acceleration limit" },
       { kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration" },
       { kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero" },
-      { kGoalPositionMismatch, "Mismatch between the final position and the goal position" }});
+      { kGoalPositionMismatch, "Mismatch between the final position and the goal position" } });
 }  // end namespace trackjoint
