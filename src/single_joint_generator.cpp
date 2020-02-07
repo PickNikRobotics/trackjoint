@@ -6,8 +6,8 @@
  * Proprietary and confidential
  *********************************************************************/
 
-#include <trackjoint/single_joint_generator.h>
-#include <trackjoint/utilities.h>
+#include "trackjoint/single_joint_generator.h"
+#include "trackjoint/utilities.h"
 
 namespace trackjoint
 {

@@ -57,9 +57,8 @@ private:
 
   /** \brief Undo UpSample() to output a time/position/velocity series with the
    * correct spacing. */
-  void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector,
-                                       Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector,
-                                       Eigen::VectorXd* jerk_vector);
+  void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
+                  Eigen::VectorXd* acceleration_vector, Eigen::VectorXd* jerk_vector);
 
   /** \brief Synchronize all trajectories with the one of longest duration. */
   ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);

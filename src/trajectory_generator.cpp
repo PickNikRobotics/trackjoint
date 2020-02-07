@@ -6,8 +6,8 @@
  * Proprietary and confidential
  *********************************************************************/
 
-#include <trackjoint/trajectory_generator.h>
 #include <fstream>
+#include "trackjoint/trajectory_generator.h"
 
 namespace trackjoint
 {
@@ -79,6 +79,7 @@ void TrajectoryGenerator::DownSample(Eigen::VectorXd* time_vector, Eigen::Vector
   Eigen::VectorXd new_positions(new_vector_size);
   Eigen::VectorXd new_velocities(new_vector_size);
   Eigen::VectorXd new_accelerations(new_vector_size);
+  Eigen::VectorXd new_jerks(new_vector_size);
 
   // Keep the first and last elements of position/vel/accel since they should match exactly
   new_positions[0] = (*position_vector)[0];
@@ -353,6 +354,18 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
   {
     return error_code;
   }
+
+/*
+  if ((output_trajectories->at(0).jerks.size() != output_trajectories->at(0).velocities.size()) ||
+    (output_trajectories->at(0).accelerations.size() != output_trajectories->at(0).velocities.size())
+    )
+  {
+    std::cout << "SIZE MISMATCH before Downsample!!!!!!" << std::endl;
+    std::cout << "jerk: " << output_trajectories->at(0).jerks.size() << std::endl;
+    std::cout << "acceleration: " << output_trajectories->at(0).accelerations.size() << std::endl;
+    std::cout << "velocity: " << output_trajectories->at(0).velocities.size() << std::endl;
+  }
+*/
 
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
