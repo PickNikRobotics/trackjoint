@@ -26,7 +26,8 @@ public:
   /** \brief Constructor */
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t max_num_waypoints);
+                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t max_num_waypoints,
+                       const double position_tolerance);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
@@ -74,6 +75,7 @@ private:
   const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
   const size_t kMaxNumWaypoints;
+  const double kPositionTolerance;
 
   double desired_duration_, max_duration_;
   Eigen::VectorXd nominal_times_;

@@ -7,12 +7,12 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for three joints.
+   Desc: A minimal example of smoothing a trajectory for one joint.
 */
 
-#include <trackjoint/error_codes.h>
-#include <trackjoint/joint_trajectory.h>
-#include <trackjoint/trajectory_generator.h>
+#include "trackjoint/error_codes.h"
+#include "trackjoint/joint_trajectory.h"
+#include "trackjoint/trajectory_generator.h"
 #include <chrono>
 #include <fstream>
 
@@ -43,9 +43,11 @@ int main(int argc, char** argv)
   single_joint_limits.jerk_limit = 5000;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
+  const double position_tolerance = 1e-6;
+
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits);
+                                           goal_joint_states, limits, position_tolerance);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
