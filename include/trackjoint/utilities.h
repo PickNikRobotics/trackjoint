@@ -14,6 +14,7 @@
 
 #include <Eigen/Dense>
 #include <iostream>
+#include <vector>
 #include "trackjoint/joint_trajectory.h"
 
 namespace trackjoint
