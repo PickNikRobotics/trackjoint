@@ -63,7 +63,7 @@ int main(int argc, char** argv)
   {
     trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
                                              goal_joint_states, limits, kPositionTolerance);
-    traj_gen.GenerateTrajectories(&output_trajectories);
+    error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     if (error_code != trackjoint::ErrorCodeEnum::kNoError)
     {

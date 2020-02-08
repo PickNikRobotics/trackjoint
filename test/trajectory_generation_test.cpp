@@ -244,7 +244,7 @@ TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, TestVelAccelJerkLimit)
+TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
 {
   // Velocity, acceleration and jerk limits are hit
 
@@ -289,7 +289,7 @@ TEST_F(TrajectoryGenerationTest, TestVelAccelJerkLimit)
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration_, kDurationTolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
+TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 {
   // Incoming command is a noisy sine wave
 
@@ -366,7 +366,7 @@ TEST_F(TrajectoryGenerationTest, TestNoisyStreamingCommand)
   EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
 
-TEST_F(TrajectoryGenerationTest, TestOscillatingUR5TrackJointCase)
+TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 {
   // This test comes from a MoveIt trajectory.
   // It was successful but there was a position oscillation.
@@ -739,6 +739,65 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
   const double kTimestepTolerance = 0.0005;
   EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
               kTimestepTolerance);
+}
+
+TEST_F(TrajectoryGenerationTest, CustomerStreaming)
+{
+  // A customer-requested streaming test
+
+  constexpr size_t kNumDof = 1;
+  constexpr double kTimestep = 0.001;
+  constexpr double kMaxDuration = 100;
+  constexpr double kPositionTolerance = 1e-6;
+  constexpr double kMinDesiredDuration = kTimestep;
+  // Between iterations, skip this many waypoints.
+  // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
+  // Minimum is 1.
+  constexpr std::size_t kNewSeedStateIndex = 10;
+
+  std::vector<trackjoint::KinematicState> start_state(1);
+  std::vector<trackjoint::KinematicState> goal_joint_states(1);
+  start_state[0].position = 0.9;
+  goal_joint_states[0].position = -0.9;
+
+  std::vector<trackjoint::Limits> limits(1);
+  limits[0].velocity_limit = 2;
+  limits[0].acceleration_limit = 2;
+  limits[0].jerk_limit = 2;
+
+  // This is a best-case estimate, assuming the robot is already at maximum velocity
+  double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
+  // But, don't ask for a duration that is shorter than one timestep
+  desired_duration = std::max(desired_duration - kNewSeedStateIndex * kTimestep, kMinDesiredDuration);
+
+  // Generate initial trajectory
+  std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
+                                           goal_joint_states, limits, kPositionTolerance);
+  trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
+
+  // Until a generated trajectory has only 2 waypoints
+  while (desired_duration > kTimestep)
+  {
+    trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
+                                             goal_joint_states, limits, kPositionTolerance);
+    error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+    EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
+
+    std::size_t joint = 0;
+    // Get a new seed state for next trajectory generation
+    start_state[0].position = output_trajectories.at(joint).positions[kNewSeedStateIndex];
+    start_state[0].velocity = output_trajectories.at(joint).velocities[kNewSeedStateIndex];
+    start_state[0].acceleration = output_trajectories.at(joint).accelerations[kNewSeedStateIndex];
+
+    // Shorten the desired duration as we get closer to goal
+    // This is a best-case estimate, assuming the robot is already at maximum velocity
+    desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
+    desired_duration = std::max(desired_duration, kTimestep);
+  }
+
+  // If the test gets here, it passed.
 }
 }  // namespace trackjoint
 
