@@ -26,5 +26,6 @@ namespace trackjoint
  */
 Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
 
-void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories);
+void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
+                          const double desired_duration);
 }  // namespace trackjoint

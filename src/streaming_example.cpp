@@ -23,6 +23,11 @@ int main(int argc, char** argv)
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
   constexpr double kPositionTolerance = 1e-6;
+  constexpr double kMinDesiredDuration = kTimestep;
+  // Between iterations, skip this many waypoints.
+  // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
+  // Minimum is 1.
+  constexpr std::size_t kNewSeedStateIndex = 10;
 
   std::vector<trackjoint::KinematicState> start_state(1);
   std::vector<trackjoint::KinematicState> goal_joint_states(1);
@@ -36,6 +41,8 @@ int main(int argc, char** argv)
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
   double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
+  // But, don't ask for a duration that is shorter than one timestep
+  desired_duration = std::max(desired_duration - kNewSeedStateIndex * kTimestep, kMinDesiredDuration);
 
   // Generate initial trajectory
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
@@ -48,12 +55,8 @@ int main(int argc, char** argv)
     return -1;
   }
   std::cout << "Initial trajectory calculation:" << std::endl;
-  std::cout << output_trajectories[0].positions.size() << " waypoints" << std::endl;
-  std::cout << "Final position: " << output_trajectories[0].positions[output_trajectories[0].positions.size() - 1]
-            << std::endl;
-  // Check for overshoot
-  std::cout << "Minimum position: " << output_trajectories[0].positions.minCoeff()
-            << "  Maximum position: " << output_trajectories[0].positions.maxCoeff() << std::endl;
+  std::size_t joint = 0;
+  PrintJointTrajectory(joint, output_trajectories, desired_duration);
 
   // Until a generated trajectory has only 2 waypoints
   while (desired_duration > kTimestep)
@@ -69,18 +72,18 @@ int main(int argc, char** argv)
     }
 
     // Print the synchronized trajectories
-    std::size_t joint = 0;
-    PrintJointTrajectory(joint, output_trajectories);
+    joint = 0;
+    PrintJointTrajectory(joint, output_trajectories, desired_duration);
 
     // Get a new seed state for next trajectory generation
-    constexpr std::size_t next_start_index = 10;
-    start_state[0].position = output_trajectories.at(joint).positions[next_start_index];
-    start_state[0].velocity = output_trajectories.at(joint).velocities[next_start_index];
-    start_state[0].acceleration = output_trajectories.at(joint).accelerations[next_start_index];
+    start_state[0].position = output_trajectories.at(joint).positions[kNewSeedStateIndex];
+    start_state[0].velocity = output_trajectories.at(joint).velocities[kNewSeedStateIndex];
+    start_state[0].acceleration = output_trajectories.at(joint).accelerations[kNewSeedStateIndex];
 
     // Shorten the desired duration as we get closer to goal
     // This is a best-case estimate, assuming the robot is already at maximum velocity
     desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
+    desired_duration = std::max(desired_duration, kTimestep);
   }
 
   std::cout << "Done!" << std::endl;

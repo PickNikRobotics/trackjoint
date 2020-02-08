@@ -23,7 +23,8 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
-void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories)
+void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
+                          const double desired_duration)
 {
   std::cout << "==========" << std::endl;
   std::cout << std::endl;
@@ -35,6 +36,7 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint:
   std::cout << std::endl;
   std::cout << "==========" << std::endl;
   std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << std::endl;
+  std::cout << "  Desired duration: " << desired_duration << std::endl;
   std::cout << "Elapsed time: " << output_trajectories.at(joint).elapsed_times[0]
             << "  Initial position: " << output_trajectories.at(joint).positions[0]
             << "  Initial velocity: " << output_trajectories.at(joint).velocities[0]
