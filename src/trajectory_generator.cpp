@@ -319,10 +319,10 @@ void TrajectoryGenerator::ClipVectorsForOutput(std::vector<JointTrajectory>* tra
           trajectory->at(joint).velocities[waypt] = -limits_[joint].velocity_limit;
 
         // Acceleration
-        if (trajectory->at(joint).accelerations[waypt] > limits_[joint].velocity_limit)
-          trajectory->at(joint).accelerations[waypt] = limits_[joint].velocity_limit;
-        if (trajectory->at(joint).accelerations[waypt] < -limits_[joint].velocity_limit)
-          trajectory->at(joint).accelerations[waypt] = -limits_[joint].velocity_limit;
+        if (trajectory->at(joint).accelerations[waypt] > limits_[joint].acceleration_limit)
+          trajectory->at(joint).accelerations[waypt] = limits_[joint].acceleration_limit;
+        if (trajectory->at(joint).accelerations[waypt] < -limits_[joint].acceleration_limit)
+          trajectory->at(joint).accelerations[waypt] = -limits_[joint].acceleration_limit;
 
         // Jerk
         if (trajectory->at(joint).jerks[waypt] > limits_[joint].jerk_limit)

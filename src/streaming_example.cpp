@@ -29,12 +29,12 @@ int main(int argc, char** argv)
   // Minimum is 1.
   constexpr std::size_t kNewSeedStateIndex = 10;
 
-  std::vector<trackjoint::KinematicState> start_state(1);
-  std::vector<trackjoint::KinematicState> goal_joint_states(1);
+  std::vector<trackjoint::KinematicState> start_state(kNumDof);
+  std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
   start_state[0].position = 0.9;
   goal_joint_states[0].position = -0.9;
 
-  std::vector<trackjoint::Limits> limits(1);
+  std::vector<trackjoint::Limits> limits(kNumDof);
   limits[0].velocity_limit = 2;
   limits[0].acceleration_limit = 2;
   limits[0].jerk_limit = 2;
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
   // This is a best-case estimate, assuming the robot is already at maximum velocity
   double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
-  desired_duration = std::max(desired_duration - kNewSeedStateIndex * kTimestep, kMinDesiredDuration);
+  desired_duration = std::max(desired_duration, kMinDesiredDuration);
 
   // Generate initial trajectory
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
