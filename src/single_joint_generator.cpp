@@ -56,7 +56,7 @@ ErrorCodeEnum SingleJointGenerator::ExtendTrajectoryDuration()
   waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
   waypoints_.positions = Interpolate(waypoints_.elapsed_times);
   CalculateDerivatives();
-  ErrorCodeEnum error_code = LimitCompensation(&index_last_successful_);
+  ErrorCodeEnum error_code = ForwardLimitCompensation(&index_last_successful_);
   return error_code;
 }
 
@@ -101,10 +101,12 @@ Eigen::VectorXd SingleJointGenerator::Interpolate(Eigen::VectorXd& times)
   return interpolated_position;
 }
 
-ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* index_last_successful)
 {
-  // This is the indexing convention:
-  // accel(i) = accel(i-1) + jerk(i) * dt
+  // This is the indexing convention.
+  // Jerk should be updated before acceleration, acceleration should be updated before velocity.
+  // 1. accel(i) = accel(i-1) + jerk(i) * dt
+  // 2. vel(i) == vel(i-1) + accel(i) * dt
 
   // Start with the assumption that the entire trajectory can be completed
   *index_last_successful = waypoints_.positions.size();
@@ -127,19 +129,24 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t* index_last_success
     delta_j = 0;
     if (fabs(waypoints_.jerks(index)) > jerk_limit)
     {
-      delta_j = std::copysign(1.0, waypoints_.jerks(index)) * jerk_limit - waypoints_.jerks(index);
-      waypoints_.jerks(index) = std::copysign(1.0, waypoints_.jerks(index)) * jerk_limit;
+      delta_j = std::copysign(jerk_limit, waypoints_.jerks(index)) - waypoints_.jerks(index);
+      waypoints_.jerks(index) = std::copysign(jerk_limit, waypoints_.jerks(index));
 
       waypoints_.accelerations(index) = waypoints_.accelerations(index - 1) + waypoints_.jerks(index) * kTimestep;
-      // Recalculate jerk(i+1) to keep accel(i+1) and vel(i+1) the same
+      // Recalculate jerk(i+1) to keep accel(i+1) and vel(i+1) the same.
+      // The algorithm does whatever it needs to keep vel(i+1) the same.
+      // If vel(i+1) doesn't change, then we don't need to look farther ahead at index i+2, i+3, and so on...
+      // So it saves a lot of computation.
+      // It's OK if accel(i+1) and/or jerk(i+1) exceed the limits because the next iteration will account for them.
       waypoints_.jerks(index + 1) = (waypoints_.accelerations(index + 1) - waypoints_.accelerations(index)) / kTimestep;
+      // TODO(andyz): update waypoints_.accel(index + 1) here to reflect the changes at index i
 
-      waypoints_.velocities(index) = waypoints_.velocities(index) + waypoints_.accelerations(index) * kTimestep;
+      waypoints_.velocities(index) = waypoints_.velocities(index - 1) + waypoints_.accelerations(index) * kTimestep;
       delta_v = 0.5 * delta_j * kTimestep * kTimestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this
       // limit, if needed
-      successful_compensation = VelocityCompensation(index, delta_v);
+      successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * kTimestep;
@@ -163,9 +170,8 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t* index_last_success
   {
     if (fabs(waypoints_.accelerations(index)) > acceleration_limit)
     {
-      delta_a =
-          std::copysign(1.0, waypoints_.accelerations(index)) * acceleration_limit - waypoints_.accelerations(index);
-      temp_accel = std::copysign(1.0, waypoints_.jerks(index)) * acceleration_limit;
+      delta_a = std::copysign(acceleration_limit, waypoints_.accelerations(index)) - waypoints_.accelerations(index);
+      temp_accel = std::copysign(acceleration_limit, waypoints_.accelerations(index));
 
       // Check jerk limit before applying the change.
       // The first condition checks if the new jerk(i) is going to exceed the limit. Pretty straightforward.
@@ -192,7 +198,7 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t* index_last_success
       waypoints_.velocities(index) = waypoints_.velocities(index) + delta_v;
       // Try decreasing the velocity in previous timesteps to compensate for
       // this limit, if needed
-      successful_compensation = VelocityCompensation(index, delta_v);
+      successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * kTimestep;
@@ -227,7 +233,7 @@ ErrorCodeEnum SingleJointGenerator::LimitCompensation(size_t* index_last_success
       if (delta_v != 0)
       {
         // Try decreasing the velocity in previous timesteps to compensate for this limit
-        successful_compensation = VelocityCompensation(index, delta_v);
+        successful_compensation = BackwardLimitCompensation(index, &delta_v);
         if (!successful_compensation)
         {
           position_error = position_error + delta_v * kTimestep;
@@ -285,7 +291,7 @@ void SingleJointGenerator::RecordFailureTime(size_t current_index, size_t* index
   }
 }
 
-bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double excess_velocity)
+bool SingleJointGenerator::BackwardLimitCompensation(size_t limited_index, double* excess_velocity)
 {
   // The algorithm:
   // 1) check jerk limits, from beginning to end of trajectory. Don't bother
@@ -306,10 +312,10 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
     if (fabs(waypoints_.velocities(index)) < kLimits.velocity_limit)
     {
       // If the full change can be made in this timestep
-      if ((excess_velocity > 0 && waypoints_.velocities(index) <= kLimits.velocity_limit - excess_velocity) ||
-          (excess_velocity < 0 && waypoints_.velocities(index) >= -kLimits.velocity_limit - excess_velocity))
+      if ((*excess_velocity > 0 && waypoints_.velocities(index) <= kLimits.velocity_limit - *excess_velocity) ||
+          (*excess_velocity < 0 && waypoints_.velocities(index) >= -kLimits.velocity_limit - *excess_velocity))
       {
-        double new_velocity = waypoints_.velocities(index) + excess_velocity;
+        double new_velocity = waypoints_.velocities(index) + *excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / kTimestep;
         double backward_jerk =
@@ -348,7 +354,7 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
       {
         // This is what accel and jerk would be if we set velocity(index) to the
         // limit
-        double new_velocity = std::copysign(1.0, excess_velocity) * kLimits.velocity_limit;
+        double new_velocity = std::copysign(1.0, *excess_velocity) * kLimits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / kTimestep;
         double backward_jerk =
@@ -378,7 +384,7 @@ bool SingleJointGenerator::VelocityCompensation(size_t limited_index, double exc
             waypoints_.accelerations(index) = backward_accel;
             waypoints_.jerks(index) = backward_jerk;
           }
-          excess_velocity = excess_velocity - delta_v;
+          *excess_velocity = *excess_velocity - delta_v;
         }
       }
     }
@@ -444,7 +450,7 @@ ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
 
 ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t* index_last_successful)
 {
-  ErrorCodeEnum error_code = LimitCompensation(index_last_successful);
+  ErrorCodeEnum error_code = ForwardLimitCompensation(index_last_successful);
   if (error_code)
     return error_code;
 

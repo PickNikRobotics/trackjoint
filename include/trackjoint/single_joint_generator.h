@@ -50,14 +50,14 @@ private:
   /** \brief Interpolate from start to end state with a polynomial */
   Eigen::VectorXd Interpolate(Eigen::VectorXd& times);
 
-  /** \brief Step through a vector of velocities, compensating for limits */
-  ErrorCodeEnum LimitCompensation(size_t* index_last_successful);
+  /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
+  ErrorCodeEnum ForwardLimitCompensation(size_t* index_last_successful);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool VelocityCompensation(size_t limited_index, double excess_velocity);
+  bool BackwardLimitCompensation(size_t limited_index, double* excess_velocity);
 
-  /** \brief This uses VelocityCompensation() but it starts from a position
+  /** \brief This uses BackwardLimitCompensation() but it starts from a position
    * vector */
   ErrorCodeEnum PositionVectorLimitLookAhead(size_t* index_last_successful);
 
