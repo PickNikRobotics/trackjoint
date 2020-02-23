@@ -767,7 +767,8 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   limits[kJoint].jerk_limit = 2;
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration = fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
+  double desired_duration =
+      fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
   desired_duration = std::max(desired_duration, kMinDesiredDuration);
 
@@ -779,7 +780,8 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
 
   // Until a generated trajectory has only 2 waypoints
-  while (desired_duration > kTimestep && output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+  while (desired_duration > kTimestep &&
+         (std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
   {
     trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
                                              goal_joint_states, limits, kPositionTolerance);
@@ -793,7 +795,8 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 
     // Shorten the desired duration as we get closer to goal
     // This is a best-case estimate, assuming the robot is already at maximum velocity
-    desired_duration = fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
+    desired_duration =
+        fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
     desired_duration = std::max(desired_duration, kTimestep);
   }
 
