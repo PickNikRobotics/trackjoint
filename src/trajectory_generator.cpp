@@ -33,9 +33,10 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_.push_back(SingleJointGenerator(
-        upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint], goal_joint_states[joint],
-        limits[joint], upsampled_num_waypoints_, kMinNumWaypoints, kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
+    single_joint_generators_.push_back(SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_,
+                                                            current_joint_states[joint], goal_joint_states[joint],
+                                                            limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
+                                                            kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
   }
 
   std::cout.precision(8);

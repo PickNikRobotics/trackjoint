@@ -71,8 +71,8 @@ int main(int argc, char** argv)
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     auto end_time = std::chrono::high_resolution_clock::now();
-    std::cout << "Run time (microseconds): " <<
-      std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << std::endl;
+    std::cout << "Run time (microseconds): "
+              << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << std::endl;
 
     if (error_code != trackjoint::ErrorCodeEnum::kNoError)
     {

@@ -25,7 +25,8 @@ namespace trackjoint
  * input: first_element: we usually have an initial condition, so supply it
  * directly.
  */
-inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
+                                               double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
