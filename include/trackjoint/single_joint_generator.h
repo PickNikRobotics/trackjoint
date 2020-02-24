@@ -17,6 +17,7 @@
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
 #include "trackjoint/limits.h"
+#include "trackjoint/utilities.h"
 
 namespace trackjoint
 {
@@ -26,8 +27,8 @@ public:
   /** \brief Constructor */
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t max_num_waypoints,
-                       const double position_tolerance);
+                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t min_num_waypoints,
+                       size_t max_num_waypoints, const double position_tolerance, bool use_high_speed_mode);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
@@ -72,11 +73,12 @@ private:
 
   const double kTimestep;
   const KinematicState kCurrentJointState;
-  const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
-  const size_t kMaxNumWaypoints;
+  const size_t kMinNumWaypoints, kMaxNumWaypoints;
   const double kPositionTolerance;
+  const bool kUseHighSpeedMode;
 
+  KinematicState goal_joint_state_;
   double desired_duration_, max_duration_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;

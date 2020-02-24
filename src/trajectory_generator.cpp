@@ -14,11 +14,14 @@ namespace trackjoint
 TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
                                          const std::vector<KinematicState>& current_joint_states,
                                          const std::vector<KinematicState>& goal_joint_states,
-                                         const std::vector<Limits>& limits, const double position_tolerance)
+                                         const std::vector<Limits>& limits, const double position_tolerance,
+                                         bool use_high_speed_mode)
   : kNumDof(num_dof)
+  , kDesiredTimestep(timestep)
+  , kUseHighSpeedMode(use_high_speed_mode)
+  , kCurrentJointStates(current_joint_states)
   , desired_duration_(desired_duration)
   , max_duration_(max_duration)
-  , kDesiredTimestep(timestep)
   ,
   // Default timestep
   upsampled_timestep_(timestep)
@@ -32,8 +35,10 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   {
     single_joint_generators_.push_back(SingleJointGenerator(
         upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint], goal_joint_states[joint],
-        limits[joint], upsampled_num_waypoints_, kMaxNumWaypoints, position_tolerance));
+        limits[joint], upsampled_num_waypoints_, kMinNumWaypoints, kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
   }
+
+  std::cout.precision(8);
 }
 
 void TrajectoryGenerator::UpSample()
@@ -256,20 +261,19 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
     }
   }
 
-  // This indicates that a successful trajectory wasn't found, even when the
-  // trajectory was extended to max_duration.
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_))
+  // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
+  // Not relevant if high-speed mode is used
+  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_) && !kUseHighSpeedMode)
   {
     SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationExceeded;
   }
 
-  // Subtract one from longest_num_waypoints because the first index doesn't
-  // count toward duration
+  // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
   double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
 
-  // If any of the component durations need to be extended, run them again
-  if (new_desired_duration > desired_duration_)
+  // If any of the component durations were changed, run them again
+  if (new_desired_duration != desired_duration_)
   {
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
@@ -279,8 +283,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
         single_joint_generators_[joint].ExtendTrajectoryDuration();
         output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
       }
-      // If this was the index of longest duration, don't need to re-generate a
-      // trajectory
+      // If this was the index of longest duration, don't need to re-generate a trajectory
       else
       {
         output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
@@ -356,15 +359,25 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
 
   // Downsample all vectors, if needed, to the correct timestep
   if (upsample_rounds_ > 0)
+  {
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
       DownSample(&output_trajectories->at(joint).elapsed_times, &output_trajectories->at(joint).positions,
                  &output_trajectories->at(joint).velocities, &output_trajectories->at(joint).accelerations,
                  &output_trajectories->at(joint).jerks);
     }
+  }
 
   // To be on the safe side, ensure limits are obeyed
   ClipVectorsForOutput(output_trajectories);
+
+  // Ensure the start state matches user-requested start state
+  for (size_t joint = 0; joint < kNumDof; ++joint)
+  {
+    output_trajectories->at(joint).positions[0] = kCurrentJointStates.at(joint).position;
+    output_trajectories->at(joint).velocities[0] = kCurrentJointStates.at(joint).velocity;
+    output_trajectories->at(joint).accelerations[0] = kCurrentJointStates.at(joint).acceleration;
+  }
 
   return error_code;
 }
