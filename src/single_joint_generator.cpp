@@ -190,8 +190,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
         break;
       }
 
-      // Try decreasing the velocity in previous timesteps to compensate for
-      // this limit, if needed
+      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       delta_v = delta_a * kTimestep;
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
@@ -224,7 +223,8 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       // Re-calculate derivatives from the updated velocity vector
       CalculateDerivatives();
 
-      // Try decreasing the velocity in previous timesteps to compensate for this limit
+      // Try adjusting the velocity in previous timesteps to compensate for this limit.
+      // Try to account for position error, too.
       delta_v += position_error / kTimestep;
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
