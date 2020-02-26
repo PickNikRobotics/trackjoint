@@ -190,8 +190,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
         break;
       }
 
-      // Try decreasing the velocity in previous timesteps to compensate for
-      // this limit, if needed
+      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       delta_v = delta_a * kTimestep;
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
@@ -224,12 +223,17 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       // Re-calculate derivatives from the updated velocity vector
       CalculateDerivatives();
 
-      // Try decreasing the velocity in previous timesteps to compensate for this limit
+      // Try adjusting the velocity in previous timesteps to compensate for this limit.
+      // Try to account for position error, too.
+      delta_v += position_error / kTimestep;
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * kTimestep;
       }
+      else
+        position_error = 0;
+
       if (fabs(position_error) > kPositionTolerance || fabs(waypoints_.accelerations(index)) > kAccelerationLimit ||
           fabs(waypoints_.jerks(index)) > kJerkLimit ||
           fabs(waypoints_.accelerations(index + 1)) > kAccelerationLimit ||
@@ -239,34 +243,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
         break;
-      }
-
-      // If possible, adjust velocity in the next timestep to account for any position error.
-      if (position_error)
-      {
-        // Velocity adjustment at timestep i+1
-        double vel_to_cancel_error = waypoints_.velocities(index + 1) + position_error / kTimestep;
-        double accel_to_cancel_error = (vel_to_cancel_error - waypoints_.velocities(index)) / kTimestep;
-        double jerk_to_cancel_error = (accel_to_cancel_error - waypoints_.accelerations(index)) / kTimestep;
-
-        // If vel(i+1) changes, need to re-check accel(i+2) and jerk(i+2)
-        double accel2 = 0;  // New acceleration at i+2
-        double jerk2 = 0;   // New jerk at i+2
-        if (index < num_waypoints - 1)
-        {
-          accel2 = (waypoints_.velocities(index + 2) - vel_to_cancel_error) / kTimestep;
-          jerk2 = (accel2 - accel_to_cancel_error) / kTimestep;
-        }
-
-        // Apply the new velocity unless it would violate limits
-        if (fabs(vel_to_cancel_error) <= kVelocityLimit && fabs(accel_to_cancel_error) <= kAccelerationLimit &&
-            fabs(jerk_to_cancel_error) <= kJerkLimit && fabs(accel2) <= kAccelerationLimit && fabs(jerk2) <= kJerkLimit)
-        {
-          waypoints_.velocities(index + 1) = vel_to_cancel_error;
-          // Re-calculate derivatives from the updated velocity vector
-          CalculateDerivatives();
-          position_error = 0;
-        }
       }
     }
   }
