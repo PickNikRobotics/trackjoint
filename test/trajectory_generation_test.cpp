@@ -612,16 +612,16 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 2;
-  single_joint_limits.acceleration_limit = 1e2;
-  single_joint_limits.jerk_limit = 1e4;
+  single_joint_limits.velocity_limit = 0.1;
+  single_joint_limits.acceleration_limit = 1;
+  single_joint_limits.jerk_limit = 10;
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
 
-  const double kDesiredDuration = 0.1;
   const double kMaxDuration = 5;
   const double kTimestep = 0.001;
+  const double kDesiredDuration = kTimestep;
 
   trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
                                            goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
@@ -750,12 +750,18 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   constexpr std::size_t kJoint = 0;
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
-  constexpr double kPositionTolerance = 1e-6;
+  constexpr bool kUseHighSpeedMode = true;
+  // Position tolerance for each waypoint
+  constexpr double kWaypointPositionTolerance = 1e-5;
+  // Tolerances for the final waypoint
+  constexpr double kFinalPositionTolerance = 1e-5;
+  constexpr double kFinalVelocityTolerance = 1e-3;
+  constexpr double kFinalAccelerationTolerance = 1e-2;
   constexpr double kMinDesiredDuration = kTimestep;
   // Between iterations, skip this many waypoints.
   // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
   // Minimum is 1.
-  constexpr std::size_t kNewSeedStateIndex = 10;
+  constexpr std::size_t kNewSeedStateIndex = 1;
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
@@ -776,29 +782,39 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   // Generate initial trajectory
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                           goal_joint_states, limits, kPositionTolerance, use_high_speed_mode_);
+                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
   trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
   EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
 
+  double position_error = std::numeric_limits<double>::max();
+  double velocity_error = std::numeric_limits<double>::max();
+  double acceleration_error = std::numeric_limits<double>::max();
+
   // Until a generated trajectory has only 2 waypoints
-  while (desired_duration > kTimestep &&
-         (std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+  while (fabs(position_error) > kFinalPositionTolerance ||
+         fabs(velocity_error) > kFinalVelocityTolerance ||
+         fabs(acceleration_error) > kFinalAccelerationTolerance)
   {
     trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                             goal_joint_states, limits, kPositionTolerance, use_high_speed_mode_);
+                                             goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
     EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
-
     // Get a new seed state for next trajectory generation
-    start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
-    start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
-    start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+    {
+      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
+      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
+      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+    }
+
+    position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
+    velocity_error = start_state[kJoint].velocity - goal_joint_states.at(kJoint).velocity;
+    acceleration_error = start_state[kJoint].acceleration - goal_joint_states.at(kJoint).acceleration;
 
     // Shorten the desired duration as we get closer to goal
-    // This is a best-case estimate, assuming the robot is already at maximum velocity
-    desired_duration =
-        fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
-    desired_duration = std::max(desired_duration, kTimestep);
+    desired_duration -= kTimestep;
+    // But, don't ask for a duration that is shorter than one timestep
+    desired_duration = std::max(desired_duration, kMinDesiredDuration);
   }
 
   // If the test gets here, it passed.
