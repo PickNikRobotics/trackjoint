@@ -24,12 +24,12 @@ int main(int argc, char** argv)
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
   constexpr bool kUseHighSpeedMode = true;
-  constexpr double kPositionTolerance = 1e-6;
+  constexpr double kPositionTolerance = 1e-5;
   constexpr double kMinDesiredDuration = kTimestep;
   // Between iterations, skip this many waypoints.
   // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
   // Minimum is 1.
-  constexpr std::size_t kNewSeedStateIndex = 10;
+  constexpr std::size_t kNewSeedStateIndex = 1;
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
