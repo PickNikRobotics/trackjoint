@@ -24,7 +24,12 @@ int main(int argc, char** argv)
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
   constexpr bool kUseHighSpeedMode = true;
-  constexpr double kPositionTolerance = 1e-5;
+  // Position tolerance for each waypoint
+  constexpr double kWaypointPositionTolerance = 1e-5;
+  // Tolerances for the final waypoint
+  constexpr double kFinalPositionTolerance = 1e-5;
+  constexpr double kFinalVelocityTolerance = 1e-3;
+  constexpr double kFinalAccelerationTolerance = 1e-2;
   constexpr double kMinDesiredDuration = kTimestep;
   // Between iterations, skip this many waypoints.
   // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
@@ -49,7 +54,7 @@ int main(int argc, char** argv)
   // Generate initial trajectory
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                           goal_joint_states, limits, kPositionTolerance, kUseHighSpeedMode);
+                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
   trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
   if (error_code != trackjoint::ErrorCodeEnum::kNoError)
   {
@@ -60,13 +65,19 @@ int main(int argc, char** argv)
 
   PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
 
+  double position_error = std::numeric_limits<double>::max();
+  double velocity_error = std::numeric_limits<double>::max();
+  double acceleration_error = std::numeric_limits<double>::max();
+
   // Until a generated trajectory has only 2 waypoints
-  while ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+  while (fabs(position_error) > kFinalPositionTolerance ||
+         fabs(velocity_error) > kFinalVelocityTolerance ||
+         fabs(acceleration_error) > kFinalAccelerationTolerance)
   {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                             goal_joint_states, limits, kPositionTolerance, kUseHighSpeedMode);
+                                             goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -89,6 +100,10 @@ int main(int argc, char** argv)
       start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
       start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
     }
+
+    position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
+    velocity_error = start_state[kJoint].velocity - goal_joint_states.at(kJoint).velocity;
+    acceleration_error = start_state[kJoint].acceleration - goal_joint_states.at(kJoint).acceleration;
 
     // Shorten the desired duration as we get closer to goal
     desired_duration -= kTimestep;

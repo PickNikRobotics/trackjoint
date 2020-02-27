@@ -174,7 +174,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       }
       if (fabs(position_error) > kPositionTolerance)
       {
-        std::cout << "Jerk failure! at index " << index << std::endl;
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -226,7 +225,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       }
       if (fabs(position_error) > kPositionTolerance)
       {
-        std::cout << "Acceleration failure! at index " << index << std::endl;
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -234,12 +232,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       }
     }
   }
-
-
-  std::cout << "GOING INTO velocity comp: " << std::endl;
-  std::cout << "Times 0/1/2/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.elapsed_times[1]  << "  " << waypoints_.elapsed_times[2]<< std::endl;
-  std::cout << "Velocities 0/1/2/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.velocities[1] << "  " << waypoints_.velocities[2] << std::endl;
-  std::cout << "Accelerations 0/1/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.accelerations[1] << "  " << waypoints_.accelerations[2] << std::endl;
 
   // Compensate for velocity limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
@@ -273,18 +265,12 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
           fabs(waypoints_.accelerations(index + 1)) > kAccelerationLimit ||
           fabs(waypoints_.jerks(index + 1)) > kJerkLimit)
       {
-        std::cout << "Velocity failure! at index " << index << std::endl;
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
         break;
       }
     }
-
-    std::cout << "COMING OUT OF vel comp: " << std::endl;
-    std::cout << "Times 0/1/2/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.elapsed_times[1]  << "  " << waypoints_.elapsed_times[2]<< std::endl;
-    std::cout << "Velocities 0/1/2/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.velocities[1] << "  " << waypoints_.velocities[2] << std::endl;
-    std::cout << "Accelerations 0/1/final: " << waypoints_.elapsed_times[0] << "  " << waypoints_.accelerations[1] << "  " << waypoints_.accelerations[2] << std::endl;
   }
 
   return ErrorCodeEnum::kNoError;
@@ -296,7 +282,6 @@ inline void SingleJointGenerator::RecordFailureTime(size_t current_index, size_t
   if (current_index < *index_last_successful)
   {
     *index_last_successful = current_index;
-    std::cout << "index_last_successful:  " << *index_last_successful << std::endl;
   }
 }
 
@@ -413,8 +398,6 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   // This gives a new duration estimate.
 
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
-
-  std::cout << "index_last_successful: " << index_last_successful_ << std::endl;
 
   // If in normal mode, we can extend trajectories
   if (!kUseHighSpeedMode)
