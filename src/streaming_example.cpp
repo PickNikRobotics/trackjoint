@@ -61,8 +61,7 @@ int main(int argc, char** argv)
   PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
 
   // Until a generated trajectory has only 2 waypoints
-  while (desired_duration > kTimestep &&
-         (std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+  while ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
   {
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -84,15 +83,17 @@ int main(int argc, char** argv)
     PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
 
     // Get a new seed state for next trajectory generation
-    start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
-    start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
-    start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+    {
+      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
+      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
+      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+    }
 
     // Shorten the desired duration as we get closer to goal
-    // This is a best-case estimate, assuming the robot is already at maximum velocity
-    desired_duration =
-        fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
-    desired_duration = std::max(desired_duration, kTimestep);
+    desired_duration -= kTimestep;
+    // But, don't ask for a duration that is shorter than one timestep
+    desired_duration = std::max(desired_duration, kMinDesiredDuration);
   }
 
   std::cout << "Done!" << std::endl;
