@@ -446,10 +446,10 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       ClipEigenVector(&waypoints_.jerks, kMinNumWaypoints);
       ClipEigenVector(&waypoints_.elapsed_times, kMinNumWaypoints);
       // Eigen vectors do not have a "back" member function
-      goal_joint_state_.position = waypoints_.positions[kMinNumWaypoints-1];
-      goal_joint_state_.velocity = waypoints_.velocities[kMinNumWaypoints-1];
-      goal_joint_state_.acceleration = waypoints_.accelerations[kMinNumWaypoints-1];
-      desired_duration_ = waypoints_.elapsed_times[kMinNumWaypoints-1];
+      goal_joint_state_.position = waypoints_.positions[kMinNumWaypoints - 1];
+      goal_joint_state_.velocity = waypoints_.velocities[kMinNumWaypoints - 1];
+      goal_joint_state_.acceleration = waypoints_.accelerations[kMinNumWaypoints - 1];
+      desired_duration_ = waypoints_.elapsed_times[kMinNumWaypoints - 1];
     }
   }
 

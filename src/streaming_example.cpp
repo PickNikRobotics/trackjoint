@@ -70,8 +70,7 @@ int main(int argc, char** argv)
   double acceleration_error = std::numeric_limits<double>::max();
 
   // Until a generated trajectory has only 2 waypoints
-  while (fabs(position_error) > kFinalPositionTolerance ||
-         fabs(velocity_error) > kFinalVelocityTolerance ||
+  while (fabs(position_error) > kFinalPositionTolerance || fabs(velocity_error) > kFinalVelocityTolerance ||
          fabs(acceleration_error) > kFinalAccelerationTolerance)
   {
     auto start_time = std::chrono::high_resolution_clock::now();
