@@ -130,7 +130,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   if (!kUseHighSpeedMode || static_cast<size_t>(waypoints_.positions.size()) <= kMinNumWaypoints)
     last_waypoint_to_adjust = waypoints_.positions.size() - 1;
   // Shorten the trajectory, if in high-speed mode
-  else if (kUseHighSpeedMode && static_cast<size_t>(waypoints_.positions.size()) > kMinNumWaypoints)
+  else
   {
     last_waypoint_to_adjust = kMinNumWaypoints - 1;
 
