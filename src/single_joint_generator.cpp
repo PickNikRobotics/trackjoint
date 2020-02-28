@@ -419,6 +419,12 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       if (new_num_waypoints > kMaxNumWaypoints)
         new_num_waypoints = kMaxNumWaypoints;
 
+      waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+      waypoints_.positions.resize(waypoints_.elapsed_times.size());
+      waypoints_.velocities.resize(waypoints_.elapsed_times.size());
+      waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
+      waypoints_.jerks.resize(waypoints_.elapsed_times.size());
+
       ////////////////////////////////////////////////////////////
       // Try to create the trajectory again, with the new duration
       ////////////////////////////////////////////////////////////

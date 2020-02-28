@@ -587,8 +587,7 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
 
 TEST_F(TrajectoryGenerationTest, DurationExtension)
 {
-  // The third joint cannot reach in the desired time, so trajectories must be
-  // extended
+  // The third joint cannot reach in the desired time, so trajectories must be extended
 
   std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
   trackjoint::KinematicState joint_state;
@@ -612,16 +611,16 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
 
   std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 0.1;
-  single_joint_limits.acceleration_limit = 1;
-  single_joint_limits.jerk_limit = 10;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 1e2;
+  single_joint_limits.jerk_limit = 1e4;
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
 
+  const double kDesiredDuration = 0.1;
   const double kMaxDuration = 5;
   const double kTimestep = 0.001;
-  const double kDesiredDuration = kTimestep;
 
   trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
                                            goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
