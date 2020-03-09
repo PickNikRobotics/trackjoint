@@ -38,8 +38,6 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
                                                             limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
                                                             kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
   }
-
-  std::cout.precision(8);
 }
 
 void TrajectoryGenerator::UpSample()

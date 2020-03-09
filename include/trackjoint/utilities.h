@@ -47,6 +47,7 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint:
 /** \brief Clip all elements beyond a given size */
 inline void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
 {
-  *vector = vector->head(new_num_waypoints);
+  Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
+  *vector = new_vector;
 }
 }  // namespace trackjoint
