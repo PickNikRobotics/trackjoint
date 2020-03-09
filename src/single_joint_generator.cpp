@@ -111,7 +111,12 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
 
   // Start with the assumption that the entire trajectory can be completed
-  *index_last_successful = waypoints_.positions.size();
+  // High-speed mode returns at the minimum number of waypoints.
+  if (!kUseHighSpeedMode)
+    *index_last_successful = waypoints_.positions.size();
+  else
+    *index_last_successful = kMinNumWaypoints;
+
   bool successful_compensation = false;
 
   // Discrete differentiation introduces small numerical errors, so allow a small tolerance
@@ -133,18 +138,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   else
   {
     last_waypoint_to_adjust = kMinNumWaypoints - 1;
-
-    // If in high-speed mode, clip at the shorter number of waypoints
-    ClipEigenVector(&waypoints_.positions, kMinNumWaypoints);
-    ClipEigenVector(&waypoints_.velocities, kMinNumWaypoints);
-    ClipEigenVector(&waypoints_.accelerations, kMinNumWaypoints);
-    ClipEigenVector(&waypoints_.jerks, kMinNumWaypoints);
-    ClipEigenVector(&waypoints_.elapsed_times, kMinNumWaypoints);
-    // Eigen vectors do not have a "back" member function
-    goal_joint_state_.position = waypoints_.positions[last_waypoint_to_adjust];
-    goal_joint_state_.velocity = waypoints_.velocities[last_waypoint_to_adjust];
-    goal_joint_state_.acceleration = waypoints_.accelerations[last_waypoint_to_adjust];
-    desired_duration_ = waypoints_.elapsed_times[last_waypoint_to_adjust];
   }
 
   // Compensate for jerk limits at each timestep, starting near the beginning

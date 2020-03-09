@@ -62,8 +62,11 @@ int main(int argc, char** argv)
     return -1;
   }
   std::cout << "Initial trajectory calculation:" << std::endl;
-
   PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
+
+  start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
+  start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
+  start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
 
   double position_error = std::numeric_limits<double>::max();
   double velocity_error = std::numeric_limits<double>::max();
@@ -98,6 +101,11 @@ int main(int argc, char** argv)
       start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
       start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
       start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+    }
+    else
+    {
+      std::cout << "Index error!" << std::endl;
+      return 1;
     }
 
     position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
