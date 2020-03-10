@@ -74,7 +74,7 @@ private:
   double desired_duration_, max_duration_;
   // TODO(andyz): set this back to a small number when done testing
   const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
-  const size_t kMinNumWaypoints = 49;     // Upsample for better accuracy if fewer than this many waypoints
+  const size_t kMinNumWaypoints = 10;     // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   double upsampled_timestep_;

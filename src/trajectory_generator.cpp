@@ -30,13 +30,18 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
 
+  // If we needed to perform an UpSample pass, it means the number of waypoints is already small.
+  // Do not use high speed mode.
+  if (upsample_rounds_ > 0)
+    use_high_speed_mode = false;
+
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_.push_back(SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_,
                                                             current_joint_states[joint], goal_joint_states[joint],
                                                             limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
-                                                            kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
+                                                            kMaxNumWaypoints, position_tolerance, use_high_speed_mode));
   }
 }
 

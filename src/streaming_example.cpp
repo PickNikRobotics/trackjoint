@@ -30,7 +30,7 @@ int main(int argc, char** argv)
   constexpr double kFinalPositionTolerance = 1e-4;
   constexpr double kFinalVelocityTolerance = 1e-1;
   constexpr double kFinalAccelerationTolerance = 1e-1;
-  constexpr double kMinDesiredDuration = kTimestep;
+  constexpr double kMinDesiredDuration = 10 * kTimestep;
   // Between iterations, move ahead this many waypoints along the trajectory.
   constexpr std::size_t kNextWaypoint = 1;
 
