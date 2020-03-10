@@ -432,7 +432,7 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   else
   {
     // Clip at the last successful index
-    if (index_last_successful_ < kMinNumWaypoints)
+    if (index_last_successful_ < kMinNumWaypoints - 1)
     {
       // If in high-speed mode, clip at the shorter number of waypoints
       ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
