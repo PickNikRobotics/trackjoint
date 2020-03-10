@@ -30,18 +30,13 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   // Upsample if num. waypoints would be short. Helps with accuracy
   UpSample();
 
-  // If we needed to perform an UpSample pass, it means the number of waypoints is already small.
-  // Do not use high speed mode.
-  if (upsample_rounds_ > 0)
-    use_high_speed_mode = false;
-
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_.push_back(SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_,
                                                             current_joint_states[joint], goal_joint_states[joint],
                                                             limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
-                                                            kMaxNumWaypoints, position_tolerance, use_high_speed_mode));
+                                                            kMaxNumWaypoints, position_tolerance, kUseHighSpeedMode));
   }
 }
 
@@ -168,14 +163,12 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
   // Need at least 1 timestep
   if (rounded_duration < nominal_timestep)
   {
-    SetFinalStateToCurrentState();
     return ErrorCodeEnum::kDesiredDurationTooShort;
   }
 
   // Maximum duration must be equal to or longer than the nominal, goal duration
   if (max_duration_ < rounded_duration)
   {
-    SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
   }
 
@@ -184,36 +177,39 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
   {
     if (abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit)
     {
-      SetFinalStateToCurrentState();
       return ErrorCodeEnum::kVelocityExceedsLimit;
     }
 
     // Check that goal vels. are less than the limits.
     if (abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit)
     {
-      SetFinalStateToCurrentState();
       return ErrorCodeEnum::kVelocityExceedsLimit;
     }
 
     // Check that current accels. are less than the limits.
     if (abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
     {
-      SetFinalStateToCurrentState();
       return ErrorCodeEnum::kAccelExceedsLimit;
     }
 
     // Check that goal accels. are less than the limits.
     if (abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
     {
-      SetFinalStateToCurrentState();
       return ErrorCodeEnum::kAccelExceedsLimit;
     }
 
     // Check for positive limits.
     if (limits[joint].velocity_limit <= 0 || limits[joint].acceleration_limit <= 0 || limits[joint].jerk_limit <= 0)
     {
-      SetFinalStateToCurrentState();
       return ErrorCodeEnum::kLimitNotPositive;
+    }
+
+    // In high-speed mode, the user-requested duration should be >= kMinNumWaypoints * timestep.
+    // This prevents up/downsample from being used. Since high-speed mode can return a variable number of waypoints,
+    // it does not work with up/downsample.
+    if (rounded_duration < kMinNumWaypoints * nominal_timestep && kUseHighSpeedMode)
+    {
+      return ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode;
     }
   }
 
@@ -270,7 +266,6 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   // Not relevant if high-speed mode is used
   if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_) && !kUseHighSpeedMode)
   {
-    SetFinalStateToCurrentState();
     return ErrorCodeEnum::kMaxDurationExceeded;
   }
 
@@ -304,12 +299,6 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   }
 
   return ErrorCodeEnum::kNoError;
-}
-
-void TrajectoryGenerator::SetFinalStateToCurrentState()
-{
-  // TODO(andyz)
-  ;
 }
 
 void TrajectoryGenerator::ClipVectorsForOutput(std::vector<JointTrajectory>* trajectory)

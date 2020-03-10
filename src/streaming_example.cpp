@@ -30,6 +30,8 @@ int main(int argc, char** argv)
   constexpr double kFinalPositionTolerance = 1e-4;
   constexpr double kFinalVelocityTolerance = 1e-1;
   constexpr double kFinalAccelerationTolerance = 1e-1;
+  // For high-speed mode, it is important to keep the desired duration >=10 timesteps.
+  // Otherwise, an error will be thrown.
   constexpr double kMinDesiredDuration = 10 * kTimestep;
   // Between iterations, move ahead this many waypoints along the trajectory.
   constexpr std::size_t kNextWaypoint = 1;
@@ -49,11 +51,21 @@ int main(int argc, char** argv)
   // But, don't ask for a duration that is shorter than one timestep
   desired_duration = std::max(desired_duration, kMinDesiredDuration);
 
-  // Generate initial trajectory
+  // Create object for trajectory generation
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
                                            goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
-  trackjoint::ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+
+  // An example of optional input validation
+  trackjoint::ErrorCodeEnum error_code = traj_gen.InputChecking(start_state, goal_joint_states, limits, kTimestep);
+  if (error_code)
+  {
+    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    return -1;
+  }
+
+  // Generate the initial trajectory
+  error_code = traj_gen.GenerateTrajectories(&output_trajectories);
   if (error_code != trackjoint::ErrorCodeEnum::kNoError)
   {
     std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;

@@ -23,7 +23,8 @@ enum ErrorCodeEnum
   kMaxDurationLessThanDesiredDuration = 5,
   kLimitNotPositive = 6,
   kGoalPositionMismatch = 7,
-  kFailureToGenerateSingleWaypoint = 8
+  kFailureToGenerateSingleWaypoint = 8,
+  kLessThanTenTimestepsForHighSpeedMode = 9
 };
 
 const std::unordered_map<uint, std::string> kErrorCodeMap(
@@ -36,5 +37,6 @@ const std::unordered_map<uint, std::string> kErrorCodeMap(
       { kMaxDurationLessThanDesiredDuration, "max_duration should not be less than desired_duration" },
       { kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero" },
       { kGoalPositionMismatch, "Mismatch between the final position and the goal position" },
-      { kFailureToGenerateSingleWaypoint, "Failed to generate even a single new waypoint" } });
+      { kFailureToGenerateSingleWaypoint, "Failed to generate even a single new waypoint" },
+      { kLessThanTenTimestepsForHighSpeedMode, "In high-speed mode, desired duration should be at least 10 timesteps"} });
 }  // end namespace trackjoint

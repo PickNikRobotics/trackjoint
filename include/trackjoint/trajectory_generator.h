@@ -63,10 +63,6 @@ private:
   /** \brief Synchronize all trajectories with the one of longest duration. */
   ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
-  /** \brief Set the output state equal to the current state. Used if an error
-   * is encountered. */
-  void SetFinalStateToCurrentState();
-
   const uint kNumDof;
   const double kDesiredTimestep;
   const bool kUseHighSpeedMode;
