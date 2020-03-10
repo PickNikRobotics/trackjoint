@@ -74,7 +74,8 @@ void TrajectoryGenerator::DownSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
   // Eigen::VectorXd does not provide .back(), so get the final time like this:
   double final_time = (*time_vector)[time_vector->size() - 1];
-  size_t new_vector_size = 1 + round(final_time / kDesiredTimestep);
+  // minimum new_vector_size is two (initial waypoint and final waypoint)
+  size_t new_vector_size = std::max(size_t(1 + round(final_time / kDesiredTimestep)), size_t(2));
   // Time downsampling:
   time_vector->setLinSpaced(new_vector_size, 0., final_time);
 
