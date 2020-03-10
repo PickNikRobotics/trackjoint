@@ -25,7 +25,7 @@ namespace trackjoint
  * input: first_element: we usually have an initial condition, so supply it
  * directly.
  */
-//TODO(602): Overload DiscreteDifferentiation to take starting index
+// TODO(602): Overload DiscreteDifferentiation to take starting index
 inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
                                                double first_element)
 {

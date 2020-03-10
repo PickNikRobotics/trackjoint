@@ -398,8 +398,7 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
     size_t new_num_waypoints = 0;
     // Iterate over new durations until the position error is acceptable or the maximum duration is reached
     while ((index_last_successful_ < static_cast<size_t>(waypoints_.positions.size())) &&
-           (desired_duration_ < max_duration_) &&
-           (new_num_waypoints < kMaxNumWaypoints))
+           (desired_duration_ < max_duration_) && (new_num_waypoints < kMaxNumWaypoints))
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
       desired_duration_ = (1. + 0.5 * (1. - index_last_successful_ / waypoints_.positions.size())) * desired_duration_;
@@ -408,9 +407,8 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       if (std::fmod(desired_duration_, kTimestep) > 0.5 * kTimestep)
         desired_duration_ = desired_duration_ + kTimestep;
 
-      new_num_waypoints = std::max(
-        static_cast<size_t>(waypoints_.positions.size() + 1),
-        static_cast<size_t>(floor(1 + desired_duration_ / kTimestep)));
+      new_num_waypoints = std::max(static_cast<size_t>(waypoints_.positions.size() + 1),
+                                   static_cast<size_t>(floor(1 + desired_duration_ / kTimestep)));
       // Cap the trajectory duration to maintain determinism
       if (new_num_waypoints > kMaxNumWaypoints)
         new_num_waypoints = kMaxNumWaypoints;
