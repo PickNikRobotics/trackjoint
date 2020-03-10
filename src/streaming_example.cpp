@@ -27,14 +27,12 @@ int main(int argc, char** argv)
   // Position tolerance for each waypoint
   constexpr double kWaypointPositionTolerance = 1e-5;
   // Tolerances for the final waypoint
-  constexpr double kFinalPositionTolerance = 1e-5;
-  constexpr double kFinalVelocityTolerance = 1e-3;
-  constexpr double kFinalAccelerationTolerance = 1e-2;
+  constexpr double kFinalPositionTolerance = 1e-4;
+  constexpr double kFinalVelocityTolerance = 1e-1;
+  constexpr double kFinalAccelerationTolerance = 1e-1;
   constexpr double kMinDesiredDuration = kTimestep;
-  // Between iterations, skip this many waypoints.
-  // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
-  // Minimum is 1.
-  constexpr std::size_t kNewSeedStateIndex = 1;
+  // Between iterations, move ahead this many waypoints along the trajectory.
+  constexpr std::size_t kNextWaypoint = 1;
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
@@ -64,9 +62,9 @@ int main(int argc, char** argv)
   std::cout << "Initial trajectory calculation:" << std::endl;
   PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
 
-  start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
-  start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
-  start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+  start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNextWaypoint];
+  start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNextWaypoint];
+  start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNextWaypoint];
 
   double position_error = std::numeric_limits<double>::max();
   double velocity_error = std::numeric_limits<double>::max();
@@ -96,11 +94,11 @@ int main(int argc, char** argv)
     PrintJointTrajectory(kJoint, output_trajectories, desired_duration);
 
     // Get a new seed state for next trajectory generation
-    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNextWaypoint)
     {
-      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
-      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
-      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNextWaypoint];
+      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNextWaypoint];
+      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNextWaypoint];
     }
     else
     {

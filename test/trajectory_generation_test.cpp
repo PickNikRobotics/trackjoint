@@ -758,9 +758,9 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   constexpr double kFinalAccelerationTolerance = 1e-2;
   constexpr double kMinDesiredDuration = kTimestep;
   // Between iterations, skip this many waypoints.
-  // Take kNewSeedStateIndex from the previous trajectory to start the new trajectory.
+  // Take kNextWaypoint from the previous trajectory to start the new trajectory.
   // Minimum is 1.
-  constexpr std::size_t kNewSeedStateIndex = 1;
+  constexpr std::size_t kNextWaypoint = 1;
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
@@ -798,11 +798,11 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
     EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
     // Get a new seed state for next trajectory generation
-    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNewSeedStateIndex)
+    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNextWaypoint)
     {
-      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNewSeedStateIndex];
-      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNewSeedStateIndex];
-      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNewSeedStateIndex];
+      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNextWaypoint];
+      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNextWaypoint];
+      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNextWaypoint];
     }
 
     position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
