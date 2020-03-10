@@ -370,14 +370,6 @@ ErrorCodeEnum TrajectoryGenerator::GenerateTrajectories(std::vector<JointTraject
   // To be on the safe side, ensure limits are obeyed
   ClipVectorsForOutput(output_trajectories);
 
-  // Ensure the start state matches user-requested start state
-  for (size_t joint = 0; joint < kNumDof; ++joint)
-  {
-    output_trajectories->at(joint).positions[0] = kCurrentJointStates.at(joint).position;
-    output_trajectories->at(joint).velocities[0] = kCurrentJointStates.at(joint).velocity;
-    output_trajectories->at(joint).accelerations[0] = kCurrentJointStates.at(joint).acceleration;
-  }
-
   return error_code;
 }
 }  // end namespace trackjoint

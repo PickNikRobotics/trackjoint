@@ -395,19 +395,22 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   // If in normal mode, we can extend trajectories
   if (!kUseHighSpeedMode)
   {
+    size_t new_num_waypoints = 0;
     // Iterate over new durations until the position error is acceptable or the maximum duration is reached
     while ((index_last_successful_ < static_cast<size_t>(waypoints_.positions.size())) &&
-           (desired_duration_ < max_duration_))
+           (desired_duration_ < max_duration_) &&
+           (new_num_waypoints < kMaxNumWaypoints))
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
-      // TODO(andyz): Ensure at least one new timestep is added
       desired_duration_ = (1. + 0.5 * (1. - index_last_successful_ / waypoints_.positions.size())) * desired_duration_;
 
       // // Round to nearest timestep
       if (std::fmod(desired_duration_, kTimestep) > 0.5 * kTimestep)
         desired_duration_ = desired_duration_ + kTimestep;
 
-      size_t new_num_waypoints = floor(1 + desired_duration_ / kTimestep);
+      new_num_waypoints = std::max(
+        static_cast<size_t>(waypoints_.positions.size() + 1),
+        static_cast<size_t>(floor(1 + desired_duration_ / kTimestep)));
       // Cap the trajectory duration to maintain determinism
       if (new_num_waypoints > kMaxNumWaypoints)
         new_num_waypoints = kMaxNumWaypoints;
@@ -430,7 +433,23 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   // May need to clip the trajectories if only a few waypoints were successful.
   else
   {
+    // Clip at the last successful index
     if (index_last_successful_ < kMinNumWaypoints)
+    {
+      // If in high-speed mode, clip at the shorter number of waypoints
+      ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
+      ClipEigenVector(&waypoints_.velocities, index_last_successful_ + 1);
+      ClipEigenVector(&waypoints_.accelerations, index_last_successful_ + 1);
+      ClipEigenVector(&waypoints_.jerks, index_last_successful_ + 1);
+      ClipEigenVector(&waypoints_.elapsed_times, index_last_successful_ + 1);
+      // Eigen vectors do not have a "back" member function
+      goal_joint_state_.position = waypoints_.positions[index_last_successful_];
+      goal_joint_state_.velocity = waypoints_.velocities[index_last_successful_];
+      goal_joint_state_.acceleration = waypoints_.accelerations[index_last_successful_];
+      desired_duration_ = waypoints_.elapsed_times[index_last_successful_];
+    }
+    // else, clip at kMinNumWaypoints
+    else
     {
       // If in high-speed mode, clip at the shorter number of waypoints
       ClipEigenVector(&waypoints_.positions, kMinNumWaypoints);
