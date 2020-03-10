@@ -38,5 +38,6 @@ const std::unordered_map<uint, std::string> kErrorCodeMap(
       { kLimitNotPositive, "Vel/accel/jerk limits should be greater than zero" },
       { kGoalPositionMismatch, "Mismatch between the final position and the goal position" },
       { kFailureToGenerateSingleWaypoint, "Failed to generate even a single new waypoint" },
-      { kLessThanTenTimestepsForHighSpeedMode, "In high-speed mode, desired duration should be at least 10 timesteps"} });
+      { kLessThanTenTimestepsForHighSpeedMode, "In high-speed mode, desired duration should be at least 10 "
+                                               "timesteps" } });
 }  // end namespace trackjoint

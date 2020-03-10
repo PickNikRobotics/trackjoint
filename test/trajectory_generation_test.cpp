@@ -827,8 +827,8 @@ TEST_F(TrajectoryGenerationTest, HighSpeedTooFewTimesteps)
 
   trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                            goal_joint_states_, limits_, position_tolerance_, use_high_speed_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode, traj_gen.InputChecking(current_joint_states_,
-    goal_joint_states_, limits_, timestep_));
+  EXPECT_EQ(ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode,
+            traj_gen.InputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
 }
 }  // namespace trackjoint
 
