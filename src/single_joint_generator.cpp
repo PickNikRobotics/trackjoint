@@ -493,6 +493,7 @@ inline ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t* 
     waypoints_.positions(index) = waypoints_.positions(index - 1) + waypoints_.velocities(index - 1) * kTimestep +
                                   0.5 * waypoints_.accelerations(index - 1) * pow(kTimestep, 2) +
                                   kOneSixth * waypoints_.jerks(index - 1) * pow(kTimestep, 3);
+
   // Final waypoint should match the goal, unless trajectory was cut short for high-speed mode
   if (!kUseHighSpeedMode)
     waypoints_.positions(waypoints_.positions.size() - 1) = goal_joint_state_.position;
