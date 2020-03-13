@@ -28,21 +28,8 @@ namespace trackjoint
  * return a vector of derivatives
  */
 // TODO(602): Overload DiscreteDifferentiation to take starting index
-inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
-                                               double first_element)
-{
-  // derivative = (difference between adjacent elements) / timestep
-  Eigen::VectorXd input_shifted_right(input_vector.size());
-  input_shifted_right(0) = 0;
-  input_shifted_right.tail(input_shifted_right.size() - 1) = input_vector.head(input_vector.size() - 1);
-  Eigen::VectorXd derivative(input_vector.size());
-  derivative(0) = first_element;
-  derivative.tail(derivative.size() - 1) =
-      (input_vector.tail(input_vector.size() - 1) - input_shifted_right.tail(input_shifted_right.size() - 1)) /
-      timestep;
-
-  return derivative;
-};
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
+                                               double first_element);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *
@@ -53,14 +40,9 @@ inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vect
 void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
                           const double desired_duration);
 
-/** \brief Clip all elements beyond a given size
- *
- * input vector a vector to clip, such as positions
- * input new_num_waypoints clip all elements beyond this number
-*/
-inline void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
-{
-  Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
-  *vector = new_vector;
-}
+/** \brief Clip all elements beyond a given size */
+void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints);
+
+/* \brief Check if all elements of a vector are within a [low_limit, high_limit] range. */
+bool VerifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector);
 }  // namespace trackjoint

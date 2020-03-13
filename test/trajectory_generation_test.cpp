@@ -93,10 +93,8 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              timestep_tolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[0].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
@@ -146,11 +144,11 @@ TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
   // Duration
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-0.1, 0.1, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-0.1, 0.1, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-0.1, 0.1, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration)
@@ -186,9 +184,14 @@ TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration)
   // Number of waypoints
   EXPECT_EQ(output_trajectories[0].elapsed_times.size(), 3);
   // Timestep
-  double timestep_tolerance = 0.003;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+  double kTimestepTolerance = 0.003;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
+
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
@@ -220,11 +223,11 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
   // Duration
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
@@ -274,11 +277,11 @@ TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
   // Duration
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
@@ -323,11 +326,11 @@ TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
   // Duration
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration_, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration_, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
@@ -393,10 +396,9 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
     traj_gen.generateTrajectories(&output_trajectories);
 
     VerifyVelAccelJerkLimits(output_trajectories, limits);
-    // Timestep
-    const double timestep_tolerance = 0.25 * timestep;
-    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-                timestep_tolerance);
+    EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[0].positions));
+    EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[1].positions));
+    EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[2].positions));
 
     // Save the first waypoint in x_smoothed...
     x_smoothed(waypoint) = output_trajectories.at(0).positions(1);
@@ -505,6 +507,10 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 
     ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories);
 
+    EXPECT_TRUE(VerifyVectorWithinBounds(-10, 10, output_trajectories[0].positions));
+    EXPECT_TRUE(VerifyVectorWithinBounds(-10, 10, output_trajectories[1].positions));
+    EXPECT_TRUE(VerifyVectorWithinBounds(-10, 10, output_trajectories[2].positions));
+
     // Saving Trackjoint output to .csv files for plotting
     traj_gen.saveTrajectoriesToFile(output_trajectories, BASE_FILEPATH, point != 0);
 
@@ -568,11 +574,11 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
   // Duration
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, LimitCompensation)
@@ -622,10 +628,10 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration / timestep;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 4, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 4, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 4, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, DurationExtension)
@@ -678,11 +684,11 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   const double expected_duration = 1.05;
   const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), expected_duration, duration_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kExpectedDuration, kDurationTolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 5, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 5, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 5, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
@@ -740,10 +746,10 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration / timestep;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
-  // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 3, output_trajectories[0].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 3, output_trajectories[1].positions));
+  EXPECT_TRUE(VerifyVectorWithinBounds(-2, 3, output_trajectories[2].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
@@ -786,9 +792,10 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
   const double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Timestep
-  const double timestep_tolerance = 0.0005;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-              timestep_tolerance);
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
+  EXPECT_TRUE(VerifyVectorWithinBounds(-1, 1, output_trajectories[0].positions));
 }
 
 TEST_F(TrajectoryGenerationTest, CustomerStreaming)
@@ -853,19 +860,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
                    waypoint_position_tolerance, use_streaming_mode);
     error_code = traj_gen.generateTrajectories(&output_trajectories);
     EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
-    // Timestep
-    const double timestep_tolerance = 0.0005;
-    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep,
-                timestep_tolerance);
-    // All components should have the same number of waypoints
-    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[1].elapsed_times.size());
-    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[2].elapsed_times.size());
-    // All components should have the same duration
-    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
-              output_trajectories[1].elapsed_times[output_trajectories[0].elapsed_times.size() - 1]);
-    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
-              output_trajectories[1].elapsed_times[output_trajectories[2].elapsed_times.size() - 1]);
-
+    EXPECT_TRUE(VerifyVectorWithinBounds(-2, 2, output_trajectories[0].positions));
     // Get a new seed state for next trajectory generation
     if ((std::size_t)output_trajectories.at(joint_to_update).positions.size() > next_waypoint)
     {
