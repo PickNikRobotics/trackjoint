@@ -163,10 +163,16 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[0] = 1;
+
         position_error = position_error + delta_v * kTimestep;
       }
       if (fabs(position_error) > kPositionTolerance)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[1] = 1;
+
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -192,6 +198,9 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       if ((fabs((temp_accel - waypoints_.accelerations(index)) / kTimestep) <= kJerkLimit) &&
           (fabs(waypoints_.jerks(index) + delta_a / kTimestep) <= kJerkLimit))
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[2] = 1;
+
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) = (waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / kTimestep;
         waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
@@ -202,6 +211,9 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       }
       else
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[3] = 1;
+
         // Acceleration and jerk limits cannot both be satisfied
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
@@ -214,10 +226,16 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[4] = 1;
+
         position_error = position_error + delta_v * kTimestep;
       }
       if (fabs(position_error) > kPositionTolerance)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[5] = 1;
+
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -248,16 +266,27 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
       successful_compensation = BackwardLimitCompensation(index, &delta_v);
       if (!successful_compensation)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[6] = 1;
+
         position_error = position_error + delta_v * kTimestep;
       }
       else
+      {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[7] = 1;
+
         position_error = 0;
+      }
 
       if (fabs(position_error) > kPositionTolerance || fabs(waypoints_.accelerations(index)) > kAccelerationLimit ||
           fabs(waypoints_.jerks(index)) > kJerkLimit ||
           fabs(waypoints_.accelerations(index + 1)) > kAccelerationLimit ||
           fabs(waypoints_.jerks(index + 1)) > kJerkLimit)
       {
+        // For unit testing, mark that this condition was triggered
+        forward_limit_comp_conditions_[8] = 1;
+
         RecordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -516,5 +545,10 @@ void SingleJointGenerator::UpdateTrajectoryDuration(double new_trajectory_durati
   // max_duration == desired_duration
   desired_duration_ = new_trajectory_duration;
   max_duration_ = new_trajectory_duration;
+}
+
+std::bitset<8> SingleJointGenerator::GetForwardLimitCompBitmask()
+{
+  return forward_limit_comp_conditions_;
 }
 }  // end namespace trackjoint

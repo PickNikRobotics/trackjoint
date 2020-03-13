@@ -36,7 +36,13 @@ public:
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                       const double position_tolerance, bool use_high_speed_mode);
 
-  /** \brief Generate and return trajectories for every joint*/
+  /** \brief Reset the member variables of the object and prepare to generate a new trajectory */
+  void Reset(double timestep, double desired_duration, double max_duration,
+             const std::vector<KinematicState>& current_joint_states,
+             const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
+             const double position_tolerance, bool use_high_speed_mode);
+
+  /** \brief Generate and return trajectories for every joint */
   ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory>* output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file */
@@ -47,6 +53,9 @@ public:
   ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
                               const std::vector<trackjoint::KinematicState>& goal_joint_states,
                               const std::vector<Limits>& limits, double nominal_timestep);
+
+  /** \brief Get bitmasks for use in unit testing. One bitset for each dof. */
+  std::vector<std::bitset<8>> GetForwardLimitCompBitmasks();
 
 private:
   /** \brief Ensure limits are obeyed before outputting. */
@@ -63,22 +72,18 @@ private:
   /** \brief Synchronize all trajectories with the one of longest duration. */
   ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
-  /** \brief Set the output state equal to the current state. Used if an error
-   * is encountered. */
-  void SetFinalStateToCurrentState();
-
-  const uint kNumDof;
-  const double kDesiredTimestep;
-  const bool kUseHighSpeedMode;
-  const std::vector<KinematicState> kCurrentJointStates;
-  double desired_duration_, max_duration_;
   // TODO(andyz): set this back to a small number when done testing
   const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
-  const size_t kMinNumWaypoints = 49;     // Upsample for better accuracy if fewer than this many waypoints
+  const size_t kMinNumWaypoints = 10;     // Upsample for better accuracy if fewer than this many waypoints
+
+  const uint kNumDof;
+  double desired_timestep_, upsampled_timestep_;
+  double desired_duration_, max_duration_;
+  std::vector<KinematicState> current_joint_states_;
+  std::vector<Limits> limits_;
+  bool use_high_speed_mode_;
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
-  double upsampled_timestep_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
-  const std::vector<Limits> limits_;
-};  // end class TrajectoryGenerator
+};                              // end class TrajectoryGenerator
 }  // namespace trackjoint
