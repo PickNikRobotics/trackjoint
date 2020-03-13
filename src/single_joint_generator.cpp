@@ -32,9 +32,9 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
 }
 
 void SingleJointGenerator::Reset(double timestep, double desired_duration, double max_duration,
-      const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-      const trackjoint::Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
-      bool use_high_speed_mode)
+                                 const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
+                                 const trackjoint::Limits& limits, size_t desired_num_waypoints,
+                                 const double position_tolerance, bool use_high_speed_mode)
 {
   timestep_ = timestep;
   desired_duration_ = desired_duration;
@@ -526,7 +526,8 @@ inline void SingleJointGenerator::CalculateDerivatives()
   // velocity = (difference between adjacent position elements) / delta_t
   // acceleration = (difference between adjacent velocity elements) / delta_t
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, timestep_, current_joint_state_.velocity);
-  waypoints_.accelerations = DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
+  waypoints_.accelerations =
+      DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);
 }
 
