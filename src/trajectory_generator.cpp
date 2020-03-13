@@ -50,7 +50,6 @@ void TrajectoryGenerator::Reset(double timestep, double desired_duration, double
   current_joint_states_ = current_joint_states;
   limits_ = limits;
   use_high_speed_mode_ = use_high_speed_mode;
-  single_joint_generators_.clear();
   upsampled_num_waypoints_ = 0;
   upsample_rounds_ = 0;
 
@@ -60,10 +59,9 @@ void TrajectoryGenerator::Reset(double timestep, double desired_duration, double
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_.push_back(
-        SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
-                             goal_joint_states[joint], limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
-                             kMaxNumWaypoints, position_tolerance, use_high_speed_mode_));
+    single_joint_generators_[joint].Reset(upsampled_timestep_, desired_duration_, max_duration_,
+                                          current_joint_states[joint], goal_joint_states[joint], limits[joint],
+                                          upsampled_num_waypoints_, position_tolerance, use_high_speed_mode_);
   }
 }
 
