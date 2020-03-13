@@ -6,6 +6,10 @@
  * Proprietary and confidential
  *********************************************************************/
 
+/* Author: Andy Zelenak
+   Desc: The status codes that TrackJoint can return.
+*/
+
 #pragma once
 
 #include <string>
@@ -13,6 +17,9 @@
 
 namespace trackjoint
 {
+/**
+ * \brief TrackJoint returns integer error codes
+ */
 enum ErrorCodeEnum
 {
   kNoError = 0,
@@ -27,6 +34,9 @@ enum ErrorCodeEnum
   kLessThanTenTimestepsForHighSpeedMode = 9
 };
 
+/**
+ * \brief Use this map to look up human-readable strings for each error code
+ */
 const std::unordered_map<uint, std::string> kErrorCodeMap(
     { { kNoError, "No error, trajectory generation was successful" },
       { kDesiredDurationTooShort, "Desired duration is too short, cannot have less than one timestep in a "

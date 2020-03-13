@@ -17,7 +17,7 @@
 namespace trackjoint
 {
 /**
- * \brief Vectors of position, velocity, acceleration, and time
+ * \brief Vectors of kinematic states and time
  */
 struct JointTrajectory
 {
