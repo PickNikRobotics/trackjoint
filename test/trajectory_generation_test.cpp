@@ -188,7 +188,6 @@ TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration)
   EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
               kTimestepTolerance);
 
-
   EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[0].positions));
   EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[1].positions));
   EXPECT_TRUE(VerifyVectorWithinBounds(-2, 0, output_trajectories[2].positions));

@@ -28,8 +28,7 @@ namespace trackjoint
  * return a vector of derivatives
  */
 // TODO(602): Overload DiscreteDifferentiation to take starting index
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
-                                               double first_element);
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *
