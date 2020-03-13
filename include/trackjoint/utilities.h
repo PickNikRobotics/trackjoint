@@ -13,6 +13,9 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <iostream>
+#include <vector>
+#include "trackjoint/joint_trajectory.h"
 
 namespace trackjoint
 {
@@ -22,7 +25,9 @@ namespace trackjoint
  * input: first_element: we usually have an initial condition, so supply it
  * directly.
  */
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+// TODO(602): Overload DiscreteDifferentiation to take starting index
+inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
+                                               double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
@@ -36,4 +41,14 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
 
   return derivative;
 };
+
+void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
+                          const double desired_duration);
+
+/** \brief Clip all elements beyond a given size */
+inline void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
+{
+  Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
+  *vector = new_vector;
+}
 }  // namespace trackjoint

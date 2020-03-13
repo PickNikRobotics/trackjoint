@@ -7,21 +7,22 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: An example of smoothing a trajectory for three joints.
+   Desc: A minimal example of smoothing a trajectory for one joint.
 */
 
-#include <trackjoint/error_codes.h>
-#include <trackjoint/joint_trajectory.h>
-#include <trackjoint/trajectory_generator.h>
+#include "trackjoint/error_codes.h"
+#include "trackjoint/joint_trajectory.h"
+#include "trackjoint/trajectory_generator.h"
 #include <chrono>
 #include <fstream>
 
 int main(int argc, char** argv)
 {
-  const int kNumDof = 1;
-  const double kTimestep = 0.0075;
-  const double kDesiredDuration = 0.028322;
-  const double kMaxDuration = 10;
+  constexpr int kNumDof = 1;
+  constexpr double kTimestep = 0.0075;
+  constexpr double kDesiredDuration = 0.028322;
+  constexpr double kMaxDuration = 10;
+  constexpr bool kUseHighSpeedMode = false;
   const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
@@ -43,9 +44,11 @@ int main(int argc, char** argv)
   single_joint_limits.jerk_limit = 5000;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
+  const double position_tolerance = 1e-6;
+
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits);
+                                           goal_joint_states, limits, position_tolerance, kUseHighSpeedMode);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
