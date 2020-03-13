@@ -34,7 +34,7 @@ public:
   TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
                       const std::vector<KinematicState>& current_joint_states,
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                      const double position_tolerance);
+                      const double position_tolerance, bool use_high_speed_mode);
 
   /** \brief Generate and return trajectories for every joint*/
   ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory>* output_trajectories);
@@ -68,13 +68,15 @@ private:
   void SetFinalStateToCurrentState();
 
   const uint kNumDof;
+  const double kDesiredTimestep;
+  const bool kUseHighSpeedMode;
+  const std::vector<KinematicState> kCurrentJointStates;
   double desired_duration_, max_duration_;
   // TODO(andyz): set this back to a small number when done testing
   const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
   const size_t kMinNumWaypoints = 49;     // Upsample for better accuracy if fewer than this many waypoints
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
-  const double kDesiredTimestep;
   double upsampled_timestep_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
   const std::vector<Limits> limits_;

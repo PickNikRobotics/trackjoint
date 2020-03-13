@@ -18,10 +18,11 @@
 
 int main(int argc, char** argv)
 {
-  const int kNumDof = 1;
-  const double kTimestep = 0.0075;
-  const double kDesiredDuration = 0.028322;
-  const double kMaxDuration = 10;
+  constexpr int kNumDof = 1;
+  constexpr double kTimestep = 0.0075;
+  constexpr double kDesiredDuration = 0.028322;
+  constexpr double kMaxDuration = 10;
+  constexpr bool kUseHighSpeedMode = false;
   const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
@@ -47,7 +48,7 @@ int main(int argc, char** argv)
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits, position_tolerance);
+                                           goal_joint_states, limits, position_tolerance, kUseHighSpeedMode);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 

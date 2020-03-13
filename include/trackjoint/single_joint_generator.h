@@ -17,6 +17,7 @@
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
 #include "trackjoint/limits.h"
+#include "trackjoint/utilities.h"
 
 namespace trackjoint
 {
@@ -26,8 +27,8 @@ public:
   /** \brief Constructor */
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t max_num_waypoints,
-                       const double position_tolerance);
+                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t min_num_waypoints,
+                       size_t max_num_waypoints, const double position_tolerance, bool use_high_speed_mode);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
@@ -72,11 +73,18 @@ private:
 
   const double kTimestep;
   const KinematicState kCurrentJointState;
-  const KinematicState kGoalJointState;
   const trackjoint::Limits kLimits;
-  const size_t kMaxNumWaypoints;
+  const size_t kMaxNumHighSpeedWaypoints, kMaxNumWaypoints;
   const double kPositionTolerance;
 
+  // If high-speed mode is enabled, trajectories are clipped at kMaxNumHighSpeedWaypoints so the algorithm runs quickly
+  // High-speed mode is intended for realtime streaming applications.
+  // There could be even fewer waypoints if the goal is very close or the algorithm only finds a few waypoints
+  // successfully.
+  // In high-speed mode, trajectory duration is not extended until it successfully reaches the goal.
+  const bool kUseHighSpeedMode;
+
+  KinematicState goal_joint_state_;
   double desired_duration_, max_duration_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
