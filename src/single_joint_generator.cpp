@@ -19,7 +19,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   : kTimestep(timestep)
   , kCurrentJointState(current_joint_state)
   , kLimits(limits)
-  , kMinNumWaypoints(min_num_waypoints)
+  , kMaxNumHighSpeedWaypoints(min_num_waypoints)
   , kMaxNumWaypoints(max_num_waypoints)
   , kPositionTolerance(position_tolerance)
   , kUseHighSpeedMode(use_high_speed_mode)
@@ -115,7 +115,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   if (!kUseHighSpeedMode)
     *index_last_successful = waypoints_.positions.size();
   else
-    *index_last_successful = kMinNumWaypoints;
+    *index_last_successful = kMaxNumHighSpeedWaypoints;
 
   bool successful_compensation = false;
 
@@ -132,12 +132,12 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   // Subtract one because we do not want to affect vel/accel at the last timestep
   std::size_t last_waypoint_to_adjust;
   // High speed mode is not necessary if the number of waypoints is already very short
-  if (!kUseHighSpeedMode || static_cast<size_t>(waypoints_.positions.size()) <= kMinNumWaypoints)
+  if (!kUseHighSpeedMode || static_cast<size_t>(waypoints_.positions.size()) <= kMaxNumHighSpeedWaypoints)
     last_waypoint_to_adjust = waypoints_.positions.size() - 1;
   // Shorten the trajectory, if in high-speed mode
   else
   {
-    last_waypoint_to_adjust = kMinNumWaypoints - 1;
+    last_waypoint_to_adjust = kMaxNumHighSpeedWaypoints - 1;
   }
 
   // Compensate for jerk limits at each timestep, starting near the beginning
@@ -432,7 +432,7 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   else
   {
     // Clip at the last successful index
-    if (index_last_successful_ < kMinNumWaypoints - 1)
+    if (index_last_successful_ < kMaxNumHighSpeedWaypoints - 1)
     {
       // If in high-speed mode, clip at the shorter number of waypoints
       ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
@@ -446,20 +446,20 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       goal_joint_state_.acceleration = waypoints_.accelerations[index_last_successful_];
       desired_duration_ = waypoints_.elapsed_times[index_last_successful_];
     }
-    // else, clip at kMinNumWaypoints
+    // else, clip at kMaxNumHighSpeedWaypoints
     else
     {
       // If in high-speed mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, kMinNumWaypoints);
-      ClipEigenVector(&waypoints_.velocities, kMinNumWaypoints);
-      ClipEigenVector(&waypoints_.accelerations, kMinNumWaypoints);
-      ClipEigenVector(&waypoints_.jerks, kMinNumWaypoints);
-      ClipEigenVector(&waypoints_.elapsed_times, kMinNumWaypoints);
+      ClipEigenVector(&waypoints_.positions, kMaxNumHighSpeedWaypoints);
+      ClipEigenVector(&waypoints_.velocities, kMaxNumHighSpeedWaypoints);
+      ClipEigenVector(&waypoints_.accelerations, kMaxNumHighSpeedWaypoints);
+      ClipEigenVector(&waypoints_.jerks, kMaxNumHighSpeedWaypoints);
+      ClipEigenVector(&waypoints_.elapsed_times, kMaxNumHighSpeedWaypoints);
       // Eigen vectors do not have a "back" member function
-      goal_joint_state_.position = waypoints_.positions[kMinNumWaypoints - 1];
-      goal_joint_state_.velocity = waypoints_.velocities[kMinNumWaypoints - 1];
-      goal_joint_state_.acceleration = waypoints_.accelerations[kMinNumWaypoints - 1];
-      desired_duration_ = waypoints_.elapsed_times[kMinNumWaypoints - 1];
+      goal_joint_state_.position = waypoints_.positions[kMaxNumHighSpeedWaypoints - 1];
+      goal_joint_state_.velocity = waypoints_.velocities[kMaxNumHighSpeedWaypoints - 1];
+      goal_joint_state_.acceleration = waypoints_.accelerations[kMaxNumHighSpeedWaypoints - 1];
+      desired_duration_ = waypoints_.elapsed_times[kMaxNumHighSpeedWaypoints - 1];
     }
   }
 

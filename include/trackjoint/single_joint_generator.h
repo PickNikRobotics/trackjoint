@@ -74,12 +74,12 @@ private:
   const double kTimestep;
   const KinematicState kCurrentJointState;
   const trackjoint::Limits kLimits;
-  const size_t kMinNumWaypoints, kMaxNumWaypoints;
+  const size_t kMaxNumHighSpeedWaypoints, kMaxNumWaypoints;
   const double kPositionTolerance;
 
-  // If high-speed mode is enabled, trajectories are clipped at kMinNumWaypoints so the algorithm runs very quickly.
+  // If high-speed mode is enabled, trajectories are clipped at kMaxNumHighSpeedWaypoints so the algorithm runs quickly
   // High-speed mode is intended for realtime streaming applications.
-  // There could be even fewer waypoints than that if the goal is very close or the algorithm only finds a few waypoints
+  // There could be even fewer waypoints if the goal is very close or the algorithm only finds a few waypoints
   // successfully.
   // In high-speed mode, trajectory duration is not extended until it successfully reaches the goal.
   const bool kUseHighSpeedMode;
