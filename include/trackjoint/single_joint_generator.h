@@ -49,27 +49,27 @@ public:
 
 private:
   /** \brief Interpolate from start to end state with a polynomial */
-  inline Eigen::VectorXd Interpolate(Eigen::VectorXd& times);
+  Eigen::VectorXd Interpolate(Eigen::VectorXd& times);
 
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
-  inline ErrorCodeEnum ForwardLimitCompensation(size_t* index_last_successful);
+  ErrorCodeEnum ForwardLimitCompensation(size_t* index_last_successful);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  inline bool BackwardLimitCompensation(size_t limited_index, double* excess_velocity);
+  bool BackwardLimitCompensation(size_t limited_index, double* excess_velocity);
 
   /** \brief This uses BackwardLimitCompensation() but it starts from a position
    * vector */
-  inline ErrorCodeEnum PositionVectorLimitLookAhead(size_t* index_last_successful);
+  ErrorCodeEnum PositionVectorLimitLookAhead(size_t* index_last_successful);
 
   /** \brief Record the index when compensation first failed */
   inline void RecordFailureTime(size_t current_index, size_t* index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
-  inline ErrorCodeEnum PredictTimeToReach();
+  ErrorCodeEnum PredictTimeToReach();
 
   /** \brief Calculate vel/accel/jerk from position */
-  inline void CalculateDerivatives();
+  void CalculateDerivatives();
 
   const double kTimestep;
   const KinematicState kCurrentJointState;
