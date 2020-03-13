@@ -498,9 +498,9 @@ inline ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t* 
   // Initial waypoint
   waypoints_.positions(0) = current_joint_state_.position;
   for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()) - 1; ++index)
-    waypoints_.positions(index) = waypoints_.positions(index - 1) + waypoints_.velocities(index - 1) * timestep_ +
-                                  0.5 * waypoints_.accelerations(index - 1) * pow(timestep_, 2) +
-                                  kOneSixth * waypoints_.jerks(index - 1) * pow(timestep_, 3);
+    waypoints_.positions(index) = waypoints_.positions(index - 1) + waypoints_.velocities(index - 1) * kTimestep +
+                                  0.5 * waypoints_.accelerations(index - 1) * pow(kTimestep, 2) +
+                                  kOneSixth * waypoints_.jerks(index - 1) * pow(kTimestep, 3);
 
   // Final waypoint should match the goal, unless trajectory was cut short for high-speed mode
   if (!use_high_speed_mode_)

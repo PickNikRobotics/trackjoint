@@ -50,6 +50,7 @@ void TrajectoryGenerator::Reset(double timestep, double desired_duration, double
   current_joint_states_ = current_joint_states;
   limits_ = limits;
   use_high_speed_mode_ = use_high_speed_mode;
+  single_joint_generators_.clear();
   upsampled_num_waypoints_ = 0;
   upsample_rounds_ = 0;
 
@@ -59,9 +60,10 @@ void TrajectoryGenerator::Reset(double timestep, double desired_duration, double
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_[joint].Reset(upsampled_timestep_, desired_duration_, max_duration_,
-                                          current_joint_states[joint], goal_joint_states[joint], limits[joint],
-                                          upsampled_num_waypoints_, position_tolerance, use_high_speed_mode_);
+    single_joint_generators_.push_back(
+        SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
+                             goal_joint_states[joint], limits[joint], upsampled_num_waypoints_, kMinNumWaypoints,
+                             kMaxNumWaypoints, position_tolerance, use_high_speed_mode_));
   }
 }
 
@@ -235,7 +237,8 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
     }
 
     // In high-speed mode, the user-requested duration should be >= kMinNumWaypoints * timestep.
-    // UpSample and DownSample aren't used in high-speed mode.
+    // This prevents up/downsample from being used. Since high-speed mode can return a variable number of waypoints,
+    // it does not work with up/downsample.
     if (rounded_duration < kMinNumWaypoints * nominal_timestep && use_high_speed_mode_)
     {
       return ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode;
@@ -302,14 +305,12 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
     }
   }
 
-  // Normal mode, extend to the longest duration so all components arrive at the same time
-  if (!use_high_speed_mode_)
+  // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
+  // Not relevant if high-speed mode is used
+  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
   {
-    // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-    if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
-    {
-      return ErrorCodeEnum::kMaxDurationExceeded;
-    }
+    return ErrorCodeEnum::kMaxDurationExceeded;
+  }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
     double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
