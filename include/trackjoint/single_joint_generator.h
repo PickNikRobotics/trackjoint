@@ -31,10 +31,9 @@ public:
                        size_t max_num_waypoints, const double position_tolerance, bool use_high_speed_mode);
 
   /** \brief Reset data members and prepare to generate a new trajectory */
-  void Reset(double timestep, double desired_duration, double max_duration,
-        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-        const trackjoint::Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
-        bool use_high_speed_mode);
+  void Reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
+             const KinematicState& goal_joint_state, const trackjoint::Limits& limits, size_t desired_num_waypoints,
+             const double position_tolerance, bool use_high_speed_mode);
 
   /** \brief Generate a jerk-limited trajectory for this joint */
   ErrorCodeEnum GenerateTrajectory();
