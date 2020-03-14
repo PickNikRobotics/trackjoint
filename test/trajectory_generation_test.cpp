@@ -93,6 +93,10 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
@@ -565,6 +569,10 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, LimitCompensation)
@@ -850,14 +858,6 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     const double kTimestepTolerance = 0.0005;
     EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
                 kTimestepTolerance);
-    // All components should have the same number of waypoints
-    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[1].elapsed_times.size());
-    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[2].elapsed_times.size());
-    // All components should have the same duration
-    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
-              output_trajectories[1].elapsed_times[output_trajectories[0].elapsed_times.size() - 1]);
-    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
-              output_trajectories[1].elapsed_times[output_trajectories[2].elapsed_times.size() - 1]);
 
     // Get a new seed state for next trajectory generation
     if ((std::size_t)output_trajectories.at(kJointToUpdate).positions.size() > kNextWaypoint)
