@@ -286,7 +286,6 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   size_t longest_num_waypoints = 0;
   size_t index_of_longest_duration = 0;
   size_t shortest_num_waypoints = SIZE_MAX;
-  size_t index_of_shortest_duration = 0;
 
   // Find longest and shortest durations
   for (size_t joint = 0; joint < kNumDof; ++joint)
@@ -300,7 +299,6 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() < shortest_num_waypoints)
     {
       shortest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex() + 1;
-      index_of_shortest_duration = joint;
     }
   }
 
