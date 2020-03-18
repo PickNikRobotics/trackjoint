@@ -387,8 +387,8 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 
     x_desired(waypoint) = goal_joint_states[0].position;
 
-    traj_gen.Reset(kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                             goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
+    traj_gen.Reset(kTimestep, kDesiredDuration, kMaxDuration, current_joint_states, goal_joint_states, limits,
+                   position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
     traj_gen.GenerateTrajectories(&output_trajectories);
 
@@ -493,15 +493,14 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 
   // Create trajectory generator object
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[0], kMaxDuration,
-                                           trackjt_current_joint_states[0], trackjt_goal_joint_states[0],
-                                           limits, position_tolerance_, use_high_speed_mode_);
+                                           trackjt_current_joint_states[0], trackjt_goal_joint_states[0], limits,
+                                           position_tolerance_, use_high_speed_mode_);
 
   // Step through the saved waypoints and smooth them with TrackJoint
   for (std::size_t point = 0; point < trackjt_desired_durations.size(); ++point)
   {
-    traj_gen.Reset(kTimestep, trackjt_desired_durations[point], kMaxDuration,
-                                           trackjt_current_joint_states[point], trackjt_goal_joint_states[point],
-                                           limits, position_tolerance_, use_high_speed_mode_);
+    traj_gen.Reset(kTimestep, trackjt_desired_durations[point], kMaxDuration, trackjt_current_joint_states[point],
+                   trackjt_goal_joint_states[point], limits, position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
     ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
