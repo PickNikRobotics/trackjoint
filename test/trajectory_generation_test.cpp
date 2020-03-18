@@ -369,6 +369,9 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   Eigen::VectorXd time_vector(kNumWaypoints);
 
   double time = 0;
+  // Create Trajectory Generator object
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
 
   for (size_t waypoint = 0; waypoint < kNumWaypoints; ++waypoint)
   {
@@ -384,12 +387,16 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 
     x_desired(waypoint) = goal_joint_states[0].position;
 
-    trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+    traj_gen.Reset(kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
                                              goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
     traj_gen.GenerateTrajectories(&output_trajectories);
 
     VerifyVelAccelJerkLimits(output_trajectories, limits);
+    // Timestep
+    const double kTimestepTolerance = 0.25 * kTimestep;
+    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+                kTimestepTolerance);
 
     // Save the first waypoint in x_smoothed...
     x_smoothed(waypoint) = output_trajectories.at(0).positions(1);
@@ -484,20 +491,29 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
     trackjt_desired_durations.push_back(moveit_times_from_start[point + 1][0] - moveit_times_from_start[point][0]);
   }
 
+  // Create trajectory generator object
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[0], kMaxDuration,
+                                           trackjt_current_joint_states[0], trackjt_goal_joint_states[0],
+                                           limits, position_tolerance_, use_high_speed_mode_);
+
   // Step through the saved waypoints and smooth them with TrackJoint
   for (std::size_t point = 0; point < trackjt_desired_durations.size(); ++point)
   {
-    trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[point], kMaxDuration,
-                                             trackjt_current_joint_states[point], trackjt_goal_joint_states[point],
-                                             limits, position_tolerance_, use_high_speed_mode_);
+    traj_gen.Reset(kTimestep, trackjt_desired_durations[point], kMaxDuration,
+                                           trackjt_current_joint_states[point], trackjt_goal_joint_states[point],
+                                           limits, position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
-    traj_gen.GenerateTrajectories(&output_trajectories);
+    ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     // Saving Trackjoint output to .csv files for plotting
     traj_gen.SaveTrajectoriesToFile(output_trajectories, base_filepath, point != 0);
 
-    EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+    EXPECT_EQ(ErrorCodeEnum::kNoError, error_code);
+    // Timestep
+    const double kTimestepTolerance = 0.25 * kTimestep;
+    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+                kTimestepTolerance);
   }
   EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
 }
