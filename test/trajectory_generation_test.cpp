@@ -858,6 +858,14 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     const double kTimestepTolerance = 0.0005;
     EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
                 kTimestepTolerance);
+    // All components should have the same number of waypoints
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[1].elapsed_times.size());
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[2].elapsed_times.size());
+    // All components should have the same duration
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[0].elapsed_times.size() - 1]);
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[2].elapsed_times.size() - 1]);
 
     // Get a new seed state for next trajectory generation
     if ((std::size_t)output_trajectories.at(kJointToUpdate).positions.size() > kNextWaypoint)

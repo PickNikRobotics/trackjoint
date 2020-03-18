@@ -235,8 +235,7 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
     }
 
     // In high-speed mode, the user-requested duration should be >= kMinNumWaypoints * timestep.
-    // This prevents up/downsample from being used. Since high-speed mode can return a variable number of waypoints,
-    // it does not work with up/downsample.
+    // UpSample and DownSample aren't used in high-speed mode.
     if (rounded_duration < kMinNumWaypoints * nominal_timestep && use_high_speed_mode_)
     {
       return ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode;
@@ -287,6 +286,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   size_t longest_num_waypoints = 0;
   size_t index_of_longest_duration = 0;
   size_t shortest_num_waypoints = SIZE_MAX;
+  size_t index_of_shortest_duration = 0;
 
   // Find longest and shortest durations
   for (size_t joint = 0; joint < kNumDof; ++joint)
@@ -300,15 +300,18 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() < shortest_num_waypoints)
     {
       shortest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex() + 1;
+      index_of_shortest_duration = joint;
     }
   }
 
-  // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-  // Not relevant if high-speed mode is used
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
+  // Normal mode, extend to the longest duration so all components arrive at the same time
+  if (!use_high_speed_mode_)
   {
-    return ErrorCodeEnum::kMaxDurationExceeded;
-  }
+    // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
+    if ((longest_num_waypoints - 1) < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
+    {
+      return ErrorCodeEnum::kMaxDurationExceeded;
+    }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
     double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
