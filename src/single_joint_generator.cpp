@@ -133,7 +133,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   if (!use_high_speed_mode_)
     *index_last_successful = waypoints_.positions.size();
   else
-    *index_last_successful = kMaxNumHighSpeedWaypoints;
+    *index_last_successful = kMaxNumHighSpeedWaypoints - 1;
 
   bool successful_compensation = false;
 
@@ -450,7 +450,7 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   else
   {
     // Clip at the last successful index
-    if (index_last_successful_ < kMaxNumHighSpeedWaypoints - 1)
+    if (index_last_successful_ + 1 < kMaxNumHighSpeedWaypoints)
     {
       // If in high-speed mode, clip at the shorter number of waypoints
       ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);

@@ -78,12 +78,17 @@ void TrajectoryGenerator::UpSample()
 
   upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
-  while (upsampled_num_waypoints_ < kMinNumWaypoints)
+  // High-speed mode is designed to always return kMinNumWaypoints (or fewer, if only a few are successful)
+  // So, UpSample and DownSample are not necessary.
+  if (!use_high_speed_mode_)
   {
-    upsampled_num_waypoints_ = 2 * upsampled_num_waypoints_ - 1;
+    while (upsampled_num_waypoints_ < kMinNumWaypoints)
+    {
+      upsampled_num_waypoints_ = 2 * upsampled_num_waypoints_ - 1;
 
-    upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
-    ++upsample_rounds_;
+      upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
+      ++upsample_rounds_;
+    }
   }
 }
 
@@ -230,8 +235,7 @@ ErrorCodeEnum TrajectoryGenerator::InputChecking(const std::vector<trackjoint::K
     }
 
     // In high-speed mode, the user-requested duration should be >= kMinNumWaypoints * timestep.
-    // This prevents up/downsample from being used. Since high-speed mode can return a variable number of waypoints,
-    // it does not work with up/downsample.
+    // UpSample and DownSample aren't used in high-speed mode.
     if (rounded_duration < kMinNumWaypoints * nominal_timestep && use_high_speed_mode_)
     {
       return ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode;
@@ -274,52 +278,82 @@ void TrajectoryGenerator::SaveTrajectoriesToFile(const std::vector<JointTrajecto
 
 ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories)
 {
+  // Normal mode: extend to the longest duration across all components
+  // High-speed mode: clip all components at the shortest successful number of waypoints
+
+  // No need to synchronize if there's only one joint
+
   size_t longest_num_waypoints = 0;
   size_t index_of_longest_duration = 0;
+  size_t shortest_num_waypoints = SIZE_MAX;
+  size_t index_of_shortest_duration = 0;
 
-  // Extend to the longest duration across all components
+  // Find longest and shortest durations
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     if (single_joint_generators_[joint].GetLastSuccessfulIndex() > longest_num_waypoints)
     {
-      longest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex();
+      longest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex() + 1;
       index_of_longest_duration = joint;
     }
-  }
 
-  // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-  // Not relevant if high-speed mode is used
-  if (longest_num_waypoints < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
-  {
-    return ErrorCodeEnum::kMaxDurationExceeded;
-  }
-
-  // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
-  double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
-
-  // If any of the component durations were changed, run them again
-  if (new_desired_duration != desired_duration_)
-  {
-    for (size_t joint = 0; joint < kNumDof; ++joint)
+    if (single_joint_generators_[joint].GetLastSuccessfulIndex() < shortest_num_waypoints)
     {
-      if (joint != index_of_longest_duration)
+      shortest_num_waypoints = single_joint_generators_[joint].GetLastSuccessfulIndex() + 1;
+      index_of_shortest_duration = joint;
+    }
+  }
+
+  // Normal mode, extend to the longest duration so all components arrive at the same time
+  if (!use_high_speed_mode_)
+  {
+    // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
+    if ((longest_num_waypoints - 1) < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
+    {
+      return ErrorCodeEnum::kMaxDurationExceeded;
+    }
+
+    // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
+    double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
+
+    // If any of the component durations were changed, run them again
+    if (new_desired_duration != desired_duration_)
+    {
+      for (size_t joint = 0; joint < kNumDof; ++joint)
       {
-        single_joint_generators_[joint].UpdateTrajectoryDuration(new_desired_duration);
-        single_joint_generators_[joint].ExtendTrajectoryDuration();
-        output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+        if (joint != index_of_longest_duration)
+        {
+          single_joint_generators_[joint].UpdateTrajectoryDuration(new_desired_duration);
+          single_joint_generators_[joint].ExtendTrajectoryDuration();
+          output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+        }
+        // If this was the index of longest duration, don't need to re-generate a trajectory
+        else
+        {
+          output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+        }
       }
-      // If this was the index of longest duration, don't need to re-generate a trajectory
-      else
+    }
+    else
+    {
+      for (size_t joint = 0; joint < kNumDof; ++joint)
       {
         output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
       }
     }
   }
-  else
+  // High-speed mode, clip at the shortest number of waypoints across all components
+  else if (use_high_speed_mode_)
   {
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
       output_trajectories->at(joint) = single_joint_generators_[joint].GetTrajectory();
+
+      ClipEigenVector(&output_trajectories->at(joint).positions, shortest_num_waypoints);
+      ClipEigenVector(&output_trajectories->at(joint).velocities, shortest_num_waypoints);
+      ClipEigenVector(&output_trajectories->at(joint).accelerations, shortest_num_waypoints);
+      ClipEigenVector(&output_trajectories->at(joint).jerks, shortest_num_waypoints);
+      ClipEigenVector(&output_trajectories->at(joint).elapsed_times, shortest_num_waypoints);
     }
   }
 

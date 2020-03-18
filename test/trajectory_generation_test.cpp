@@ -794,10 +794,12 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
 
 TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 {
-  // A customer-requested streaming test
+  // A customer-requested streaming test.
+  // For simplicity, only Joint 0 is updated
+  // This is also a good test of trajectory synchronization in high-speed mode.
 
-  constexpr size_t kNumDof = 1;
-  constexpr std::size_t kJoint = 0;
+  constexpr size_t kNumDof = 3;
+  constexpr std::size_t kJointToUpdate = 0;
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
   constexpr bool kUseHighSpeedMode = true;
@@ -815,17 +817,22 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
-  start_state[kJoint].position = 0.9;
-  goal_joint_states[kJoint].position = -0.9;
+  start_state[0].position = 0.9;
+  start_state[1].position = 0.4;
+  start_state[2].position = -1.7;
+  goal_joint_states[0].position = -0.9;
+  goal_joint_states[1].position = -0.9;
+  goal_joint_states[2].position = -0.9;
 
-  std::vector<trackjoint::Limits> limits(kNumDof);
-  limits[kJoint].velocity_limit = 2;
-  limits[kJoint].acceleration_limit = 2;
-  limits[kJoint].jerk_limit = 2;
+  trackjoint::Limits limits_per_joint;
+  limits_per_joint.velocity_limit = 2;
+  limits_per_joint.acceleration_limit = 2;
+  limits_per_joint.jerk_limit = 2;
+  std::vector<trackjoint::Limits> limits = { limits_per_joint, limits_per_joint, limits_per_joint };
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration =
-      fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
+  double desired_duration = fabs(start_state[kJointToUpdate].position - goal_joint_states[kJointToUpdate].position) /
+                            limits[kJointToUpdate].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
   desired_duration = std::max(desired_duration, kMinDesiredDuration);
 
@@ -840,7 +847,6 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   double velocity_error = std::numeric_limits<double>::max();
   double acceleration_error = std::numeric_limits<double>::max();
 
-  // Until a generated trajectory has only 2 waypoints
   while (fabs(position_error) > kFinalPositionTolerance || fabs(velocity_error) > kFinalVelocityTolerance ||
          fabs(acceleration_error) > kFinalAccelerationTolerance)
   {
@@ -852,22 +858,30 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     const double kTimestepTolerance = 0.0005;
     EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
                 kTimestepTolerance);
+    // All components should have the same number of waypoints
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[1].elapsed_times.size());
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[2].elapsed_times.size());
+    // All components should have the same duration
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[0].elapsed_times.size() - 1]);
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[2].elapsed_times.size() - 1]);
 
     // Get a new seed state for next trajectory generation
-    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNextWaypoint)
+    if ((std::size_t)output_trajectories.at(kJointToUpdate).positions.size() > kNextWaypoint)
     {
-      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNextWaypoint];
-      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNextWaypoint];
-      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNextWaypoint];
+      start_state[kJointToUpdate].position = output_trajectories.at(kJointToUpdate).positions[kNextWaypoint];
+      start_state[kJointToUpdate].velocity = output_trajectories.at(kJointToUpdate).velocities[kNextWaypoint];
+      start_state[kJointToUpdate].acceleration = output_trajectories.at(kJointToUpdate).accelerations[kNextWaypoint];
     }
 
-    position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
-    velocity_error = start_state[kJoint].velocity - goal_joint_states.at(kJoint).velocity;
-    acceleration_error = start_state[kJoint].acceleration - goal_joint_states.at(kJoint).acceleration;
+    position_error = start_state[kJointToUpdate].position - goal_joint_states.at(kJointToUpdate).position;
+    velocity_error = start_state[kJointToUpdate].velocity - goal_joint_states.at(kJointToUpdate).velocity;
+    acceleration_error = start_state[kJointToUpdate].acceleration - goal_joint_states.at(kJointToUpdate).acceleration;
 
     // Shorten the desired duration as we get closer to goal
     desired_duration -= kTimestep;
-    // But, don't ask for a duration that is shorter than one timestep
+    // But, don't ask for a duration that is shorter than the minimum
     desired_duration = std::max(desired_duration, kMinDesiredDuration);
   }
 
