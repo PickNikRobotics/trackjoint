@@ -255,8 +255,8 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
     // If the velocity limit would be exceeded
     if (fabs(waypoints_.velocities(index)) > kVelocityLimit)
     {
+      delta_v = std::copysign(kVelocityLimit, waypoints_.velocities(index)) - waypoints_.velocities(index);
       waypoints_.velocities(index) = std::copysign(kVelocityLimit, waypoints_.velocities(index));
-      delta_v = waypoints_.velocities(index) - waypoints_.velocities(index);
       // Re-calculate derivatives from the updated velocity vector
       CalculateDerivatives();
 
