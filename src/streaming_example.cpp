@@ -26,17 +26,18 @@ int main(int argc, char** argv)
   // Waypoints will be spaced at 1 ms
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
-  // High-speed mode returns just a few waypoints but executes very quickly.
-  // It returns from 2-10 waypoints, depending on how many waypoints can be calculated on a first pass.
+  // Streaming mode returns just a few waypoints but executes very quickly.
+  // It returns from 2-kNumWaypointsThreshold waypoints, depending on how many waypoints can be calculated on a first
+  // pass.
   // Waypoint[0] is the current state of the robot
-  constexpr bool kUseHighSpeedMode = true;
+  constexpr bool kUseStreamingMode = true;
   // Position tolerance for each waypoint
   constexpr double kWaypointPositionTolerance = 1e-5;
   // Loop until these tolerances are achieved
   constexpr double kFinalPositionTolerance = 1e-4;
   constexpr double kFinalVelocityTolerance = 1e-1;
   constexpr double kFinalAccelerationTolerance = 1e-1;
-  // For high-speed mode, it is important to keep the desired duration >=10 timesteps.
+  // For streaming mode, it is important to keep the desired duration >=10 timesteps.
   // Otherwise, an error will be thrown. This helps with accuracy
   constexpr double kMinDesiredDuration = 10 * kTimestep;
   // Between TrackJoint iterations, move ahead this many waypoints along the trajectory.
@@ -63,7 +64,7 @@ int main(int argc, char** argv)
   // Create object for trajectory generation
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
   trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
+                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseStreamingMode);
 
   // An example of optional input validation
   trackjoint::ErrorCodeEnum error_code = traj_gen.InputChecking(start_state, goal_joint_states, limits, kTimestep);
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
 
     // This Reset() function is more computationally efficient when TrackJoint is called with a high frequency
     traj_gen.Reset(kTimestep, desired_duration, kMaxDuration, start_state, goal_joint_states, limits,
-                   kWaypointPositionTolerance, kUseHighSpeedMode);
+                   kWaypointPositionTolerance, kUseStreamingMode);
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     auto end_time = std::chrono::high_resolution_clock::now();

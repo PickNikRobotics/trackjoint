@@ -33,21 +33,24 @@ public:
    * input goal_joint_states vector of the target kinematic states for each degree of freedom
    * input limits vector of kinematic limits for each degree of freedom
    * input desired_num_waypoints nominal number of waypoints, calculated from user-supplied duration and timestep
-   * input min_num_waypoints accuracy is typically bad below about 10 waypoints, so use this minimum
-   * input max_num_waypoints to maintain determinism, return an error if more than this many waypoints is required
+   * input num_waypoints_threshold minimum/maximum number of waypoints for full trajectory/streaming modes, respectively
+   * input max_num_waypoints_trajectory_mode to maintain determinism, return an error if more than this many waypoints
+   * is required
    * input position_tolerance tolerance for how close the final trajectory should follow a smooth interpolation.
    *                          Should be set lower than the accuracy requirements for your task
-   * input use_high_speed_mode set to true for fast streaming applications. Returns a maximum of 49 waypoints.
+   * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
+   * waypoints.
    */
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t min_num_waypoints,
-                       size_t max_num_waypoints, const double position_tolerance, bool use_high_speed_mode);
+                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
+                       size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
+                       bool use_streaming_mode);
 
   /** \brief Reset data members and prepare to generate a new trajectory */
   void Reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const trackjoint::Limits& limits, size_t desired_num_waypoints,
-             const double position_tolerance, bool use_high_speed_mode);
+             const double position_tolerance, bool use_streaming_mode);
 
   /** \brief Generate a jerk-limited trajectory for this joint
    *
@@ -107,7 +110,7 @@ private:
   /** \brief Calculate vel/accel/jerk from position */
   void CalculateDerivatives();
 
-  const size_t kMaxNumHighSpeedWaypoints, kMaxNumWaypoints;
+  const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
   double timestep_;
   double desired_duration_, max_duration_;
@@ -119,11 +122,12 @@ private:
   JointTrajectory waypoints_;
   size_t index_last_successful_;
 
-  // If high-speed mode is enabled, trajectories are clipped at kMinNumWaypoints so the algorithm runs very quickly.
-  // High-speed mode is intended for realtime streaming applications.
+  // If streaming mode is enabled, trajectories are clipped at kNumWaypointsThreshold so the algorithm runs very
+  // quickly.
+  // streaming mode is intended for realtime streaming applications.
   // There could be even fewer waypoints than that if the goal is very close or the algorithm only finds a few waypoints
   // successfully.
-  // In high-speed mode, trajectory duration is not extended until it successfully reaches the goal.
-  bool use_high_speed_mode_;
+  // In streaming mode, trajectory duration is not extended until it successfully reaches the goal.
+  bool use_streaming_mode_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
