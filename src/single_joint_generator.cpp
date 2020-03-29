@@ -14,10 +14,10 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
                                            const trackjoint::KinematicState& current_joint_state,
                                            const trackjoint::KinematicState& goal_joint_state,
                                            const trackjoint::Limits& limits, size_t desired_num_waypoints,
-                                           size_t min_num_waypoints, size_t max_num_waypoints,
-                                           const double position_tolerance, bool use_high_speed_mode)
-  : kMaxNumHighSpeedWaypoints(min_num_waypoints)
-  , kMaxNumWaypoints(max_num_waypoints)
+                                           size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode,
+                                           const double position_tolerance, bool use_streaming_mode)
+  : kNumWaypointsThreshold(num_waypoints_threshold)
+  , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
   , timestep_(timestep)
   , desired_duration_(desired_duration)
   , max_duration_(max_duration)
@@ -25,7 +25,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   , goal_joint_state_(goal_joint_state)
   , limits_(limits)
   , position_tolerance_(position_tolerance)
-  , use_high_speed_mode_(use_high_speed_mode)
+  , use_streaming_mode_(use_streaming_mode)
 {
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -34,7 +34,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
 void SingleJointGenerator::Reset(double timestep, double desired_duration, double max_duration,
                                  const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
                                  const trackjoint::Limits& limits, size_t desired_num_waypoints,
-                                 const double position_tolerance, bool use_high_speed_mode)
+                                 const double position_tolerance, bool use_streaming_mode)
 {
   timestep_ = timestep;
   desired_duration_ = desired_duration;
@@ -43,7 +43,7 @@ void SingleJointGenerator::Reset(double timestep, double desired_duration, doubl
   goal_joint_state_ = goal_joint_state;
   limits_ = limits;
   position_tolerance_ = position_tolerance;
-  use_high_speed_mode_ = use_high_speed_mode;
+  use_streaming_mode_ = use_streaming_mode;
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -129,12 +129,12 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
 
   // Start with the assumption that the entire trajectory can be completed.
-  // High-speed mode returns at the minimum number of waypoints.
-  // High-speed mode is not necessary if the number of waypoints is already very short.
-  if (!use_high_speed_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kMaxNumHighSpeedWaypoints)
+  // Streaming mode returns at the minimum number of waypoints.
+  // Streaming mode is not necessary if the number of waypoints is already very short.
+  if (!use_streaming_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kNumWaypointsThreshold)
     *index_last_successful = waypoints_.positions.size() - 1;
   else
-    *index_last_successful = kMaxNumHighSpeedWaypoints - 1;
+    *index_last_successful = kNumWaypointsThreshold - 1;
 
   bool successful_compensation = false;
 
@@ -400,12 +400,12 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
 
   // If in normal mode, we can extend trajectories
-  if (!use_high_speed_mode_)
+  if (!use_streaming_mode_)
   {
     size_t new_num_waypoints = 0;
     // Iterate over new durations until the position error is acceptable or the maximum duration is reached
     while ((index_last_successful_ < static_cast<size_t>(waypoints_.positions.size() - 1)) &&
-           (desired_duration_ < max_duration_) && (new_num_waypoints < kMaxNumWaypoints))
+           (desired_duration_ < max_duration_) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
       desired_duration_ =
@@ -418,8 +418,8 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       new_num_waypoints = std::max(static_cast<size_t>(waypoints_.positions.size() + 1),
                                    static_cast<size_t>(floor(1 + desired_duration_ / timestep_)));
       // Cap the trajectory duration to maintain determinism
-      if (new_num_waypoints > kMaxNumWaypoints)
-        new_num_waypoints = kMaxNumWaypoints;
+      if (new_num_waypoints > kMaxNumWaypointsFullTrajectory)
+        new_num_waypoints = kMaxNumWaypointsFullTrajectory;
 
       waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
       waypoints_.positions.resize(waypoints_.elapsed_times.size());
@@ -435,14 +435,14 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       PositionVectorLimitLookAhead(&index_last_successful_);
     }
   }
-  // If in high-speed mode, do not extend the trajectories.
+  // If in streaming mode, do not extend the trajectories.
   // May need to clip the trajectories if only a few waypoints were successful.
   else
   {
     // Clip at the last successful index
-    if (index_last_successful_ + 1 < kMaxNumHighSpeedWaypoints)
+    if (index_last_successful_ + 1 < kNumWaypointsThreshold)
     {
-      // If in high-speed mode, clip at the shorter number of waypoints
+      // If in streaming mode, clip at the shorter number of waypoints
       ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
       ClipEigenVector(&waypoints_.velocities, index_last_successful_ + 1);
       ClipEigenVector(&waypoints_.accelerations, index_last_successful_ + 1);
@@ -454,25 +454,25 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
       goal_joint_state_.acceleration = waypoints_.accelerations[index_last_successful_];
       desired_duration_ = waypoints_.elapsed_times[index_last_successful_];
     }
-    // else, clip at kMaxNumHighSpeedWaypoints
+    // else, clip at kNumWaypointsThreshold
     else
     {
-      // If in high-speed mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, kMaxNumHighSpeedWaypoints);
-      ClipEigenVector(&waypoints_.velocities, kMaxNumHighSpeedWaypoints);
-      ClipEigenVector(&waypoints_.accelerations, kMaxNumHighSpeedWaypoints);
-      ClipEigenVector(&waypoints_.jerks, kMaxNumHighSpeedWaypoints);
-      ClipEigenVector(&waypoints_.elapsed_times, kMaxNumHighSpeedWaypoints);
+      // If in streaming mode, clip at the shorter number of waypoints
+      ClipEigenVector(&waypoints_.positions, kNumWaypointsThreshold);
+      ClipEigenVector(&waypoints_.velocities, kNumWaypointsThreshold);
+      ClipEigenVector(&waypoints_.accelerations, kNumWaypointsThreshold);
+      ClipEigenVector(&waypoints_.jerks, kNumWaypointsThreshold);
+      ClipEigenVector(&waypoints_.elapsed_times, kNumWaypointsThreshold);
       // Eigen vectors do not have a "back" member function
-      goal_joint_state_.position = waypoints_.positions[kMaxNumHighSpeedWaypoints - 1];
-      goal_joint_state_.velocity = waypoints_.velocities[kMaxNumHighSpeedWaypoints - 1];
-      goal_joint_state_.acceleration = waypoints_.accelerations[kMaxNumHighSpeedWaypoints - 1];
-      desired_duration_ = waypoints_.elapsed_times[kMaxNumHighSpeedWaypoints - 1];
+      goal_joint_state_.position = waypoints_.positions[kNumWaypointsThreshold - 1];
+      goal_joint_state_.velocity = waypoints_.velocities[kNumWaypointsThreshold - 1];
+      goal_joint_state_.acceleration = waypoints_.accelerations[kNumWaypointsThreshold - 1];
+      desired_duration_ = waypoints_.elapsed_times[kNumWaypointsThreshold - 1];
     }
   }
 
   // Normal mode: Error if we extended the duration to the maximum and it still wasn't successful
-  if (!use_high_speed_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
+  if (!use_streaming_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
   }
@@ -502,8 +502,8 @@ inline ErrorCodeEnum SingleJointGenerator::PositionVectorLimitLookAhead(size_t* 
                                   0.5 * waypoints_.accelerations(index - 1) * pow(timestep_, 2) +
                                   kOneSixth * waypoints_.jerks(index - 1) * pow(timestep_, 3);
 
-  // Final waypoint should match the goal, unless trajectory was cut short for high-speed mode
-  if (!use_high_speed_mode_)
+  // Final waypoint should match the goal, unless trajectory was cut short for streaming mode
+  if (!use_streaming_mode_)
     waypoints_.positions(waypoints_.positions.size() - 1) = goal_joint_state_.position;
 
   return error_code;

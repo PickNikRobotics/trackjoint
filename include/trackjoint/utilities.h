@@ -7,7 +7,7 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: Generate jerk-limited trajectories for a single joint.
+   Desc: Simple utilities, such as printing important data from a trajectory.
 */
 
 #pragma once
@@ -22,8 +22,10 @@ namespace trackjoint
 /**
  * \brief Discrete differentiation of a vector
  *
- * input: first_element: we usually have an initial condition, so supply it
- * directly.
+ * input input_vector any vector, such as position
+ * input timestep the time between consecutive elements
+ * input first_element supply an initial condition
+ * return a vector of derivatives
  */
 // TODO(602): Overload DiscreteDifferentiation to take starting index
 inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep,
@@ -42,10 +44,20 @@ inline Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vect
   return derivative;
 };
 
+/** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
+ *
+ * input joint the index of a joint
+ * input output_trajectories the calculated trajectories for n joints
+ * input desired_duration the user-requested duration of the trajectory
+*/
 void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
                           const double desired_duration);
 
-/** \brief Clip all elements beyond a given size */
+/** \brief Clip all elements beyond a given size
+ *
+ * input vector a vector to clip, such as positions
+ * input new_num_waypoints clip all elements beyond this number
+*/
 inline void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
 {
   Eigen::VectorXd new_vector = vector->head(new_num_waypoints);

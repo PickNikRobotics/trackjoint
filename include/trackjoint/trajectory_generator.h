@@ -7,7 +7,7 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: Generate jerk-limited trajectories for n robot joints.
+   Desc: Generate jerk-limited trajectories for n degrees of freedom.
 */
 
 #pragma once
@@ -27,58 +27,103 @@
 
 namespace trackjoint
 {
+/** \brief The top-level trajectory generation object. Stores and synchronized data for n degrees of freedom. */
 class TrajectoryGenerator
 {
 public:
-  /** \brief Constructor */
+  /** \brief Constructor
+   *
+   * input num_dof number of degrees of freedom
+   * input timestep desired time between waypoints
+   * input desired_duration total desired duration of the trajectory
+   * input max_duration allow the trajectory to be extended up to this limit. Error if that cannot be done.
+   * input current_joint_states vector of the initial kinematic states for each degree of freedom
+   * input goal_joint_states vector of the target kinematic states for each degree of freedom
+   * input limits vector of kinematic limits for each degree of freedom
+   * input position_tolerance tolerance for how close the final trajectory should follow a smooth interpolation.
+   *                          Should be set lower than the accuracy requirements for your task
+   * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of kNumWaypointsThreshold
+   * waypoints.
+   */
   TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
                       const std::vector<KinematicState>& current_joint_states,
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                      const double position_tolerance, bool use_high_speed_mode);
+                      const double position_tolerance, bool use_streaming_mode);
 
   /** \brief Reset the member variables of the object and prepare to generate a new trajectory */
   void Reset(double timestep, double desired_duration, double max_duration,
              const std::vector<KinematicState>& current_joint_states,
              const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-             const double position_tolerance, bool use_high_speed_mode);
+             const double position_tolerance, bool use_streaming_mode);
 
-  /** \brief Generate and return trajectories for every joint */
+  /** \brief Generate and return trajectories for every joint
+   *
+   * input output_trajectories the calculated trajectories for n joints
+   */
   ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory>* output_trajectories);
 
-  /** \brief Save generated trajectory to a .csv file */
+  /** \brief Save generated trajectory to a .csv file
+   *
+   * input output_trajectories the calculated trajectories for n joints
+   * input directory to save in
+   * input append_to_file adds new data to existing file if true
+   */
   void SaveTrajectoriesToFile(const std::vector<JointTrajectory>& output_trajectories, const std::string& base_filepath,
                               bool append_to_file = false) const;
 
-  /** \brief Check user input for errors */
+  /** \brief Check user input for errors
+   *
+   * input current_joint_states vector of the initial kinematic states for each degree of freedom
+   * input goal_joint_states vector of the target kinematic states for each degree of freedom
+   * input limits vector of kinematic limits for each degree of freedom
+   * input nominal_timestep the user-requested time between waypoints
+   * returna TrackJoint status code
+  */
   ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
                               const std::vector<trackjoint::KinematicState>& goal_joint_states,
                               const std::vector<Limits>& limits, double nominal_timestep);
 
 private:
-  /** \brief Ensure limits are obeyed before outputting. */
+  /** \brief Ensure limits are obeyed before outputting.
+   *
+   * input trajectory the calculated trajectories for n joints
+  */
   void ClipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
 
   /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
   void UpSample();
 
-  /** \brief Undo UpSample() to output a time/position/velocity series with the
-   * correct spacing. */
+  /** \brief Undo UpSample() to output a time/position/velocity/acceleration series with the correct spacing.
+   *
+   * input time_vector a vector of times
+   * input position_vector a vector of positions
+   * input velocity_vector a vector of velocities
+   * input acceleration_vector a vector of accelerations
+   * input jerk_vector a vector of jerks
+  */
   void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
                   Eigen::VectorXd* acceleration_vector, Eigen::VectorXd* jerk_vector);
 
-  /** \brief Synchronize all trajectories with the one of longest duration. */
+  /** \brief Synchronize all trajectories with the one of longest duration.
+   *
+   * input output_trajectories the calculated trajectories for n joints
+   * returna TrackJoint status code
+  */
   ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
   // TODO(andyz): set this back to a small number when done testing
-  const size_t kMaxNumWaypoints = 10000;  // A relatively small number, to run fast
-  const size_t kMinNumWaypoints = 10;     // Upsample for better accuracy if fewer than this many waypoints
+  // TODO(709): Remove kMaxNumWaypointsFullTrajectory - not needed now that we have streaming mode
+  const size_t kMaxNumWaypointsFullTrajectory = 10000;  // A relatively small number, to run fast
+  // Upsample for better accuracy if num waypoints is below threshold in full trajectory mode
+  // Clip trajectories to threshold in streaming mode
+  const size_t kNumWaypointsThreshold = 10;
 
   const uint kNumDof;
   double desired_timestep_, upsampled_timestep_;
   double desired_duration_, max_duration_;
   std::vector<KinematicState> current_joint_states_;
   std::vector<Limits> limits_;
-  bool use_high_speed_mode_;
+  bool use_streaming_mode_;
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.

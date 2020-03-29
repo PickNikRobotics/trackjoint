@@ -6,6 +6,10 @@
  * Proprietary and confidential
  *********************************************************************/
 
+/* Author: Andy Zelenak
+   Desc: Describe the kinematic state at an instant.
+*/
+
 #pragma once
 
 #include <iostream>

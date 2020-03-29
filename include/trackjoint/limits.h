@@ -6,12 +6,16 @@
  * Proprietary and confidential
  *********************************************************************/
 
+/* Author: Andy Zelenak
+   Desc: Limits on kinematic quantities for a single degree of freedom.
+*/
+
 #pragma once
 
 namespace trackjoint
 {
 /**
- * \brief Maximum dynamics and parameters of TrackJoint
+ * \brief Maximum kinematics parameters for a single degree of freedom.
  */
 struct Limits
 {
