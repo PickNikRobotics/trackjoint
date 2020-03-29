@@ -75,6 +75,30 @@ protected:
   bool use_high_speed_mode_ = false;
 };  // class TrajectoryGenerationTest
 
+TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
+{
+  // Use the class defaults. This trajectory is easy, does not require limit
+  // compensation or trajectory extension
+
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
+                                           goal_joint_states_, limits_, position_tolerance_, use_high_speed_mode_);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+
+  // Position error
+  const double kPositionTolerance = 1e-4;
+  const double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states_, output_trajectories);
+  EXPECT_LT(kPositionError, kPositionTolerance);
+  // Duration
+  uint num_waypoint_tolerance = 1;
+  uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
+  EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
+}
+
 TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
 {
   // Request a duration of one timestep
@@ -123,6 +147,10 @@ TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration)
@@ -193,6 +221,10 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
@@ -243,6 +275,10 @@ TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
@@ -288,6 +324,10 @@ TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration_, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
@@ -329,6 +369,9 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   Eigen::VectorXd time_vector(kNumWaypoints);
 
   double time = 0;
+  // Create Trajectory Generator object
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
 
   for (size_t waypoint = 0; waypoint < kNumWaypoints; ++waypoint)
   {
@@ -344,12 +387,16 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 
     x_desired(waypoint) = goal_joint_states[0].position;
 
-    trackjoint::TrajectoryGenerator traj_gen(num_dof_, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                             goal_joint_states, limits, position_tolerance_, use_high_speed_mode_);
+    traj_gen.Reset(kTimestep, kDesiredDuration, kMaxDuration, current_joint_states, goal_joint_states, limits,
+                   position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
     traj_gen.GenerateTrajectories(&output_trajectories);
 
     VerifyVelAccelJerkLimits(output_trajectories, limits);
+    // Timestep
+    const double kTimestepTolerance = 0.25 * kTimestep;
+    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+                kTimestepTolerance);
 
     // Save the first waypoint in x_smoothed...
     x_smoothed(waypoint) = output_trajectories.at(0).positions(1);
@@ -444,20 +491,28 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
     trackjt_desired_durations.push_back(moveit_times_from_start[point + 1][0] - moveit_times_from_start[point][0]);
   }
 
+  // Create trajectory generator object
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[0], kMaxDuration,
+                                           trackjt_current_joint_states[0], trackjt_goal_joint_states[0], limits,
+                                           position_tolerance_, use_high_speed_mode_);
+
   // Step through the saved waypoints and smooth them with TrackJoint
   for (std::size_t point = 0; point < trackjt_desired_durations.size(); ++point)
   {
-    trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, trackjt_desired_durations[point], kMaxDuration,
-                                             trackjt_current_joint_states[point], trackjt_goal_joint_states[point],
-                                             limits, position_tolerance_, use_high_speed_mode_);
+    traj_gen.Reset(kTimestep, trackjt_desired_durations[point], kMaxDuration, trackjt_current_joint_states[point],
+                   trackjt_goal_joint_states[point], limits, position_tolerance_, use_high_speed_mode_);
     std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
-    traj_gen.GenerateTrajectories(&output_trajectories);
+    ErrorCodeEnum error_code = traj_gen.GenerateTrajectories(&output_trajectories);
 
     // Saving Trackjoint output to .csv files for plotting
     traj_gen.SaveTrajectoriesToFile(output_trajectories, base_filepath, point != 0);
 
-    EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+    EXPECT_EQ(ErrorCodeEnum::kNoError, error_code);
+    // Timestep
+    const double kTimestepTolerance = 0.25 * kTimestep;
+    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+                kTimestepTolerance);
   }
   EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
 }
@@ -514,26 +569,10 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
-}
-
-TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
-{
-  // Use the class defaults. This trajectory is easy, does not require limit
-  // compensation or trajectory extension
-
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
-                                           goal_joint_states_, limits_, position_tolerance_, use_high_speed_mode_);
-  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
-
-  // Position error
-  const double kPositionTolerance = 1e-4;
-  const double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states_, output_trajectories);
-  EXPECT_LT(kPositionError, kPositionTolerance);
-  // Duration
-  uint num_waypoint_tolerance = 1;
-  uint expected_num_waypoints = 1 + desired_duration_ / timestep_;
-  EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, LimitCompensation)
@@ -583,6 +622,10 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, DurationExtension)
@@ -632,10 +675,14 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
   const double kPositionError = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
   EXPECT_LT(kPositionError, kPositionTolerance);
   // Duration
-  const double kExpectedDuration = 0.763;
+  const double kExpectedDuration = 3.984;
   const double kDurationTolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
   EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kExpectedDuration, kDurationTolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
@@ -693,6 +740,10 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = 1 + kDesiredDuration / kTimestep;
   EXPECT_NEAR(uint(output_trajectories[0].positions.size()), expected_num_waypoints, num_waypoint_tolerance);
+  // Timestep
+  const double kTimestepTolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+              kTimestepTolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
@@ -743,10 +794,12 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
 
 TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 {
-  // A customer-requested streaming test
+  // A customer-requested streaming test.
+  // For simplicity, only Joint 0 is updated
+  // This is also a good test of trajectory synchronization in high-speed mode.
 
-  constexpr size_t kNumDof = 1;
-  constexpr std::size_t kJoint = 0;
+  constexpr size_t kNumDof = 3;
+  constexpr std::size_t kJointToUpdate = 0;
   constexpr double kTimestep = 0.001;
   constexpr double kMaxDuration = 100;
   constexpr bool kUseHighSpeedMode = true;
@@ -756,7 +809,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   constexpr double kFinalPositionTolerance = 1e-5;
   constexpr double kFinalVelocityTolerance = 1e-3;
   constexpr double kFinalAccelerationTolerance = 1e-2;
-  constexpr double kMinDesiredDuration = kTimestep;
+  constexpr double kMinDesiredDuration = 10 * kTimestep;
   // Between iterations, skip this many waypoints.
   // Take kNextWaypoint from the previous trajectory to start the new trajectory.
   // Minimum is 1.
@@ -764,17 +817,22 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 
   std::vector<trackjoint::KinematicState> start_state(kNumDof);
   std::vector<trackjoint::KinematicState> goal_joint_states(kNumDof);
-  start_state[kJoint].position = 0.9;
-  goal_joint_states[kJoint].position = -0.9;
+  start_state[0].position = 0.9;
+  start_state[1].position = 0.4;
+  start_state[2].position = -1.7;
+  goal_joint_states[0].position = -0.9;
+  goal_joint_states[1].position = -0.9;
+  goal_joint_states[2].position = -0.9;
 
-  std::vector<trackjoint::Limits> limits(kNumDof);
-  limits[kJoint].velocity_limit = 2;
-  limits[kJoint].acceleration_limit = 2;
-  limits[kJoint].jerk_limit = 2;
+  trackjoint::Limits limits_per_joint;
+  limits_per_joint.velocity_limit = 2;
+  limits_per_joint.acceleration_limit = 2;
+  limits_per_joint.jerk_limit = 2;
+  std::vector<trackjoint::Limits> limits = { limits_per_joint, limits_per_joint, limits_per_joint };
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration =
-      fabs(start_state[kJoint].position - goal_joint_states[kJoint].position) / limits[kJoint].velocity_limit;
+  double desired_duration = fabs(start_state[kJointToUpdate].position - goal_joint_states[kJointToUpdate].position) /
+                            limits[kJointToUpdate].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
   desired_duration = std::max(desired_duration, kMinDesiredDuration);
 
@@ -789,33 +847,58 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   double velocity_error = std::numeric_limits<double>::max();
   double acceleration_error = std::numeric_limits<double>::max();
 
-  // Until a generated trajectory has only 2 waypoints
   while (fabs(position_error) > kFinalPositionTolerance || fabs(velocity_error) > kFinalVelocityTolerance ||
          fabs(acceleration_error) > kFinalAccelerationTolerance)
   {
-    trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, start_state,
-                                             goal_joint_states, limits, kWaypointPositionTolerance, kUseHighSpeedMode);
+    traj_gen.Reset(kTimestep, desired_duration, kMaxDuration, start_state, goal_joint_states, limits,
+                   kWaypointPositionTolerance, kUseHighSpeedMode);
     error_code = traj_gen.GenerateTrajectories(&output_trajectories);
     EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
+    // Timestep
+    const double kTimestepTolerance = 0.0005;
+    EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], kTimestep,
+                kTimestepTolerance);
+    // All components should have the same number of waypoints
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[1].elapsed_times.size());
+    EXPECT_EQ(output_trajectories[0].elapsed_times.size(), output_trajectories[2].elapsed_times.size());
+    // All components should have the same duration
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[0].elapsed_times.size() - 1]);
+    EXPECT_EQ(output_trajectories[0].elapsed_times[output_trajectories[0].elapsed_times.size() - 1],
+              output_trajectories[1].elapsed_times[output_trajectories[2].elapsed_times.size() - 1]);
+
     // Get a new seed state for next trajectory generation
-    if ((std::size_t)output_trajectories.at(kJoint).positions.size() > kNextWaypoint)
+    if ((std::size_t)output_trajectories.at(kJointToUpdate).positions.size() > kNextWaypoint)
     {
-      start_state[kJoint].position = output_trajectories.at(kJoint).positions[kNextWaypoint];
-      start_state[kJoint].velocity = output_trajectories.at(kJoint).velocities[kNextWaypoint];
-      start_state[kJoint].acceleration = output_trajectories.at(kJoint).accelerations[kNextWaypoint];
+      start_state[kJointToUpdate].position = output_trajectories.at(kJointToUpdate).positions[kNextWaypoint];
+      start_state[kJointToUpdate].velocity = output_trajectories.at(kJointToUpdate).velocities[kNextWaypoint];
+      start_state[kJointToUpdate].acceleration = output_trajectories.at(kJointToUpdate).accelerations[kNextWaypoint];
     }
 
-    position_error = start_state[kJoint].position - goal_joint_states.at(kJoint).position;
-    velocity_error = start_state[kJoint].velocity - goal_joint_states.at(kJoint).velocity;
-    acceleration_error = start_state[kJoint].acceleration - goal_joint_states.at(kJoint).acceleration;
+    position_error = start_state[kJointToUpdate].position - goal_joint_states.at(kJointToUpdate).position;
+    velocity_error = start_state[kJointToUpdate].velocity - goal_joint_states.at(kJointToUpdate).velocity;
+    acceleration_error = start_state[kJointToUpdate].acceleration - goal_joint_states.at(kJointToUpdate).acceleration;
 
     // Shorten the desired duration as we get closer to goal
     desired_duration -= kTimestep;
-    // But, don't ask for a duration that is shorter than one timestep
+    // But, don't ask for a duration that is shorter than the minimum
     desired_duration = std::max(desired_duration, kMinDesiredDuration);
   }
 
   // If the test gets here, it passed.
+}
+
+TEST_F(TrajectoryGenerationTest, HighSpeedTooFewTimesteps)
+{
+  // An error should be thrown if high-speed mode is enabled with a desired duration < kMinNumTimesteps
+
+  use_high_speed_mode_ = true;
+  desired_duration_ = 9 * timestep_;
+
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
+                                           goal_joint_states_, limits_, position_tolerance_, use_high_speed_mode_);
+  EXPECT_EQ(ErrorCodeEnum::kLessThanTenTimestepsForHighSpeedMode,
+            traj_gen.InputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
 }
 }  // namespace trackjoint
 

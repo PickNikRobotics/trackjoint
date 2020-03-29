@@ -11,9 +11,6 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint:
   std::cout << "==========" << std::endl;
   std::cout << "Joint " << joint << std::endl;
   std::cout << "==========" << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "==========" << std::endl;
   std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << std::endl;
   std::cout << "  Desired duration: " << desired_duration << std::endl;
   std::cout << "Timestep: " << output_trajectories.at(joint).elapsed_times[1]
