@@ -131,7 +131,7 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   // Start with the assumption that the entire trajectory can be completed.
   // Streaming mode returns at the minimum number of waypoints.
   // Streaming mode is not necessary if the number of waypoints is already very short.
-  if (!use_streaming_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kMaxNumHighSpeedWaypoints)
+  if (!use_streaming_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kNumWaypointsThreshold)
     *index_last_successful = waypoints_.positions.size() - 1;
   else
     *index_last_successful = kNumWaypointsThreshold - 1;
