@@ -130,8 +130,9 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
 
   // Start with the assumption that the entire trajectory can be completed.
   // High-speed mode returns at the minimum number of waypoints.
-  if (!use_high_speed_mode_)
-    *index_last_successful = waypoints_.positions.size();
+  // High-speed mode is not necessary if the number of waypoints is already very short.
+  if (!use_high_speed_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kMaxNumHighSpeedWaypoints)
+    *index_last_successful = waypoints_.positions.size() - 1;
   else
     *index_last_successful = kMaxNumHighSpeedWaypoints - 1;
 
@@ -145,18 +146,6 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
 
   // Preallocate
   double delta_a(0), delta_v(0), position_error(0);
-
-  // If in high-speed mode, return as fast as possible (minimum num. waypoints)
-  // Subtract one because we do not want to affect vel/accel at the last timestep
-  std::size_t last_waypoint_to_adjust;
-  // High speed mode is not necessary if the number of waypoints is already very short
-  if (!use_high_speed_mode_ || static_cast<size_t>(waypoints_.positions.size()) <= kMaxNumHighSpeedWaypoints)
-    last_waypoint_to_adjust = waypoints_.positions.size() - 1;
-  // Shorten the trajectory, if in high-speed mode
-  else
-  {
-    last_waypoint_to_adjust = kMaxNumHighSpeedWaypoints - 1;
-  }
 
   // Compensate for jerk limits at each timestep, starting near the beginning
   // Do not want to affect vel/accel at the first/last timestep
@@ -483,7 +472,7 @@ inline ErrorCodeEnum SingleJointGenerator::PredictTimeToReach()
   }
 
   // Normal mode: Error if we extended the duration to the maximum and it still wasn't successful
-  if (!use_high_speed_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size()))
+  if (!use_high_speed_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
     error_code = ErrorCodeEnum::kMaxDurationExceeded;
   }

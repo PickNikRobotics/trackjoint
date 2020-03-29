@@ -306,7 +306,7 @@ ErrorCodeEnum TrajectoryGenerator::SynchronizeTrajComponents(std::vector<JointTr
   if (!use_high_speed_mode_)
   {
     // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-    if ((longest_num_waypoints - 1) < (desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
+    if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_) && !use_high_speed_mode_)
     {
       return ErrorCodeEnum::kMaxDurationExceeded;
     }
