@@ -153,8 +153,8 @@ inline ErrorCodeEnum SingleJointGenerator::ForwardLimitCompensation(size_t* inde
   {
     if (fabs(waypoints_.jerks(index)) > kJerkLimit)
     {
+      double delta_j = std::copysign(kJerkLimit, waypoints_.jerks(index)) - waypoints_.jerks(index);
       waypoints_.jerks(index) = std::copysign(kJerkLimit, waypoints_.jerks(index));
-      double delta_j = waypoints_.jerks(index) - waypoints_.jerks(index);
 
       waypoints_.accelerations(index) = waypoints_.accelerations(index - 1) + waypoints_.jerks(index) * timestep_;
       waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
