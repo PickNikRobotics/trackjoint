@@ -19,9 +19,13 @@
 int main(int argc, char** argv)
 {
   const int kNumDof = 3;
-  double timestep = 0.001;
+  const double kTimestep = 0.001;
   double desired_duration = 0.028322;
   const double kMaxDuration = 10;
+  // Streaming mode returns just a few waypoints but executes very quickly.
+  constexpr bool kUseStreamingMode = false;
+  // Position tolerance for each waypoint
+  constexpr double kWaypointPositionTolerance = 1e-5;
   const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   ////////////////////////////////////////////////
@@ -60,13 +64,13 @@ int main(int argc, char** argv)
   std::vector<trackjoint::Limits> limits(3, single_joint_limits);
 
   // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen(kNumDof, timestep, desired_duration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits);
+  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, current_joint_states,
+                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseStreamingMode);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
 
   trackjoint::ErrorCodeEnum error_code =
-      traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, timestep);
+      traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
 
   // Input error handling - if an error is found, the trajectory is not
   // generated.
@@ -109,7 +113,8 @@ int main(int argc, char** argv)
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "==========" << std::endl;
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).positions.size(); ++waypoint)
+    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size());
+         ++waypoint)
     {
       std::cout << "Elapsed time: " << output_trajectories.at(joint).elapsed_times(waypoint)
                 << "  Position: " << output_trajectories.at(joint).positions(waypoint)
@@ -154,10 +159,11 @@ int main(int argc, char** argv)
 
   // Create a new traj gen object with new parameters
   traj_gen.~TrajectoryGenerator();
-  new (&traj_gen) trackjoint::TrajectoryGenerator(kNumDof, timestep, desired_duration, kMaxDuration,
-                                                  current_joint_states, goal_joint_states, limits);
+  new (&traj_gen)
+      trackjoint::TrajectoryGenerator(kNumDof, kTimestep, desired_duration, kMaxDuration, current_joint_states,
+                                      goal_joint_states, limits, kWaypointPositionTolerance, kUseStreamingMode);
 
-  error_code = traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, timestep);
+  error_code = traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
 
   // Input error handling - if an error is found, the trajectory is not
   // generated.
@@ -200,7 +206,8 @@ int main(int argc, char** argv)
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "==========" << std::endl;
-    for (size_t waypoint = 0; waypoint < output_trajectories.at(joint).positions.size(); ++waypoint)
+    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size());
+         ++waypoint)
     {
       std::cout << "Elapsed time: " << output_trajectories.at(joint).elapsed_times(waypoint)
                 << "  Position: " << output_trajectories.at(joint).positions(waypoint)
