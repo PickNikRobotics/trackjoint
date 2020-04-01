@@ -84,19 +84,20 @@ protected:
   {
     for (int i = 0; i < static_cast<int>(output_trajectories.size()); ++i)
     {
-      std::cout << "# i = " << i << std::endl;
-      // std::cout << "TearDown" << std::endl;
-      std::cout << "#   timestep " << timestep << std::endl;
-      std::cout << "#   duration " << desired_duration << std::endl;
-      std::cout << "#   p_c " << current_joint_states[i].position << std::endl;
-      std::cout << "#   v_c " << current_joint_states[i].velocity << std::endl;
-      std::cout << "#   a_c " << current_joint_states[i].acceleration << std::endl;
-      std::cout << "#   p_g " << goal_joint_states[i].position << std::endl;
-      std::cout << "#   v_g " << goal_joint_states[i].velocity << std::endl;
-      std::cout << "#   a_g " << goal_joint_states[i].acceleration << std::endl;
-      std::cout << "#   l_v " << limits[i].velocity_limit << std::endl;
-      std::cout << "#   l_a " << limits[i].acceleration_limit << std::endl;
-      std::cout << "#   l_j " << limits[i].jerk_limit << std::endl;
+      // std::cout << "# i = " << i << std::endl;
+      // // std::cout << "TearDown" << std::endl;
+      // std::cout << "#   timestep " << timestep << std::endl;
+      // std::cout << "#   duration " << desired_duration << std::endl;
+      // std::cout << "#   p_c " << current_joint_states[i].position << std::endl;
+      // std::cout << "#   v_c " << current_joint_states[i].velocity << std::endl;
+      // std::cout << "#   a_c " << current_joint_states[i].acceleration << std::endl;
+      // std::cout << "#   p_g " << goal_joint_states[i].position << std::endl;
+      // std::cout << "#   v_g " << goal_joint_states[i].velocity << std::endl;
+      // std::cout << "#   a_g " << goal_joint_states[i].acceleration << std::endl;
+      // std::cout << "#   l_v " << limits[i].velocity_limit << std::endl;
+      // std::cout << "#   l_a " << limits[i].acceleration_limit << std::endl;
+      // std::cout << "#   l_j " << limits[i].jerk_limit << std::endl;
+
       // std::cout << "\t\t old min" << std::min(current_joint_states[i].position -
       // fabs(current_joint_states[i].velocity * desired_duration_) - fabs(0.5 * current_joint_states[i].acceleration *
       // desired_duration_ * desired_duration_), goal_joint_states[i].position - fabs(goal_joint_states[i].velocity *
@@ -108,15 +109,15 @@ protected:
       // desired_duration_) + fabs(0.5 * goal_joint_states[i].acceleration * desired_duration_ * desired_duration_)) <<
       // std::endl;
 
-      double cur_pos_next = current_joint_states[i].position + current_joint_states[i].velocity * timestep +
-                            0.5 * current_joint_states[i].acceleration * timestep * timestep;
+      // double cur_pos_next = current_joint_states[i].position + current_joint_states[i].velocity * timestep +
+      //                       0.5 * current_joint_states[i].acceleration * timestep * timestep;
       double goal_pos_next = goal_joint_states[i].position + goal_joint_states[i].velocity * timestep +
                              0.5 * goal_joint_states[i].acceleration * timestep * timestep;
 
-      std::cout << "#   p_c           " << current_joint_states[i].position << std::endl;
-      std::cout << "#   cur_pos_next  " << cur_pos_next << std::endl;
-      std::cout << "#   p_g           " << goal_joint_states[i].position << std::endl;
-      std::cout << "#   goal_pos_next " << goal_pos_next << std::endl;
+      // std::cout << "#   p_c           " << current_joint_states[i].position << std::endl;
+      // std::cout << "#   cur_pos_next  " << cur_pos_next << std::endl;
+      // std::cout << "#   p_g           " << goal_joint_states[i].position << std::endl;
+      // std::cout << "#   goal_pos_next " << goal_pos_next << std::endl;
 
       KinematicState min_state, max_state;
       bool moving_forward = true;
@@ -141,7 +142,7 @@ protected:
       if ((current_joint_states[i].position < goal_pos_next && goal_pos_next < goal_joint_states[i].position) ||
           (current_joint_states[i].position > goal_pos_next && goal_pos_next > goal_joint_states[i].position))
       {
-        std::cout << "# CASE 1" << std::endl;
+        // std::cout << "# CASE 1" << std::endl;
         // Have to go beyond goal position then u turn to achieve goal vel
         // Flip sign
         // double goal_vel = -1.0 * goal_joint_states[i].velocity;
@@ -152,13 +153,13 @@ protected:
           double delta_vel = max_pos_vel - 0;
           double delta_vel_acc = delta_vel / desired_duration;
           double max_pos_vel_time_to_zero = std::fabs(goal_joint_states[i].velocity) / delta_vel_acc + timestep;
-          std::cout << "#   max_pos_vel              " << max_pos_vel << std::endl;
-          std::cout << "#   delta_vel              " << delta_vel << std::endl;
-          std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-          std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
-          std::cout << "#   max_pos                " << max_pos << std::endl;
+          // std::cout << "#   max_pos_vel              " << max_pos_vel << std::endl;
+          // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+          // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+          // std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
+          // std::cout << "#   max_pos                " << max_pos << std::endl;
           max_pos += max_pos_vel * max_pos_vel_time_to_zero / 2.0;
-          std::cout << "#   max_pos2               " << max_pos << std::endl;
+          // std::cout << "#   max_pos2               " << max_pos << std::endl;
         }
         else
         {
@@ -167,13 +168,13 @@ protected:
           double delta_vel = 0 - min_pos_vel;
           double delta_vel_acc = delta_vel / desired_duration;
           double min_pos_vel_time_to_zero = std::fabs(goal_joint_states[i].velocity) / delta_vel_acc + timestep;
-          std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
-          std::cout << "#   delta_vel              " << delta_vel << std::endl;
-          std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-          std::cout << "#   min_pos_vel_time_to_zero   " << min_pos_vel_time_to_zero << std::endl;
-          std::cout << "#   min_pos                " << min_pos << std::endl;
+          // std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
+          // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+          // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+          // std::cout << "#   min_pos_vel_time_to_zero   " << min_pos_vel_time_to_zero << std::endl;
+          // std::cout << "#   min_pos                " << min_pos << std::endl;
           min_pos += min_pos_vel * min_pos_vel_time_to_zero / 2.0;
-          std::cout << "#   min_pos2               " << min_pos << std::endl;
+          // std::cout << "#   min_pos2               " << min_pos << std::endl;
         }
       }
 
@@ -182,7 +183,7 @@ protected:
       // } else {
       if (min_state.velocity < 0)
       {  //} || max_state.velocity > 0) {
-        std::cout << "# CASE 2" << std::endl;
+        // std::cout << "# CASE 2" << std::endl;
         double min_pos_vel = std::min(min_state.velocity, 0.0);
         double max_pos_vel = std::max(max_state.velocity, 0.0);
         max_pos_vel = 0.0;
@@ -190,24 +191,24 @@ protected:
         double delta_vel_acc = delta_vel / desired_duration;
         double min_pos_vel_time_to_zero = std::fabs(min_pos_vel) / delta_vel_acc + timestep;
         double max_pos_vel_time_to_zero = std::fabs(max_pos_vel) / delta_vel_acc + timestep;
-        std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
-        std::cout << "#   max_pos_vel                " << max_pos_vel << std::endl;
-        std::cout << "#   delta_vel              " << delta_vel << std::endl;
-        std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-        std::cout << "#   min_pos_vel_time_to_zero " << min_pos_vel_time_to_zero << std::endl;
-        std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
-        std::cout << "#   min_pos                " << min_pos << std::endl;
-        std::cout << "#   max_pos                " << max_pos << std::endl;
+        // std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
+        // std::cout << "#   max_pos_vel                " << max_pos_vel << std::endl;
+        // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+        // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+        // std::cout << "#   min_pos_vel_time_to_zero " << min_pos_vel_time_to_zero << std::endl;
+        // std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
+        // std::cout << "#   min_pos                " << min_pos << std::endl;
+        // std::cout << "#   max_pos                " << max_pos << std::endl;
         min_pos += min_pos_vel * min_pos_vel_time_to_zero / 2.0;
         max_pos += max_pos_vel * max_pos_vel_time_to_zero / 2.0;
-        std::cout << "#   min_pos2               " << min_pos << std::endl;
-        std::cout << "#   max_pos2               " << max_pos << std::endl;
+        // std::cout << "#   min_pos2               " << min_pos << std::endl;
+        // std::cout << "#   max_pos2               " << max_pos << std::endl;
         // int vel_timesteps_to_zero = ((int)(std::fabs(vel_term) / limits[i].acceleration_limit) + 1) * 2;
         // double vel_movement_to_zero = (vel_term * timestep * vel_timesteps_to_zero) / 2.0;
       }
       if (max_state.velocity > 0)
       {  //} || max_state.velocity > 0) {
-        std::cout << "# CASE 3" << std::endl;
+        // std::cout << "# CASE 3" << std::endl;
         double min_pos_vel = std::min(min_state.velocity, 0.0);
         min_pos_vel = 0.0;
         double max_pos_vel = std::max(max_state.velocity, 0.0);
@@ -215,18 +216,18 @@ protected:
         double delta_vel_acc = delta_vel / desired_duration;
         double min_pos_vel_time_to_zero = std::fabs(min_pos_vel) / delta_vel_acc + timestep;
         double max_pos_vel_time_to_zero = std::fabs(max_pos_vel) / delta_vel_acc + timestep;
-        std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
-        std::cout << "#   max_pos_vel                " << max_pos_vel << std::endl;
-        std::cout << "#   delta_vel              " << delta_vel << std::endl;
-        std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-        std::cout << "#   min_pos_vel_time_to_zero " << min_pos_vel_time_to_zero << std::endl;
-        std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
-        std::cout << "#   min_pos                " << min_pos << std::endl;
-        std::cout << "#   max_pos                " << max_pos << std::endl;
+        // std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
+        // std::cout << "#   max_pos_vel                " << max_pos_vel << std::endl;
+        // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+        // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+        // std::cout << "#   min_pos_vel_time_to_zero " << min_pos_vel_time_to_zero << std::endl;
+        // std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
+        // std::cout << "#   min_pos                " << min_pos << std::endl;
+        // std::cout << "#   max_pos                " << max_pos << std::endl;
         min_pos += min_pos_vel * min_pos_vel_time_to_zero / 2.0;
         max_pos += max_pos_vel * max_pos_vel_time_to_zero / 2.0;
-        std::cout << "#   min_pos2               " << min_pos << std::endl;
-        std::cout << "#   max_pos2               " << max_pos << std::endl;
+        // std::cout << "#   min_pos2               " << min_pos << std::endl;
+        // std::cout << "#   max_pos2               " << max_pos << std::endl;
         // int vel_timesteps_to_zero = ((int)(std::fabs(vel_term) / limits[i].acceleration_limit) + 1) * 2;
         // double vel_movement_to_zero = (vel_term * timestep * vel_timesteps_to_zero) / 2.0;
       }
@@ -243,19 +244,19 @@ protected:
         if (goal_pos_vel_avg > goal_joint_states[i].position)
         {
           // Have to go away from goal state to build up position to achieve goal vel at goal pos
-          std::cout << " CASE 4a" << std::endl;
+          // std::cout << " CASE 4a" << std::endl;
 
           double min_pos_vel = -1.0 * goal_joint_states[i].velocity;
           double delta_vel = 0 - min_pos_vel;
           double delta_vel_acc = delta_vel / desired_duration;
           double min_pos_vel_time_to_zero = std::fabs(goal_joint_states[i].velocity) / delta_vel_acc + timestep;
-          std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
-          std::cout << "#   delta_vel              " << delta_vel << std::endl;
-          std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-          std::cout << "#   min_pos_vel_time_to_zero   " << min_pos_vel_time_to_zero << std::endl;
-          std::cout << "#   min_pos                " << min_pos << std::endl;
+          // std::cout << "#   min_pos_vel              " << min_pos_vel << std::endl;
+          // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+          // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+          // std::cout << "#   min_pos_vel_time_to_zero   " << min_pos_vel_time_to_zero << std::endl;
+          // std::cout << "#   min_pos                " << min_pos << std::endl;
           min_pos += min_pos_vel * min_pos_vel_time_to_zero / 2.0;
-          std::cout << "#   min_pos2               " << min_pos << std::endl;
+          // std::cout << "#   min_pos2               " << min_pos << std::endl;
 
           // min_pos +=
         }
@@ -268,35 +269,35 @@ protected:
         if (goal_pos_vel_avg < goal_joint_states[i].position)
         {
           // Have to go away from goal state to build up position to achieve goal vel at goal pos
-          std::cout << " CASE 4b" << std::endl;
+          // std::cout << " CASE 4b" << std::endl;
 
           double max_pos_vel = -1.0 * goal_joint_states[i].velocity;
           double delta_vel = max_pos_vel - 0;
           double delta_vel_acc = delta_vel / desired_duration;
           double max_pos_vel_time_to_zero = std::fabs(goal_joint_states[i].velocity) / delta_vel_acc + timestep;
-          std::cout << "#   max_pos_vel              " << max_pos_vel << std::endl;
-          std::cout << "#   delta_vel              " << delta_vel << std::endl;
-          std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
-          std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
-          std::cout << "#   max_pos                " << max_pos << std::endl;
+          // std::cout << "#   max_pos_vel              " << max_pos_vel << std::endl;
+          // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+          // std::cout << "#   delta_vel_acc          " << delta_vel_acc << std::endl;
+          // std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
+          // std::cout << "#   max_pos                " << max_pos << std::endl;
           max_pos += max_pos_vel * max_pos_vel_time_to_zero / 2.0;
-          std::cout << "#   max_pos2               " << max_pos << std::endl;
+          // std::cout << "#   max_pos2               " << max_pos << std::endl;
 
           // max_pos +=
         }
       }
 
-      double min_pos_vel = min_state.velocity;  // std::min(min_state.velocity, 0.0);
+      // double min_pos_vel = min_state.velocity;  // std::min(min_state.velocity, 0.0);
       // min_pos_vel = 0.0;
-      double max_pos_vel = max_state.velocity;  // std::max(max_state.velocity, 0.0);
-      double delta_vel = max_pos_vel - min_pos_vel;
-      double delta_vel_acc = delta_vel / desired_duration;
+      // double max_pos_vel = max_state.velocity;  // std::max(max_state.velocity, 0.0);
+      // double delta_vel = max_pos_vel - min_pos_vel;
+      // double delta_vel_acc = delta_vel / desired_duration;
       // double min_pos_vel_time_to_zero = std::fabs(min_pos_vel) / delta_vel_acc + timestep;
       // double max_pos_vel_time_to_zero = std::fabs(max_pos_vel) / delta_vel_acc + timestep;
-      std::cout << "#   min_pos_vel            " << min_pos_vel << std::endl;
-      std::cout << "#   max_pos_vel            " << max_pos_vel << std::endl;
-      std::cout << "#   delta_vel              " << delta_vel << std::endl;
-      std::cout << "#   delta_vel_acc_avg      " << delta_vel_acc << std::endl;
+      // std::cout << "#   min_pos_vel            " << min_pos_vel << std::endl;
+      // std::cout << "#   max_pos_vel            " << max_pos_vel << std::endl;
+      // std::cout << "#   delta_vel              " << delta_vel << std::endl;
+      // std::cout << "#   delta_vel_acc_avg      " << delta_vel_acc << std::endl;
       // std::cout << "#   min_pos_vel_time_to_zero " << min_pos_vel_time_to_zero << std::endl;
       // std::cout << "#   max_pos_vel_time_to_zero   " << max_pos_vel_time_to_zero << std::endl;
 
@@ -318,10 +319,10 @@ protected:
       }
       // std::cout << "" << std::endl;
       // std::cout << "\t\t joint " << i << std::endl;
-      std::cout << "\t\t actual min " << actual_min << std::endl;
-      std::cout << "\t\t consrv min " << min_pos << std::endl;
-      std::cout << "\t\t actual max " << actual_max << std::endl;
-      std::cout << "\t\t consrv max " << max_pos << std::endl;
+      // std::cout << "\t\t actual min " << actual_min << std::endl;
+      // std::cout << "\t\t consrv min " << min_pos << std::endl;
+      // std::cout << "\t\t actual max " << actual_max << std::endl;
+      // std::cout << "\t\t consrv max " << max_pos << std::endl;
 
       if (actual_min < min_pos)
       {
@@ -1137,7 +1138,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   double desired_duration = fabs(start_state[joint_to_update].position - goal_joint_states[joint_to_update].position) /
                             limits[joint_to_update].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
-  desired_duration = std::max(desired_duration, min_desired_duration);
+  desired_duration_ = std::max(desired_duration_, kMinDesiredDuration);
 
   // Generate initial trajectory
   std::vector<trackjoint::JointTrajectory> output_trajectories_(kNumDof);
@@ -1158,6 +1159,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     error_code = traj_gen.generateTrajectories(&output_trajectories);
     EXPECT_EQ(error_code, trackjoint::ErrorCodeEnum::kNoError);
     // EXPECT_TRUE(VerifyVectorWithinBounds(-2, 2, output_trajectories_[0].positions));
+    // CheckBounds(output_trajectories_, current_joint_states_, goal_joint_states_, limits_, desired_duration_, kTimestep);
     // Get a new seed state for next trajectory generation
     if ((std::size_t)output_trajectories.at(joint_to_update).positions.size() > next_waypoint)
     {
@@ -1173,8 +1175,11 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     // Shorten the desired duration as we get closer to goal
     desired_duration -= timestep;
     // But, don't ask for a duration that is shorter than the minimum
-    desired_duration = std::max(desired_duration, min_desired_duration);
+    desired_duration = std::max(desired_duration, kMinDesiredDuration);
+
+    count++;
   }
+  std::cout << "# count " << count << std::endl;
 
   // If the test gets here, it passed.
 }
