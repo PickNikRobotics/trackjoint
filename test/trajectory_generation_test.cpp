@@ -86,7 +86,7 @@ protected:
       }
       double elapsed_time = output_trajectories_[i].elapsed_times[output_trajectories_[i].elapsed_times.size() - 1];
 
-      // Get initial estimate for minimum and maximum position and velocity using start and end states
+      // Get estimate of min/max position and velocity using start and end states
       double min_pos = std::min(current_joint_states_[i].position, goal_joint_states_[i].position);
       double max_pos = std::max(current_joint_states_[i].position, goal_joint_states_[i].position);
       double max_vel_mag =
@@ -98,7 +98,7 @@ protected:
       double potential_min = min_pos - max_vel_mag * elapsed_time / 2.0;
       double potential_max = max_pos + max_vel_mag * elapsed_time / 2.0;
 
-      // Case 2: We move at the velocity need to move from start to end for half of the trajectory duration
+      // Case 2: We move at the velocity needed to move from start to end for half of the trajectory duration
       // Needed for cases with start and end velocity of 0
       double dist_vel_mag =
           std::fabs((goal_joint_states_[i].position - current_joint_states_[i].position) / elapsed_time);
