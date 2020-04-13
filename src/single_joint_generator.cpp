@@ -120,10 +120,9 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
   }
 
   // If the polynomial-interpolated trajectory would overshoot, re-interpolate with a straight line.
-  // Move the polynomial toward the line until it violates acceleration limits.
-  if (
-    (interpolated_position.maxCoeff() > std::max(current_joint_state_.position, goal_joint_state_.position)) ||
-    (interpolated_position.minCoeff() < std::min(current_joint_state_.position, goal_joint_state_.position)))
+  // Move the polynomial toward the line until it violates kinematic limits.
+  if ((interpolated_position.maxCoeff() > std::max(current_joint_state_.position, goal_joint_state_.position)) ||
+      (interpolated_position.minCoeff() < std::min(current_joint_state_.position, goal_joint_state_.position)))
   {
     // Diagram of how this works here:  https://drive.google.com/drive/u/0/folders/1h78fTfLPD1576OKZECe-KpJRH3oE4Btq
 
@@ -170,9 +169,6 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
       // Segment C-D: don't change the polynomial-interpolated value, because we don't want to modify final vel/accel
       for (size_t index = 1; index < static_cast<size_t>(times.size() - 1); ++index)
       {
-        // This is a piecewise function with 6 segments
-
-        // Segment B-C
         double value_on_line = original_interpolated_position[index - 1] + v_B * delta_t;
         // Now decrease the difference between the polynomial and the line interpolation
         double new_value = value_on_line + flatten_factor * (original_interpolated_position[index] - value_on_line);
@@ -193,10 +189,8 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
       // iteration. The smoothing algorithm will take it from here.
 
       if (new_accelerations.maxCoeff() > limits_.acceleration_limit ||
-          new_accelerations.minCoeff() < -limits_.acceleration_limit ||
-          new_jerks.maxCoeff() > limits_.jerk_limit ||
-          new_jerks.minCoeff() < -limits_.jerk_limit
-         )
+          new_accelerations.minCoeff() < -limits_.acceleration_limit || new_jerks.maxCoeff() > limits_.jerk_limit ||
+          new_jerks.minCoeff() < -limits_.jerk_limit)
       {
         // Restore the previous flatten factor
         flatten_factor = std::min(1.0, flatten_factor * 1.0101);
