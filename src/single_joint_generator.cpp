@@ -119,6 +119,95 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
                  pow((1. - tao(index)), 2) / 2.);
   }
 
+  // If the polynomial-interpolated trajectory would overshoot, re-interpolate with a straight line.
+  // Move the polynomial toward the line until it violates acceleration limits.
+  if (
+    (interpolated_position.maxCoeff() > std::max(current_joint_state_.position, goal_joint_state_.position)) ||
+    (interpolated_position.minCoeff() < std::min(current_joint_state_.position, goal_joint_state_.position)))
+  {
+    // Diagram of how this works here:  https://drive.google.com/drive/u/0/folders/1h78fTfLPD1576OKZECe-KpJRH3oE4Btq
+
+    double delta_t = times[1] - times[0];
+
+    // Squash the height of the curve by this factor.
+    // Decrease flatten_factor until kinematic limits are just barely obeyed
+    // (Jerk might also be exceeded, but the smoothing algorithm should help with that)
+    // When flatten_factor == 1, there is no flattening, output matches the De Luca polynomial interpolation
+    // When flatten_factor == 0, the output matches a straight line between B and C.
+    double flatten_factor = 0.999;
+
+    Eigen::VectorXd original_interpolated_position = interpolated_position;
+
+    Eigen::VectorXd new_velocities;
+    Eigen::VectorXd new_accelerations;
+    Eigen::VectorXd new_jerks;
+
+    bool found_best_flatten_factor = false;
+
+    while (flatten_factor > 0.05)
+    {
+      // Define these variables for compactness / readability
+
+      // Segment A-B
+      // Assume the initial acceleration is maintained for one more timestep
+      double v_A = current_joint_state_.velocity;
+      double a_A = current_joint_state_.acceleration;
+      double x_B = current_joint_state_.position + v_A * delta_t + 0.5 * a_A * delta_t * delta_t;
+
+      // Solving for this segment next may seem out of order, but it's easy to do next since the goal state is known
+      // Segment C-D
+      double v_C = goal_joint_state_.velocity;
+      double a_C = goal_joint_state_.acceleration;
+      double x_C = goal_joint_state_.position - v_C * delta_t - 0.5 * a_C * delta_t * delta_t;
+      double t_C = desired_duration_ - 2 * delta_t;
+
+      // Segment B-C
+      // Acceleration over this segment is zero
+      double v_B = (x_C - x_B) / t_C;
+
+      // Segment A-B: don't change the polynomial-interpolated value, because we don't want to modify initial vel/accel
+      // Segment B-C: flatten the curve by the factor, "flatten_factor"
+      // Segment C-D: don't change the polynomial-interpolated value, because we don't want to modify final vel/accel
+      for (size_t index = 1; index < static_cast<size_t>(times.size() - 1); ++index)
+      {
+        // This is a piecewise function with 6 segments
+
+        // Segment B-C
+        double value_on_line = original_interpolated_position[index - 1] + v_B * delta_t;
+        // Now decrease the difference between the polynomial and the line interpolation
+        double new_value = value_on_line + flatten_factor * (original_interpolated_position[index] - value_on_line);
+
+        interpolated_position[index] = new_value;
+      }
+
+      new_velocities = DiscreteDifferentiation(interpolated_position, timestep_, current_joint_state_.velocity);
+      new_accelerations = DiscreteDifferentiation(new_velocities, timestep_, current_joint_state_.acceleration);
+      new_jerks = DiscreteDifferentiation(new_accelerations, timestep_, 0);
+
+      if (found_best_flatten_factor)
+      {
+        return interpolated_position;
+      }
+
+      // If a kinematic limit was just barely exceeded, restore the interpolated position vector from the previous
+      // iteration. The smoothing algorithm will take it from here.
+
+      if (new_accelerations.maxCoeff() > limits_.acceleration_limit ||
+          new_accelerations.minCoeff() < -limits_.acceleration_limit ||
+          new_jerks.maxCoeff() > limits_.jerk_limit ||
+          new_jerks.minCoeff() < -limits_.jerk_limit
+         )
+      {
+        // Restore the previous flatten factor
+        flatten_factor = std::min(1.0, flatten_factor * 1.0101);
+        found_best_flatten_factor = true;
+        continue;
+      }
+
+      flatten_factor *= 0.99;
+    }
+  }
+
   return interpolated_position;
 }
 
