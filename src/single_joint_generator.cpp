@@ -167,7 +167,7 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
       // Segment A-B: don't change the polynomial-interpolated value, because we don't want to modify initial vel/accel
       // Segment B-C: flatten the curve by the factor, "flatten_factor"
       // Segment C-D: don't change the polynomial-interpolated value, because we don't want to modify final vel/accel
-      for (size_t index = 1; index < static_cast<size_t>(times.size() - 1); ++index)
+      for (size_t index = 2; index < static_cast<size_t>(times.size() - 2); ++index)
       {
         double value_on_line = original_interpolated_position[index - 1] + v_B * delta_t;
         // Now decrease the difference between the polynomial and the line interpolation
@@ -176,14 +176,14 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
         interpolated_position[index] = new_value;
       }
 
-      new_velocities = DiscreteDifferentiation(interpolated_position, timestep_, current_joint_state_.velocity);
-      new_accelerations = DiscreteDifferentiation(new_velocities, timestep_, current_joint_state_.acceleration);
-      new_jerks = DiscreteDifferentiation(new_accelerations, timestep_, 0);
-
       if (found_best_flatten_factor)
       {
         return interpolated_position;
       }
+
+      new_velocities = DiscreteDifferentiation(interpolated_position, timestep_, current_joint_state_.velocity);
+      new_accelerations = DiscreteDifferentiation(new_velocities, timestep_, current_joint_state_.acceleration);
+      new_jerks = DiscreteDifferentiation(new_accelerations, timestep_, 0);
 
       // If a kinematic limit was just barely exceeded, restore the interpolated position vector from the previous
       // iteration. The smoothing algorithm will take it from here.
@@ -192,7 +192,7 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
           new_accelerations.minCoeff() < -limits_.acceleration_limit || new_jerks.maxCoeff() > limits_.jerk_limit ||
           new_jerks.minCoeff() < -limits_.jerk_limit)
       {
-        // Restore the previous flatten factor
+        // Restore the previous flatten factor and recalculate positions
         flatten_factor = std::min(1.0, flatten_factor * 1.0101);
         found_best_flatten_factor = true;
         continue;
