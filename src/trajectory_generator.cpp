@@ -25,7 +25,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
 {
-  // upsample if num. waypoints would be short. Helps with accuracy
+  // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
 
   // Initialize a trajectory generator for each joint
@@ -53,7 +53,7 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
   upsampled_num_waypoints_ = 0;
   upsample_rounds_ = 0;
 
-  // upsample if num. waypoints would be short. Helps with accuracy
+  // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
 
   // Initialize a trajectory generator for each joint

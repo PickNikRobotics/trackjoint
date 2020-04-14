@@ -94,7 +94,7 @@ size_t SingleJointGenerator::getLastSuccessfulIndex()
 inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 {
   // See De Luca, "Trajectory Planning" pdf, slide 19
-  // interpolate a smooth trajectory from initial to final state while matching
+  // Interpolate a smooth trajectory from initial to final state while matching
   // boundary conditions.
 
   // De Luca uses tao to represent a normalized time
