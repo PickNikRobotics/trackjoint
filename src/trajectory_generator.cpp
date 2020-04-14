@@ -18,22 +18,22 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
                                          bool use_streaming_mode)
   : kNumDof(num_dof)
   , desired_timestep_(timestep)
-  , upSampled_timestep_(timestep)
+  , upsampled_timestep_(timestep)
   , desired_duration_(desired_duration)
   , max_duration_(max_duration)
   , current_joint_states_(current_joint_states)
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
 {
-  // upSample if num. waypoints would be short. Helps with accuracy
-  upSample();
+  // upsample if num. waypoints would be short. Helps with accuracy
+  upsample();
 
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_.push_back(
-        SingleJointGenerator(upSampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
-                             goal_joint_states[joint], limits[joint], upSampled_num_waypoints_, kNumWaypointsThreshold,
+        SingleJointGenerator(upsampled_timestep_, desired_duration_, max_duration_, current_joint_states[joint],
+                             goal_joint_states[joint], limits[joint], upsampled_num_waypoints_, kNumWaypointsThreshold,
                              kMaxNumWaypointsFullTrajectory, position_tolerance, use_streaming_mode_));
   }
 }
@@ -44,50 +44,50 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
                                 const double position_tolerance, bool use_streaming_mode)
 {
   desired_timestep_ = timestep;
-  upSampled_timestep_ = timestep;
+  upsampled_timestep_ = timestep;
   desired_duration_ = desired_duration;
   max_duration_ = max_duration;
   current_joint_states_ = current_joint_states;
   limits_ = limits;
   use_streaming_mode_ = use_streaming_mode;
-  upSampled_num_waypoints_ = 0;
-  upSample_rounds_ = 0;
+  upsampled_num_waypoints_ = 0;
+  upsample_rounds_ = 0;
 
-  // upSample if num. waypoints would be short. Helps with accuracy
-  upSample();
+  // upsample if num. waypoints would be short. Helps with accuracy
+  upsample();
 
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_[joint].reset(upSampled_timestep_, desired_duration_, max_duration_,
+    single_joint_generators_[joint].reset(upsampled_timestep_, desired_duration_, max_duration_,
                                           current_joint_states[joint], goal_joint_states[joint], limits[joint],
-                                          upSampled_num_waypoints_, position_tolerance, use_streaming_mode_);
+                                          upsampled_num_waypoints_, position_tolerance, use_streaming_mode_);
   }
 }
 
-void TrajectoryGenerator::upSample()
+void TrajectoryGenerator::upsample()
 {
   // Decrease the timestep to improve accuracy.
-  // upSample algorithm:
+  // upsample algorithm:
   // Keep the first and last waypoint.
   // Insert a new waypoint between every pre-existing waypoint.
   // The formula for the new number of waypoints is new_num_waypoints =
   // 2*num_waypoints-1
-  // upSample_rounds_ tracks how many times this was applied so we can reverse
+  // upsample_rounds_ tracks how many times this was applied so we can reverse
   // it later.
 
-  upSampled_num_waypoints_ = 1 + desired_duration_ / upSampled_timestep_;
+  upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
   // streaming mode is designed to always return kNumWaypointsThreshold (or fewer, if only a few are successful)
-  // So, upSample and downSample are not necessary.
+  // So, upsample and downSample are not necessary.
   if (!use_streaming_mode_)
   {
-    while (upSampled_num_waypoints_ < kNumWaypointsThreshold)
+    while (upsampled_num_waypoints_ < kNumWaypointsThreshold)
     {
-      upSampled_num_waypoints_ = 2 * upSampled_num_waypoints_ - 1;
+      upsampled_num_waypoints_ = 2 * upsampled_num_waypoints_ - 1;
 
-      upSampled_timestep_ = desired_duration_ / (upSampled_num_waypoints_ - 1);
-      ++upSample_rounds_;
+      upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
+      ++upsample_rounds_;
     }
   }
 }
@@ -132,12 +132,12 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
   // Total number of elements filled in the new vector
   size_t num_elements_filled_in_new_vector = 0;
-  // Number of elements traversed in the upSampled vector
+  // Number of elements traversed in the upsampled vector
   size_t num_up_sampled_elements_traversed = 0;
   for (size_t count = 1; num_elements_filled_in_new_vector < new_vector_size - 2; ++count)
   {
     // Update num_elements_to_skip based on:
-    // (num_elements_remaining_in_upSampled_vector) /
+    // (num_elements_remaining_in_upsampled_vector) /
     // (num_elements_remaining_in_new_vector)
     num_elements_to_skip = (position_vector->size() - 2 - num_up_sampled_elements_traversed) /
                            (new_vector_size - 1 - num_elements_filled_in_new_vector);
@@ -173,23 +173,23 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<trackjoint::K
                                                  const std::vector<trackjoint::KinematicState>& goal_joint_states,
                                                  const std::vector<Limits>& limits, double nominal_timestep)
 {
-  if (desired_duration_ > kMaxNumWaypointsFullTrajectory * upSampled_timestep_)
+  if (desired_duration_ > kMaxNumWaypointsFullTrajectory * upsampled_timestep_)
   {
     // Print a warning but do not exit
     std::cout << "Capping desired duration at " << kMaxNumWaypointsFullTrajectory
               << " waypoints to maintain determinism." << std::endl;
-    desired_duration_ = kMaxNumWaypointsFullTrajectory * upSampled_timestep_;
+    desired_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
   }
 
-  if (max_duration_ > kMaxNumWaypointsFullTrajectory * upSampled_timestep_)
+  if (max_duration_ > kMaxNumWaypointsFullTrajectory * upsampled_timestep_)
   {
     // Print a warning but do not exit
     std::cout << "Capping max duration at " << kMaxNumWaypointsFullTrajectory << " waypoints to maintain determinism."
               << std::endl;
-    max_duration_ = kMaxNumWaypointsFullTrajectory * upSampled_timestep_;
+    max_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
   }
 
-  double rounded_duration = std::round(desired_duration_ / upSampled_timestep_) * upSampled_timestep_;
+  double rounded_duration = std::round(desired_duration_ / upsampled_timestep_) * upsampled_timestep_;
 
   // Need at least 1 timestep
   if (rounded_duration < nominal_timestep)
@@ -236,7 +236,7 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<trackjoint::K
     }
 
     // In streaming mode, the user-requested duration should be >= kNumWaypointsThreshold * timestep.
-    // upSample and downSample aren't used in streaming mode.
+    // upsample and downSample aren't used in streaming mode.
     if (rounded_duration < kNumWaypointsThreshold * nominal_timestep && use_streaming_mode_)
     {
       return ErrorCodeEnum::kLessThanTenTimestepsForStreamingMode;
@@ -307,13 +307,13 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
   if (!use_streaming_mode_)
   {
     // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-    if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upSampled_timestep_) && !use_streaming_mode_)
+    if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_) && !use_streaming_mode_)
     {
       return ErrorCodeEnum::kMaxDurationExceeded;
     }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
-    double new_desired_duration = (longest_num_waypoints - 1) * upSampled_timestep_;
+    double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
 
     // If any of the component durations were changed, run them again
     if (new_desired_duration != desired_duration_)
@@ -410,7 +410,7 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
   }
 
   // downSample all vectors, if needed, to the correct timestep
-  if (upSample_rounds_ > 0)
+  if (upsample_rounds_ > 0)
   {
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {

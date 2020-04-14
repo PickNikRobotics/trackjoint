@@ -90,10 +90,10 @@ private:
   */
   void clipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
 
-  /** \brief upSample if num. waypoints would be short. Helps with accuracy. */
-  void upSample();
+  /** \brief upsample if num. waypoints would be short. Helps with accuracy. */
+  void upsample();
 
-  /** \brief Undo upSample() to output a time/position/velocity/acceleration series with the correct spacing.
+  /** \brief Undo upsample() to output a time/position/velocity/acceleration series with the correct spacing.
    *
    * input time_vector a vector of times
    * input position_vector a vector of positions
@@ -114,18 +114,18 @@ private:
   // TODO(andyz): set this back to a small number when done testing
   // TODO(709): Remove kMaxNumWaypointsFullTrajectory - not needed now that we have streaming mode
   const size_t kMaxNumWaypointsFullTrajectory = 10000;  // A relatively small number, to run fast
-  // upSample for better accuracy if num waypoints is below threshold in full trajectory mode
+  // upsample for better accuracy if num waypoints is below threshold in full trajectory mode
   // Clip trajectories to threshold in streaming mode
   const size_t kNumWaypointsThreshold = 10;
 
   const uint kNumDof;
-  double desired_timestep_, upSampled_timestep_;
+  double desired_timestep_, upsampled_timestep_;
   double desired_duration_, max_duration_;
   std::vector<KinematicState> current_joint_states_;
   std::vector<Limits> limits_;
   bool use_streaming_mode_;
   std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
-  size_t upSampled_num_waypoints_;
-  size_t upSample_rounds_ = 0;  // Every time we upSample, timestep is halved. Track this.
+  size_t upsampled_num_waypoints_;
+  size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
 };                              // end class TrajectoryGenerator
 }  // namespace trackjoint

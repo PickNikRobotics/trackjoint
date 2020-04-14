@@ -22,7 +22,7 @@ int main(int argc, char** argv)
   // This example is for just one degree of freedom
   constexpr size_t num_dof = 1;
   // For readability, save the joint index
-  constexpr size_t k_joint = 0;
+  constexpr size_t joint = 0;
   // Waypoints will be spaced at 1 ms
   constexpr double timestep = 0.001;
   constexpr double max_duration = 100;
@@ -34,32 +34,32 @@ int main(int argc, char** argv)
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-5;
   // Loop until these tolerances are achieved
-  constexpr double k_final_position_tolerance = 1e-4;
-  constexpr double k_final_velocity_tolerance = 1e-1;
-  constexpr double k_final_acceleration_tolerance = 1e-1;
+  constexpr double final_position_tolerance = 1e-4;
+  constexpr double final_velocity_tolerance = 1e-1;
+  constexpr double final_acceleration_tolerance = 1e-1;
   // For streaming mode, it is important to keep the desired duration >=10 timesteps.
   // Otherwise, an error will be thrown. This helps with accuracy
-  constexpr double k_min_desired_duration = 10 * timestep;
+  constexpr double min_desired_duration = 10 * timestep;
   // Between TrackJoint iterations, move ahead this many waypoints along the trajectory.
-  constexpr std::size_t k_next_waypoint = 1;
+  constexpr std::size_t next_waypoint = 1;
 
   // Define start state and goal states.
   // Position, velocity, and acceleration default to 0.
   std::vector<trackjoint::KinematicState> start_state(num_dof);
   std::vector<trackjoint::KinematicState> goal_joint_states(num_dof);
-  start_state[k_joint].position = 0.9;
-  goal_joint_states[k_joint].position = -0.9;
+  start_state[joint].position = 0.9;
+  goal_joint_states[joint].position = -0.9;
 
   // A vector of vel/accel/jerk limits for each DOF
   std::vector<trackjoint::Limits> limits(num_dof);
-  limits[k_joint].velocity_limit = 2;
-  limits[k_joint].acceleration_limit = 2;
-  limits[k_joint].jerk_limit = 2;
+  limits[joint].velocity_limit = 2;
+  limits[joint].acceleration_limit = 2;
+  limits[joint].jerk_limit = 2;
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
   double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
   // But, don't ask for a duration that is shorter than the minimum
-  desired_duration = std::max(desired_duration, k_min_desired_duration);
+  desired_duration = std::max(desired_duration, min_desired_duration);
 
   // Create object for trajectory generation
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
@@ -82,12 +82,12 @@ int main(int argc, char** argv)
     return -1;
   }
   std::cout << "Initial trajectory calculation:" << std::endl;
-  PrintJointTrajectory(k_joint, output_trajectories, desired_duration);
+  PrintJointTrajectory(joint, output_trajectories, desired_duration);
 
   // Update the start state with the next waypoint
-  start_state[k_joint].position = output_trajectories.at(k_joint).positions[k_next_waypoint];
-  start_state[k_joint].velocity = output_trajectories.at(k_joint).velocities[k_next_waypoint];
-  start_state[k_joint].acceleration = output_trajectories.at(k_joint).accelerations[k_next_waypoint];
+  start_state[joint].position = output_trajectories.at(joint).positions[next_waypoint];
+  start_state[joint].velocity = output_trajectories.at(joint).velocities[next_waypoint];
+  start_state[joint].acceleration = output_trajectories.at(joint).accelerations[next_waypoint];
 
   // Loop while these errors exceed tolerances
   double position_error = std::numeric_limits<double>::max();
@@ -95,8 +95,8 @@ int main(int argc, char** argv)
   double acceleration_error = std::numeric_limits<double>::max();
 
   // Loop until the tolerances are satisfied
-  while (fabs(position_error) > k_final_position_tolerance || fabs(velocity_error) > k_final_velocity_tolerance ||
-         fabs(acceleration_error) > k_final_acceleration_tolerance)
+  while (fabs(position_error) > final_position_tolerance || fabs(velocity_error) > final_velocity_tolerance ||
+         fabs(acceleration_error) > final_acceleration_tolerance)
   {
     // Optionally, time TrackJoint performance
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -117,14 +117,14 @@ int main(int argc, char** argv)
     }
 
     // Print the synchronized trajectories
-    PrintJointTrajectory(k_joint, output_trajectories, desired_duration);
+    PrintJointTrajectory(joint, output_trajectories, desired_duration);
 
     // Move forward one waypoint for the next iteration
-    if ((std::size_t)output_trajectories.at(k_joint).positions.size() > k_next_waypoint)
+    if ((std::size_t)output_trajectories.at(joint).positions.size() > next_waypoint)
     {
-      start_state[k_joint].position = output_trajectories.at(k_joint).positions[k_next_waypoint];
-      start_state[k_joint].velocity = output_trajectories.at(k_joint).velocities[k_next_waypoint];
-      start_state[k_joint].acceleration = output_trajectories.at(k_joint).accelerations[k_next_waypoint];
+      start_state[joint].position = output_trajectories.at(joint).positions[next_waypoint];
+      start_state[joint].velocity = output_trajectories.at(joint).velocities[next_waypoint];
+      start_state[joint].acceleration = output_trajectories.at(joint).accelerations[next_waypoint];
     }
     else
     {
@@ -134,18 +134,18 @@ int main(int argc, char** argv)
     }
 
     // Calculate errors so tolerances can be checked
-    position_error = start_state[k_joint].position - goal_joint_states.at(k_joint).position;
-    velocity_error = start_state[k_joint].velocity - goal_joint_states.at(k_joint).velocity;
-    acceleration_error = start_state[k_joint].acceleration - goal_joint_states.at(k_joint).acceleration;
+    position_error = start_state[joint].position - goal_joint_states.at(joint).position;
+    velocity_error = start_state[joint].velocity - goal_joint_states.at(joint).velocity;
+    acceleration_error = start_state[joint].acceleration - goal_joint_states.at(joint).acceleration;
 
-    position_error = start_state[k_joint].position - goal_joint_states.at(k_joint).position;
-    velocity_error = start_state[k_joint].velocity - goal_joint_states.at(k_joint).velocity;
-    acceleration_error = start_state[k_joint].acceleration - goal_joint_states.at(k_joint).acceleration;
+    position_error = start_state[joint].position - goal_joint_states.at(joint).position;
+    velocity_error = start_state[joint].velocity - goal_joint_states.at(joint).velocity;
+    acceleration_error = start_state[joint].acceleration - goal_joint_states.at(joint).acceleration;
 
     // Shorten the desired duration as we get closer to goal
     desired_duration -= timestep;
     // But, don't ask for a duration that is shorter than the minimum
-    desired_duration = std::max(desired_duration, k_min_desired_duration);
+    desired_duration = std::max(desired_duration, min_desired_duration);
   }
 
   std::cout << "Done!" << std::endl;
