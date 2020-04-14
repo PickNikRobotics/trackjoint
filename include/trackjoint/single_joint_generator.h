@@ -47,8 +47,8 @@ public:
                        size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
                        bool use_streaming_mode);
 
-  /** \brief Reset data members and prepare to generate a new trajectory */
-  void Reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
+  /** \brief reset data members and prepare to generate a new trajectory */
+  void reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const trackjoint::Limits& limits, size_t desired_num_waypoints,
              const double position_tolerance, bool use_streaming_mode);
 
@@ -56,59 +56,59 @@ public:
    *
    * return a TrackJoint status code
    */
-  ErrorCodeEnum GenerateTrajectory();
+  ErrorCodeEnum generateTrajectory();
 
-  /** \brief Calculate a trajectory once duration is known. Similar to GenerateTrajectory minus PredictTimeToReach().
+  /** \brief Calculate a trajectory once duration is known. Similar to generateTrajectory minus predictTimeToReach().
    *
    * return a TrackJoint status code
    */
-  ErrorCodeEnum ExtendTrajectoryDuration();
+  ErrorCodeEnum extendTrajectoryDuration();
 
   /** \brief Get the generated trajectory
    *
    * return a vector of kinematic states for the joint
    */
-  JointTrajectory GetTrajectory();
+  JointTrajectory getTrajectory();
 
   /** \brief Get the last waypoint that successfully matched the polynomial interpolation
    *
    * return the waypoint index
    */
-  size_t GetLastSuccessfulIndex();
+  size_t getLastSuccessfulIndex();
 
   /** \brief Update desired_duration_ for this joint
    *
    * input new_trajectory_duration the new desired duration. Units not important as long as they are consistent
    */
-  void UpdateTrajectoryDuration(double new_trajectory_duration);
+  void updateTrajectoryDuration(double new_trajectory_duration);
 
 private:
-  /** \brief Interpolate from start to end state with a polynomial
+  /** \brief interpolate from start to end state with a polynomial
    *
    * input times a vector of waypoint times.
    * return a vector of interpolated positions
    */
-  Eigen::VectorXd Interpolate(Eigen::VectorXd& times);
+  Eigen::VectorXd interpolate(Eigen::VectorXd& times);
 
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
-  ErrorCodeEnum ForwardLimitCompensation(size_t* index_last_successful);
+  ErrorCodeEnum forwardLimitCompensation(size_t* index_last_successful);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool BackwardLimitCompensation(size_t limited_index, double* excess_velocity);
+  bool backwardLimitCompensation(size_t limited_index, double* excess_velocity);
 
-  /** \brief This uses BackwardLimitCompensation() but it starts from a position
+  /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
-  ErrorCodeEnum PositionVectorLimitLookAhead(size_t* index_last_successful);
+  ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
 
   /** \brief Record the index when compensation first failed */
-  inline void RecordFailureTime(size_t current_index, size_t* index_last_successful);
+  inline void recordFailureTime(size_t current_index, size_t* index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
-  ErrorCodeEnum PredictTimeToReach();
+  ErrorCodeEnum predictTimeToReach();
 
   /** \brief Calculate vel/accel/jerk from position */
-  void CalculateDerivatives();
+  void calculateDerivatives();
 
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 

@@ -18,15 +18,15 @@
 
 int main(int argc, char** argv)
 {
-  const int kNumDof = 3;
-  const double kTimestep = 0.001;
+  constexpr int num_dof = 3;
+  const double timestep = 0.001;
   double desired_duration = 0.028322;
-  const double kMaxDuration = 10;
+  constexpr double max_duration = 10;
   // Streaming mode returns just a few waypoints but executes very quickly.
-  constexpr bool kUseStreamingMode = false;
+  constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
-  constexpr double kWaypointPositionTolerance = 1e-5;
-  const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
+  constexpr double waypoint_position_tolerance = 1e-5;
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   ////////////////////////////////////////////////
   // First example - small motions, come to a halt
@@ -64,13 +64,13 @@ int main(int argc, char** argv)
   std::vector<trackjoint::Limits> limits(3, single_joint_limits);
 
   // Initialize main class
-  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, desired_duration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits, kWaypointPositionTolerance, kUseStreamingMode);
+  trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
+                                           goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
 
-  std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
 
   trackjoint::ErrorCodeEnum error_code =
-      traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
+      traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep);
 
   // Input error handling - if an error is found, the trajectory is not
   // generated.
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 
   // Measure runtime
   auto start = std::chrono::system_clock::now();
-  error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  error_code = traj_gen.generateTrajectories(&output_trajectories);
   auto end = std::chrono::system_clock::now();
 
   // Trajectory generation error handling
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
-  traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
+  traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
@@ -160,10 +160,10 @@ int main(int argc, char** argv)
   // Create a new traj gen object with new parameters
   traj_gen.~TrajectoryGenerator();
   new (&traj_gen)
-      trackjoint::TrajectoryGenerator(kNumDof, kTimestep, desired_duration, kMaxDuration, current_joint_states,
-                                      goal_joint_states, limits, kWaypointPositionTolerance, kUseStreamingMode);
+      trackjoint::TrajectoryGenerator(num_dof, timestep, desired_duration, max_duration, current_joint_states,
+                                      goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
 
-  error_code = traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
+  error_code = traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep);
 
   // Input error handling - if an error is found, the trajectory is not
   // generated.
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
 
   // Measure runtime
   start = std::chrono::system_clock::now();
-  error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  error_code = traj_gen.generateTrajectories(&output_trajectories);
   end = std::chrono::system_clock::now();
 
   // Trajectory generation error handling
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
-  traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
+  traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base);
 
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
