@@ -778,8 +778,7 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
                                            goal_joint_states, limits, position_tolerance_, use_streaming_mode_);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError,
-            traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep));
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep));
   EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories));
 
   // Position error
@@ -831,8 +830,9 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   std::vector<trackjoint::Limits> limits = { limits_per_joint, limits_per_joint, limits_per_joint };
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration = fabs(start_state[k_joint_to_update].position - goal_joint_states[k_joint_to_update].position) /
-                            limits[k_joint_to_update].velocity_limit;
+  double desired_duration =
+      fabs(start_state[k_joint_to_update].position - goal_joint_states[k_joint_to_update].position) /
+      limits[k_joint_to_update].velocity_limit;
   // But, don't ask for a duration that is shorter than one timestep
   desired_duration = std::max(desired_duration, k_min_desired_duration);
 
@@ -872,12 +872,14 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     {
       start_state[k_joint_to_update].position = output_trajectories.at(k_joint_to_update).positions[k_next_waypoint];
       start_state[k_joint_to_update].velocity = output_trajectories.at(k_joint_to_update).velocities[k_next_waypoint];
-      start_state[k_joint_to_update].acceleration = output_trajectories.at(k_joint_to_update).accelerations[k_next_waypoint];
+      start_state[k_joint_to_update].acceleration =
+          output_trajectories.at(k_joint_to_update).accelerations[k_next_waypoint];
     }
 
     position_error = start_state[k_joint_to_update].position - goal_joint_states.at(k_joint_to_update).position;
     velocity_error = start_state[k_joint_to_update].velocity - goal_joint_states.at(k_joint_to_update).velocity;
-    acceleration_error = start_state[k_joint_to_update].acceleration - goal_joint_states.at(k_joint_to_update).acceleration;
+    acceleration_error =
+        start_state[k_joint_to_update].acceleration - goal_joint_states.at(k_joint_to_update).acceleration;
 
     // Shorten the desired duration as we get closer to goal
     desired_duration -= timestep;
