@@ -149,27 +149,27 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 
       // Segment A-B
       // Assume the initial acceleration is maintained for one more timestep
-      double v_A = current_joint_state_.velocity;
-      double a_A = current_joint_state_.acceleration;
-      double x_B = current_joint_state_.position + v_A * delta_t + 0.5 * a_A * delta_t * delta_t;
+      double v_a = current_joint_state_.velocity;
+      double a_a = current_joint_state_.acceleration;
+      double x_b = current_joint_state_.position + v_a * delta_t + 0.5 * a_a * delta_t * delta_t;
 
       // Solving for this segment next may seem out of order, but it's easy to do next since the goal state is known
       // Segment C-D
-      double v_C = goal_joint_state_.velocity;
-      double a_C = goal_joint_state_.acceleration;
-      double x_C = goal_joint_state_.position - v_C * delta_t - 0.5 * a_C * delta_t * delta_t;
-      double t_C = desired_duration_ - 2 * delta_t;
+      double v_c = goal_joint_state_.velocity;
+      double a_c = goal_joint_state_.acceleration;
+      double x_c = goal_joint_state_.position - v_c * delta_t - 0.5 * a_c * delta_t * delta_t;
+      double t_c = desired_duration_ - 2 * delta_t;
 
       // Segment B-C
       // Acceleration over this segment is zero
-      double v_B = (x_C - x_B) / t_C;
+      double v_b = (x_c - x_b) / t_c;
 
       // Segment A-B: don't change the polynomial-interpolated value, because we don't want to modify initial vel/accel
       // Segment B-C: flatten the curve by the factor, "flatten_factor"
       // Segment C-D: don't change the polynomial-interpolated value, because we don't want to modify final vel/accel
       for (size_t index = 2; index < static_cast<size_t>(times.size() - 2); ++index)
       {
-        double value_on_line = original_interpolated_position[index - 1] + v_B * delta_t;
+        double value_on_line = original_interpolated_position[index - 1] + v_b * delta_t;
         // Now decrease the difference between the polynomial and the line interpolation
         double new_value = value_on_line + flatten_factor * (original_interpolated_position[index] - value_on_line);
 

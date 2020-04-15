@@ -193,8 +193,8 @@ TEST_F(TrajectoryGenerationTest, EasyLinearTrajectory)
 {
   // TrackJoint just needs to maintain the initial velocity to arrive at the goal
 
-  const double kDesiredDuration = 1;
-  const double kMaxDuration = 1;
+  const double desired_duration = 1;
+  const double max_duration = 1;
 
   std::vector<trackjoint::KinematicState> current_joint_states = current_joint_states_;
   trackjoint::KinematicState joint_state;
@@ -222,25 +222,25 @@ TEST_F(TrajectoryGenerationTest, EasyLinearTrajectory)
   limits.push_back(single_joint_limits);
   limits.push_back(single_joint_limits);
 
-  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, kDesiredDuration, kMaxDuration, current_joint_states,
+  trackjoint::TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration, max_duration, current_joint_states,
                                            goal_joint_states, limits, position_tolerance_, use_streaming_mode_);
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof_);
-  traj_gen.GenerateTrajectories(&output_trajectories);
+  traj_gen.generateTrajectories(&output_trajectories);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.GenerateTrajectories(&output_trajectories));
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories));
 
   // Position error
   double position_tolerance = 1e-4;
   double position_error = trackjoint::CalculatePositionAccuracy(goal_joint_states, output_trajectories);
   EXPECT_LT(position_error, position_tolerance);
   // Duration
-  const double kDurationTolerance = 5e-3;
+  const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories[0].elapsed_times.size() - 1;
-  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), kDesiredDuration, kDurationTolerance);
+  EXPECT_NEAR(output_trajectories[0].elapsed_times(vector_length), desired_duration, duration_tolerance);
   // Timestep
-  const double kTimestepTolerance = 0.0005;
+  const double timestep_tolerance = 0.0005;
   EXPECT_NEAR(output_trajectories[0].elapsed_times[1] - output_trajectories[0].elapsed_times[0], timestep_,
-              kTimestepTolerance);
+              timestep_tolerance);
 }
 
 TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
