@@ -43,13 +43,13 @@ public:
    */
   SingleJointGenerator(double timestep, double desired_duration, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const trackjoint::Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
+                       const Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
                        size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
                        bool use_streaming_mode);
 
   /** \brief reset data members and prepare to generate a new trajectory */
   void reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
-             const KinematicState& goal_joint_state, const trackjoint::Limits& limits, size_t desired_num_waypoints,
+             const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
              const double position_tolerance, bool use_streaming_mode);
 
   /** \brief Generate a jerk-limited trajectory for this joint
@@ -116,7 +116,7 @@ private:
   double desired_duration_, max_duration_;
   KinematicState current_joint_state_;
   KinematicState goal_joint_state_;
-  trackjoint::Limits limits_;
+  Limits limits_;
   double position_tolerance_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;

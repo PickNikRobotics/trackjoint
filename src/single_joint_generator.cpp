@@ -11,11 +11,11 @@
 namespace trackjoint
 {
 SingleJointGenerator::SingleJointGenerator(double timestep, double desired_duration, double max_duration,
-                                           const trackjoint::KinematicState& current_joint_state,
-                                           const trackjoint::KinematicState& goal_joint_state,
-                                           const trackjoint::Limits& limits, size_t desired_num_waypoints,
-                                           size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode,
-                                           const double position_tolerance, bool use_streaming_mode)
+                                           const KinematicState& current_joint_state,
+                                           const KinematicState& goal_joint_state, const Limits& limits,
+                                           size_t desired_num_waypoints, size_t num_waypoints_threshold,
+                                           size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
+                                           bool use_streaming_mode)
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
   , timestep_(timestep)
@@ -33,8 +33,8 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
 
 void SingleJointGenerator::reset(double timestep, double desired_duration, double max_duration,
                                  const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                                 const trackjoint::Limits& limits, size_t desired_num_waypoints,
-                                 const double position_tolerance, bool use_streaming_mode)
+                                 const Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
+                                 bool use_streaming_mode)
 {
   timestep_ = timestep;
   desired_duration_ = desired_duration;

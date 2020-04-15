@@ -169,8 +169,8 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   *jerk_vector = DiscreteDifferentiation(new_accelerations, desired_timestep_, 0);
 }
 
-ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
-                                                 const std::vector<trackjoint::KinematicState>& goal_joint_states,
+ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicState>& current_joint_states,
+                                                 const std::vector<KinematicState>& goal_joint_states,
                                                  const std::vector<Limits>& limits, double nominal_timestep)
 {
   if (desired_duration_ > kMaxNumWaypointsFullTrajectory * upsampled_timestep_)

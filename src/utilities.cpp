@@ -17,7 +17,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
-void PrintJointTrajectory(const std::size_t joint, const std::vector<trackjoint::JointTrajectory>& output_trajectories,
+void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
 {
   std::cout << "==========" << std::endl;
