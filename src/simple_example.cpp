@@ -19,19 +19,19 @@
 int main(int argc, char** argv)
 {
   // This example is for just one degree of freedom
-  constexpr int kNumDof = 1;
+  constexpr int num_dof = 1;
   // Timestep. Units don't matter as long as they're consistent
-  constexpr double kTimestep = 0.0075;
+  constexpr double timestep = 0.0075;
   // Total desired trajectory duration
-  constexpr double kDesiredDuration = 0.028322;
+  constexpr double desired_duration = 0.028322;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
-  constexpr double kMaxDuration = 10;
+  constexpr double max_duration = 10;
   // streaming mode returns just a few waypoints but executes very quickly. We won't use it here -- we'll calculate
   // the whole trajectory at once.
-  constexpr bool kUseStreamingMode = false;
+  constexpr bool use_streaming_mode = false;
   // Optional logging of TrackJoint output
-  const std::string kOutputPathBase = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
@@ -59,13 +59,13 @@ int main(int argc, char** argv)
   const double position_tolerance = 1e-6;
 
   // Instantiate a trajectory generation object
-  trackjoint::TrajectoryGenerator traj_gen(kNumDof, kTimestep, kDesiredDuration, kMaxDuration, current_joint_states,
-                                           goal_joint_states, limits, position_tolerance, kUseStreamingMode);
+  trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
+                                           goal_joint_states, limits, position_tolerance, use_streaming_mode);
   // This vector holds the trajectories for each DOF
-  std::vector<trackjoint::JointTrajectory> output_trajectories(kNumDof);
+  std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
   // Optionally, check user input for common errors, like current velocities being less than velocity limits
   trackjoint::ErrorCodeEnum error_code =
-      traj_gen.InputChecking(current_joint_states, goal_joint_states, limits, kTimestep);
+      traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep);
 
   // Input error handling - if an error is found, the trajectory is not generated.
   if (error_code != trackjoint::ErrorCodeEnum::kNoError)
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
   // Optionally, measure runtime
   auto start = std::chrono::system_clock::now();
   // This is where the magic happens
-  error_code = traj_gen.GenerateTrajectories(&output_trajectories);
+  error_code = traj_gen.generateTrajectories(&output_trajectories);
   auto end = std::chrono::system_clock::now();
 
   // Trajectory generation error handling
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
   std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
-  traj_gen.SaveTrajectoriesToFile(output_trajectories, kOutputPathBase);
+  traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base);
 
   // Print the synchronized trajectories.
   // Note: waypoint[0] should match the user-supplied start state

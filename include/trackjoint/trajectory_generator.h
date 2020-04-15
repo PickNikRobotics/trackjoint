@@ -50,8 +50,8 @@ public:
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                       const double position_tolerance, bool use_streaming_mode);
 
-  /** \brief Reset the member variables of the object and prepare to generate a new trajectory */
-  void Reset(double timestep, double desired_duration, double max_duration,
+  /** \brief reset the member variables of the object and prepare to generate a new trajectory */
+  void reset(double timestep, double desired_duration, double max_duration,
              const std::vector<KinematicState>& current_joint_states,
              const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
              const double position_tolerance, bool use_streaming_mode);
@@ -60,7 +60,7 @@ public:
    *
    * input output_trajectories the calculated trajectories for n joints
    */
-  ErrorCodeEnum GenerateTrajectories(std::vector<JointTrajectory>* output_trajectories);
+  ErrorCodeEnum generateTrajectories(std::vector<JointTrajectory>* output_trajectories);
 
   /** \brief Save generated trajectory to a .csv file
    *
@@ -68,7 +68,7 @@ public:
    * input directory to save in
    * input append_to_file adds new data to existing file if true
    */
-  void SaveTrajectoriesToFile(const std::vector<JointTrajectory>& output_trajectories, const std::string& base_filepath,
+  void saveTrajectoriesToFile(const std::vector<JointTrajectory>& output_trajectories, const std::string& base_filepath,
                               bool append_to_file = false) const;
 
   /** \brief Check user input for errors
@@ -79,7 +79,7 @@ public:
    * input nominal_timestep the user-requested time between waypoints
    * returna TrackJoint status code
   */
-  ErrorCodeEnum InputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
+  ErrorCodeEnum inputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
                               const std::vector<trackjoint::KinematicState>& goal_joint_states,
                               const std::vector<Limits>& limits, double nominal_timestep);
 
@@ -88,12 +88,12 @@ private:
    *
    * input trajectory the calculated trajectories for n joints
   */
-  void ClipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
+  void clipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
 
-  /** \brief Upsample if num. waypoints would be short. Helps with accuracy. */
-  void UpSample();
+  /** \brief upsample if num. waypoints would be short. Helps with accuracy. */
+  void upsample();
 
-  /** \brief Undo UpSample() to output a time/position/velocity/acceleration series with the correct spacing.
+  /** \brief Undo upsample() to output a time/position/velocity/acceleration series with the correct spacing.
    *
    * input time_vector a vector of times
    * input position_vector a vector of positions
@@ -101,7 +101,7 @@ private:
    * input acceleration_vector a vector of accelerations
    * input jerk_vector a vector of jerks
   */
-  void DownSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
+  void downSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
                   Eigen::VectorXd* acceleration_vector, Eigen::VectorXd* jerk_vector);
 
   /** \brief Synchronize all trajectories with the one of longest duration.
@@ -109,7 +109,7 @@ private:
    * input output_trajectories the calculated trajectories for n joints
    * returna TrackJoint status code
   */
-  ErrorCodeEnum SynchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
+  ErrorCodeEnum synchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
   // TODO(andyz): set this back to a small number when done testing
   // TODO(709): Remove kMaxNumWaypointsFullTrajectory - not needed now that we have streaming mode
