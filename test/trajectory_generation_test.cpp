@@ -29,7 +29,7 @@
 // Preparing data file handling
 #include <fstream>
 std::string REF_PATH = ros::package::getPath("trackjoint");
-std::string BASE_FILEPATH = REF_PATH + "/test/data/tj_output_joint";
+std::string BASE_FILEPATH = REF_PATH + "/test/data/tj_output";
 
 namespace trackjoint
 {
@@ -73,6 +73,7 @@ protected:
   std::vector<Limits> limits_;
   double position_tolerance_ = 1e-6;
   bool use_streaming_mode_ = false;
+  bool write_output_ = true;
   std::vector<JointTrajectory> output_trajectories_;
 
   void checkBounds()
@@ -108,6 +109,29 @@ protected:
       max_pos = std::max(potential_max, potential_max_2);
 
       EXPECT_TRUE(VerifyVectorWithinBounds(min_pos, max_pos, output_trajectories_[i].positions));
+    }
+  }
+
+  void writeOutputToFiles()
+  {
+    std::ofstream output_file;
+    std::string output_path;
+    for (size_t joint = 0; joint < output_trajectories_.size(); ++joint)
+    {
+      std::string file = BASE_FILEPATH + "_" + ::testing::UnitTest::GetInstance()->current_test_info()->name() + "_joint" +
+                         std::to_string(joint + 1) + ".csv";
+
+      output_file.open(file, std::ofstream::out);
+      for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories_.at(0).positions.size()); ++waypoint)
+      {
+        output_file << output_trajectories_.at(joint).elapsed_times(waypoint) << " "
+                    << output_trajectories_.at(joint).positions(waypoint) << " "
+                    << output_trajectories_.at(joint).velocities(waypoint) << " "
+                    << output_trajectories_.at(joint).accelerations(waypoint) << " "
+                    << output_trajectories_.at(joint).jerks(waypoint) << std::endl;
+      }
+      output_file.clear();
+      output_file.close();
     }
   }
 
@@ -166,6 +190,10 @@ protected:
   void TearDown() override
   {
     checkBounds();
+    if (write_output_)
+    {
+      writeOutputToFiles();
+    }
   }
 
 };  // class TrajectoryGenerationTest
@@ -559,7 +587,7 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
     ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories_);
 
     // Saving Trackjoint output to .csv files for plotting
-    traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH, point != 0);
+    traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH + "_joint");
 
     EXPECT_EQ(ErrorCodeEnum::kNoError, error_code);
     // Timestep
