@@ -79,9 +79,9 @@ public:
    * input nominal_timestep the user-requested time between waypoints
    * returna TrackJoint status code
   */
-  ErrorCodeEnum inputChecking(const std::vector<trackjoint::KinematicState>& current_joint_states,
-                              const std::vector<trackjoint::KinematicState>& goal_joint_states,
-                              const std::vector<Limits>& limits, double nominal_timestep);
+  ErrorCodeEnum inputChecking(const std::vector<KinematicState>& current_joint_states,
+                              const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
+                              double nominal_timestep);
 
 private:
   /** \brief Ensure limits are obeyed before outputting.
@@ -124,7 +124,7 @@ private:
   std::vector<KinematicState> current_joint_states_;
   std::vector<Limits> limits_;
   bool use_streaming_mode_;
-  std::vector<trackjoint::SingleJointGenerator> single_joint_generators_;
+  std::vector<SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
 };                              // end class TrajectoryGenerator
