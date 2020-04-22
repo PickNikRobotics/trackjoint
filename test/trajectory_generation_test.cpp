@@ -118,8 +118,8 @@ protected:
     std::string output_path;
     for (size_t joint = 0; joint < output_trajectories_.size(); ++joint)
     {
-      std::string file = BASE_FILEPATH + "_" + ::testing::UnitTest::GetInstance()->current_test_info()->name() + "_joint" +
-                         std::to_string(joint + 1) + ".csv";
+      std::string file = BASE_FILEPATH + "_" + ::testing::UnitTest::GetInstance()->current_test_info()->name() +
+                         "_joint" + std::to_string(joint + 1) + ".csv";
 
       output_file.open(file, std::ofstream::out);
       for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories_.at(0).positions.size()); ++waypoint)
