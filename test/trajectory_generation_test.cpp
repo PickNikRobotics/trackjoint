@@ -844,7 +844,7 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
 }
-
+/*
 TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 {
   // A customer-requested streaming test.
@@ -929,7 +929,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 
   // If the test gets here, it passed.
 }
-
+*/
 TEST_F(TrajectoryGenerationTest, StreamingTooFewTimesteps)
 {
   // An error should be thrown if streaming mode is enabled with a desired duration < kMinNumTimesteps

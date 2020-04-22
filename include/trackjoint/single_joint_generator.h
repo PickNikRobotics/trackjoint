@@ -108,7 +108,10 @@ private:
   ErrorCodeEnum predictTimeToReach();
 
   /** \brief Calculate vel/accel/jerk from position */
-  void calculateDerivatives();
+  void calculateDerivativesFromPosition();
+
+  /** \brief Calculate accel/jerk from velocity */
+  void calculateDerivativesFromVelocity();
 
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
