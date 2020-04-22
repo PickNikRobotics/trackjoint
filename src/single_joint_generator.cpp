@@ -56,7 +56,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   waypoints_.positions = interpolate(nominal_times_);
 
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
-  calculateDerivatives();
+  calculateDerivativesFromPosition();
 
   ErrorCodeEnum error_code = positionVectorLimitLookAhead(&index_last_successful_);
   if (error_code)
@@ -76,7 +76,7 @@ ErrorCodeEnum SingleJointGenerator::extendTrajectoryDuration()
   size_t expected_num_waypoints = 1 + desired_duration_ / timestep_;
   waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
   waypoints_.positions = interpolate(waypoints_.elapsed_times);
-  calculateDerivatives();
+  calculateDerivativesFromPosition();
   ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
   return error_code;
 }
@@ -162,7 +162,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
                                      0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
 
       // Re-calculate derivatives from the updated velocity vector
-      calculateDerivatives();
+      calculateDerivativesFromVelocity();
 
       delta_v = 0.5 * delta_j * timestep_ * timestep_;
 
@@ -205,7 +205,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
                                        waypoints_.accelerations(index - 1) * timestep_ +
                                        0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
         // Re-calculate derivatives from the updated velocity vector
-        calculateDerivatives();
+        calculateDerivativesFromVelocity();
       }
       else
       {
@@ -247,7 +247,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       delta_v = std::copysign(velocity_limit, waypoints_.velocities(index)) - waypoints_.velocities(index);
       waypoints_.velocities(index) = std::copysign(velocity_limit, waypoints_.velocities(index));
       // Re-calculate derivatives from the updated velocity vector
-      calculateDerivatives();
+      calculateDerivativesFromVelocity();
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
@@ -384,8 +384,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 {
   // Take a trajectory that could not reach the desired position in time.
-  // Try increasing the duration until it is interpolated without violating
-  // limits.
+  // Try increasing the duration until it is interpolated without violating limits.
   // This gives a new duration estimate.
 
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
@@ -422,7 +421,7 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
       // Try to create the trajectory again, with the new duration
       ////////////////////////////////////////////////////////////
       waypoints_.positions = interpolate(waypoints_.elapsed_times);
-      calculateDerivatives();
+      calculateDerivativesFromPosition();
       positionVectorLimitLookAhead(&index_last_successful_);
     }
   }
@@ -500,12 +499,18 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   return error_code;
 }
 
-void SingleJointGenerator::calculateDerivatives()
+inline void SingleJointGenerator::calculateDerivativesFromPosition()
 {
-  // From position vector, approximate velocity and acceleration.
-  // velocity = (difference between adjacent position elements) / delta_t
-  // acceleration = (difference between adjacent velocity elements) / delta_t
+  // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, timestep_, current_joint_state_.velocity);
+  waypoints_.accelerations =
+      DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
+  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);
+}
+
+inline void SingleJointGenerator::calculateDerivativesFromVelocity()
+{
+  // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
       DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);
