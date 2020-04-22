@@ -167,7 +167,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       delta_v = 0.5 * delta_j * timestep_ * timestep_;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -218,7 +218,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       delta_v = delta_a * timestep_;
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -252,7 +252,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
       delta_v += position_error / timestep_;
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -276,7 +276,16 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
   return ErrorCodeEnum::NO_ERROR;
 }
 
-bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double* excess_velocity)
+inline void SingleJointGenerator::recordFailureTime(size_t current_index, size_t* index_last_successful)
+{
+  // Record the index when compensation first failed
+  if (current_index < *index_last_successful)
+  {
+    *index_last_successful = current_index;
+  }
+}
+
+inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double excess_velocity)
 {
   // The algorithm:
   // 1) check jerk limits, from beginning to end of trajectory. Don't bother
@@ -297,10 +306,10 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
     if (fabs(waypoints_.velocities(index)) < limits_.velocity_limit)
     {
       // If the full change can be made in this timestep
-      if ((*excess_velocity > 0 && waypoints_.velocities(index) <= limits_.velocity_limit - *excess_velocity) ||
-          (*excess_velocity < 0 && waypoints_.velocities(index) >= -limits_.velocity_limit - *excess_velocity))
+      if ((excess_velocity > 0 && waypoints_.velocities(index) <= limits_.velocity_limit - excess_velocity) ||
+          (excess_velocity < 0 && waypoints_.velocities(index) >= -limits_.velocity_limit - excess_velocity))
       {
-        double new_velocity = waypoints_.velocities(index) + *excess_velocity;
+        double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / timestep_;
         double backward_jerk =
@@ -339,7 +348,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       {
         // This is what accel and jerk would be if we set velocity(index) to the
         // limit
-        double new_velocity = std::copysign(1.0, *excess_velocity) * limits_.velocity_limit;
+        double new_velocity = std::copysign(1.0, excess_velocity) * limits_.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / timestep_;
         double backward_jerk =
@@ -369,7 +378,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
             waypoints_.accelerations(index) = backward_accel;
             waypoints_.jerks(index) = backward_jerk;
           }
-          *excess_velocity = *excess_velocity - delta_v;
+          excess_velocity -= delta_v;
         }
       }
     }

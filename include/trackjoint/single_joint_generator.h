@@ -105,7 +105,7 @@ private:
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool backwardLimitCompensation(size_t limited_index, double* excess_velocity);
+  bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
 
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
