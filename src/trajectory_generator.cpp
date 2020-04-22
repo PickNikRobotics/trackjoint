@@ -134,32 +134,38 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   size_t num_elements_filled_in_new_vector = 0;
   // Number of elements traversed in the upsampled vector
   size_t num_up_sampled_elements_traversed = 0;
+  // The last index taken from the beginning of the upsampled vector
+  size_t last_element_pulled_from_beginning = 0;
+  // The last index taken from the end of the upsampled vector
+  size_t last_element_pulled_from_end = position_vector->size() - 1;
+
   for (size_t count = 1; num_elements_filled_in_new_vector < new_vector_size - 2; ++count)
   {
     // Update num_elements_to_skip based on:
-    // (num_elements_remaining_in_upsampled_vector) /
-    // (num_elements_remaining_in_new_vector)
+    // (num_elements_remaining_in_upsampled_vector) / (num_elements_remaining_in_new_vector)
     num_elements_to_skip = (position_vector->size() - 2 - num_up_sampled_elements_traversed) /
-                           (new_vector_size - 1 - num_elements_filled_in_new_vector);
+                           (new_vector_size - 2 - num_elements_filled_in_new_vector);
 
-    new_positions[count] = (*position_vector)[count * num_elements_to_skip];
-    new_velocities[count] = (*velocity_vector)[count * num_elements_to_skip];
-    new_accelerations[count] = (*acceleration_vector)[count * num_elements_to_skip];
+    new_positions[count] = (*position_vector)[last_element_pulled_from_beginning + num_elements_to_skip];
+    new_velocities[count] = (*velocity_vector)[last_element_pulled_from_beginning + num_elements_to_skip];
+    new_accelerations[count] = (*acceleration_vector)[last_element_pulled_from_beginning + num_elements_to_skip];
     ++num_elements_filled_in_new_vector;
     num_up_sampled_elements_traversed = num_up_sampled_elements_traversed + num_elements_to_skip;
+    last_element_pulled_from_beginning = last_element_pulled_from_beginning + num_elements_to_skip;
 
     // Count down if we need to fill more elements. Subtract two because first and last element are already filled.
     if (num_elements_filled_in_new_vector < new_vector_size - 2)
     {
       // Start filling at (end-1) because the last element is already filled
       new_positions[new_positions.size() - 1 - count] =
-          (*position_vector)[position_vector->size() - 1 - count * num_elements_to_skip];
+          (*position_vector)[last_element_pulled_from_end - num_elements_to_skip];
       new_velocities[new_velocities.size() - 1 - count] =
-          (*velocity_vector)[velocity_vector->size() - 1 - count * num_elements_to_skip];
+          (*velocity_vector)[last_element_pulled_from_end - num_elements_to_skip];
       new_accelerations[new_accelerations.size() - 1 - count] =
-          (*acceleration_vector)[acceleration_vector->size() - 1 - count * num_elements_to_skip];
+          (*acceleration_vector)[last_element_pulled_from_end - num_elements_to_skip];
       ++num_elements_filled_in_new_vector;
       num_up_sampled_elements_traversed = num_up_sampled_elements_traversed + num_elements_to_skip;
+      last_element_pulled_from_end = last_element_pulled_from_end - num_elements_to_skip;
     }
   }
 
