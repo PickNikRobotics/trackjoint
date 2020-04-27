@@ -844,7 +844,7 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
 }
-/*
+
 TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 {
   // A customer-requested streaming test.
@@ -862,7 +862,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   constexpr double final_position_tolerance = 1e-5;
   constexpr double final_velocity_tolerance = 1e-3;
   constexpr double final_acceleration_tolerance = 1e-2;
-  const double min_desired_duration = 10 * timestep_;
+  const double min_desired_duration = timestep_;
   // Between iterations, skip this many waypoints.
   // Take next_waypoint from the previous trajectory to start the new trajectory.
   // Minimum is 1.
@@ -929,7 +929,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
 
   // If the test gets here, it passed.
 }
-*/
+
 TEST_F(TrajectoryGenerationTest, StreamingTooFewTimesteps)
 {
   // An error should be thrown if streaming mode is enabled with a desired duration < kMinNumTimesteps

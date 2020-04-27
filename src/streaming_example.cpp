@@ -39,7 +39,7 @@ int main(int argc, char** argv)
   constexpr double final_acceleration_tolerance = 1e-1;
   // For streaming mode, it is important to keep the desired duration >=10 timesteps.
   // Otherwise, an error will be thrown. This helps with accuracy
-  constexpr double min_desired_duration = 10 * timestep;
+  constexpr double min_desired_duration = 1 * timestep;
   // Between TrackJoint iterations, move ahead this many waypoints along the trajectory.
   constexpr std::size_t next_waypoint = 1;
 
