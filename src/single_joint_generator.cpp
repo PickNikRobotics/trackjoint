@@ -69,16 +69,34 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   return error_code;
 }
 
-ErrorCodeEnum SingleJointGenerator::extendTrajectoryDuration()
+void SingleJointGenerator::extendTrajectoryDuration()
 {
+  // Fit and generate a spline function to the original (time, position)
+  Eigen::RowVectorXd time(waypoints_.elapsed_times);
+  Eigen::RowVectorXd position(waypoints_.positions);
+
+  const auto fit = SplineFitting1D::Interpolate(position, 2, time);
+  Spline1D spline(fit);
+  std::cout << "DONE FITTING SPLINE!" << std::endl;
+
+  // New times, with the extended duration
+  size_t expected_num_waypoints = 1 + desired_duration_ / timestep_;
+  waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
+  // Retrieve new positions at the new times
+  Eigen::RowVectorXd new_positions;
+  waypoints_.positions.resize(expected_num_waypoints);
+  for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
+    waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
+
+/*
   // Clear previous results
   waypoints_ = JointTrajectory();
-  size_t expected_num_waypoints = 1 + desired_duration_ / timestep_;
+  expected_num_waypoints = 1 + desired_duration_ / timestep_;
   waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
   waypoints_.positions = interpolate(waypoints_.elapsed_times);
   calculateDerivativesFromPosition();
   ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
-  return error_code;
+*/
 }
 
 JointTrajectory SingleJointGenerator::getTrajectory()
