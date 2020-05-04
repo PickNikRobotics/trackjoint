@@ -942,6 +942,53 @@ TEST_F(TrajectoryGenerationTest, StreamingTooFewTimesteps)
   EXPECT_EQ(ErrorCodeEnum::kLessThanTenTimestepsForStreamingMode,
             traj_gen.inputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
 }
+
+TEST_F(TrajectoryGenerationTest, SingleJointOscillation)
+{
+  // This test comes from MoveIt. Originally, this joint's trajectory oscillated
+  // Fixed by setting a shorter desired_duration_
+
+  timestep_ = 0.0075;
+  desired_duration_ = 0.1;
+  num_dof_ = 1;
+
+  current_joint_states_.resize(num_dof_);
+  KinematicState joint_state;
+  joint_state.position = -0.00397532;
+  joint_state.velocity = -0.169886;
+  joint_state.acceleration = -0.84943;
+  current_joint_states_[0] = joint_state;
+
+  goal_joint_states_.resize(num_dof_);
+  joint_state.position = -0.025211;
+  joint_state.velocity = -0.253157;
+  joint_state.acceleration = -0.87268;
+  goal_joint_states_[0] = joint_state;
+
+  limits_.resize(num_dof_);
+  Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 3.15;
+  single_joint_limits.acceleration_limit = 5;
+  single_joint_limits.jerk_limit = 5000;
+  limits_[0] = single_joint_limits;
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+  output_trajectories_.resize(num_dof_);
+
+  EXPECT_EQ(ErrorCodeEnum::kNoError,
+            traj_gen.inputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
+  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+
+  // Position error
+  const double position_tolerance = 2e-3;
+  const double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
+  EXPECT_LT(position_error, position_tolerance);
+  // Timestep
+  const double timestep_tolerance = 0.0005;
+  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+              timestep_tolerance);
+}
 }  // namespace trackjoint
 
 int main(int argc, char** argv)
