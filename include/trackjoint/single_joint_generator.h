@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cmath>  // copysign
+#include <unsupported/Eigen/Splines>  // Spline-fitting is used to extend trajectory duration
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
@@ -21,6 +22,9 @@
 
 namespace trackjoint
 {
+typedef Eigen::Spline<double, 1, 2> Spline1D;
+typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
+
 class SingleJointGenerator
 {
 public:
@@ -58,11 +62,8 @@ public:
    */
   ErrorCodeEnum generateTrajectory();
 
-  /** \brief Calculate a trajectory once duration is known. Similar to generateTrajectory minus predictTimeToReach().
-   *
-   * return a TrackJoint status code
-   */
-  ErrorCodeEnum extendTrajectoryDuration();
+  /** \brief Extend a trajectory to a new duration. Magnitudes of vel/accel/jerk will be decreased. */
+  void extendTrajectoryDuration();
 
   /** \brief Get the generated trajectory
    *

@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     }
   }
   std::cout << "============================================" << std::endl;
-
+/*
   /////////////////////////////////
   // Second example - large motions
   /////////////////////////////////
@@ -217,6 +217,6 @@ int main(int argc, char** argv)
     }
   }
   std::cout << "============================================" << std::endl;
-
+*/
   return 0;
 }
