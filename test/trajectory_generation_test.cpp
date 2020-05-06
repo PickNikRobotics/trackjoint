@@ -197,7 +197,7 @@ protected:
   }
 
 };  // class TrajectoryGenerationTest
-/*
+
 TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
 {
   // Use the class defaults. This trajectory is easy, does not require limit
@@ -491,7 +491,7 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   uint expected_num_waypoints = num_waypoints;
   EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
 }
-*/
+
 TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 {
   // This test comes from a MoveIt trajectory.
@@ -597,7 +597,7 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
   }
   EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
 }
-/*
+
 TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
 {
   // Test a "corner" trajectory.
@@ -989,7 +989,6 @@ TEST_F(TrajectoryGenerationTest, SingleJointOscillation)
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
 }
-*/
 }  // namespace trackjoint
 
 int main(int argc, char** argv)
