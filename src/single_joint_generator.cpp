@@ -74,9 +74,9 @@ void SingleJointGenerator::extendTrajectoryDuration()
   size_t new_num_waypoints = 1 + desired_duration_ / timestep_;
 
   // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
-  // This is the best way because it reduces overshoot.
+  // ^This is the best way because it reduces overshoot.
   // Otherwise, re-generate a new trajectory from scratch.
-  if (false /*index_last_successful_ == static_cast<size_t>(waypoints_.positions.size() - 1)*/)
+  if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
     // Fit and generate a spline function to the original (time, position)
     Eigen::RowVectorXd time(waypoints_.elapsed_times);
@@ -93,9 +93,11 @@ void SingleJointGenerator::extendTrajectoryDuration()
     for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
       waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
 
+    calculateDerivativesFromPosition();
     return;
   }
 
+  // Plan a new trajectory from scratch:
   // Clear previous results
   waypoints_ = JointTrajectory();
   waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
