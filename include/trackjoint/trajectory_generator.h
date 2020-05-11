@@ -83,6 +83,14 @@ public:
                               const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                               double nominal_timestep);
 
+  /** Run the BackwardLimitCompensation unit test
+   * return the difference between intended distance traveled and distance traveled after compensation
+   */
+  double runBackwardLimitCompensationTest()
+  {
+    return single_joint_generators_[0].runBackwardLimitCompensationTest();
+  }
+
 private:
   /** \brief Ensure limits are obeyed before outputting.
    *

@@ -155,6 +155,15 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
   )
 
+  add_rostest_gtest(algorithm_test
+    test/algorithm_test.test
+    test/algorithm_test.cpp
+  )
+  target_link_libraries(algorithm_test
+    ${LIBRARY_NAME}
+    ${catkin_LIBRARIES}
+  )
+
 endif()
 
 ## Test for correct C++ source code
