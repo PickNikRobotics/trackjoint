@@ -85,52 +85,7 @@ public:
   /** Run the BackwardLimitCompensation unit test
    * return the difference between intended distance traveled and distance traveled after compensation
    */
-  double runBackwardLimitCompensationTest()
-  {
-    size_t num_steps = 21;
-    // The intended velocity:
-    Eigen::VectorXd intended_velocity;
-    intended_velocity.resize(num_steps);
-    // Element 17 is over the velocity limit
-    intended_velocity << 0.997, 0.998, 0.999, 0.99987, 0.99988, 0.99989, 0.99990, 0.99991, 0.99992, 0.99993, 0.99994,
-                         0.99995, 0.99996, 0.99997, 0.99998, 0.99999, 1.0, 1.00001, 1.00001, 1.00001, 1.00001;
-
-    waypoints_.velocities.resize(num_steps);
-    // Element 17 has been set to the limit (1.0), backwardLimitCompensation should make up for this
-    waypoints_.velocities << 0.997, 0.998, 0.999, 0.99987, 0.99988, 0.99989, 0.99990, 0.99991, 0.99992, 0.99993,
-                             0.99994, 0.99995, 0.99996, 0.99997, 0.99998, 0.99999, 1.0, 1.0 /* changed */, 1.00001, 1.00001,
-                             1.00001;
-    waypoints_.positions.resize(num_steps);
-    waypoints_.accelerations.resize(num_steps);
-    waypoints_.jerks.resize(num_steps);
-    size_t limited_index = 17;
-    double delta_v = waypoints_.velocities[limited_index] - intended_velocity[limited_index];
-
-    backwardLimitCompensation(limited_index, -delta_v);
-
-    // Check that sum(intended_velocities) == sum(compensated_velocities)
-    // This is equivalent to testing that the correct distance was traveled
-    if (!(intended_velocity.sum() - waypoints_.velocities.sum()))
-      return false;
-
-    // Now do a negative version of the same test
-    // Element 17 is under the velocity limit
-    intended_velocity << -0.997, -0.998, -0.999, -0.99987, -0.99988, -0.99989, -0.99990, -0.99991, -0.99992, -0.99993, -0.99994,
-                         -0.99995, -0.99996, -0.99997, -0.99998, -0.99999, -1.0, -1.00001, -1.00001, -1.00001, -1.00001;
-    // Element 17 has been set to the limit (-1.0), backwardLimitCompensation should make up for this
-    waypoints_.velocities << -0.997, -0.998, -0.999, -0.99987, -0.99988, -0.99989, -0.99990, -0.99991, -0.99992, -0.99993,
-                             -0.99994, -0.99995, -0.99996, -0.99997, -0.99998, -0.99999, -1.0, -1.0 /* changed */, -1.00001,
-                             -1.00001, -1.00001;
-    waypoints_.positions.resize(num_steps);
-    waypoints_.accelerations.resize(num_steps);
-    waypoints_.jerks.resize(num_steps);
-    delta_v = waypoints_.velocities[limited_index] - intended_velocity[limited_index];
-
-    backwardLimitCompensation(limited_index, -delta_v);
-    std::cout << waypoints_.velocities << std::endl;
-
-    return (intended_velocity.sum() - waypoints_.velocities.sum());
-  }
+  double runBackwardLimitCompensationTest();
 
 private:
   /** \brief interpolate from start to end state with a polynomial
