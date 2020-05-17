@@ -586,9 +586,6 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 
     ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories_);
 
-    // Saving Trackjoint output to .csv files for plotting
-    traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH + "_joint");
-
     EXPECT_EQ(ErrorCodeEnum::kNoError, error_code);
     // Timestep
     const double timestep_tolerance = 0.25 * timestep_;
