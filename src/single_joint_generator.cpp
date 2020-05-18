@@ -273,7 +273,7 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
     }
   }
 
-  return ErrorCodeEnum::kNoError;
+  return ErrorCodeEnum::NO_ERROR;
 }
 
 inline void SingleJointGenerator::recordFailureTime(size_t current_index, size_t* index_last_successful)
@@ -397,7 +397,7 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   // limits.
   // This gives a new duration estimate.
 
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
 
   // If in normal mode, we can extend trajectories
   if (!use_streaming_mode_)
@@ -474,12 +474,12 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   // Normal mode: Error if we extended the duration to the maximum and it still wasn't successful
   if (!use_streaming_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    error_code = ErrorCodeEnum::kMaxDurationExceeded;
+    error_code = ErrorCodeEnum::MAX_DURATION_EXCEEDED;
   }
   // Error if not even a single waypoint could be generated
   if (waypoints_.positions.size() < 2)
   {
-    error_code = ErrorCodeEnum::kFailureToGenerateSingleWaypoint;
+    error_code = ErrorCodeEnum::FAILURE_TO_GENERATE_SINGLE_WAYPOINT;
   }
 
   return error_code;
