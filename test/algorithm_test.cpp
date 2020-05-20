@@ -85,6 +85,7 @@ protected:
     // Have generator compensate for velocity limit applied at limited_index
     double delta_v = input_velocities[limited_index] - original_velocities[limited_index];
     double success = traj_gen.single_joint_generators_[0].backwardLimitCompensation(limited_index, -delta_v);
+    EXPECT_TRUE(success);
 
     // Check that sum(original_velocities) == sum(compensated_velocities)
     // This is equivalent to testing that the correct distance was traveled
