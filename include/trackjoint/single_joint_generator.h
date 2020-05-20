@@ -82,11 +82,6 @@ public:
    */
   void updateTrajectoryDuration(double new_trajectory_duration);
 
-  /** Run the BackwardLimitCompensation unit test
-   * return the difference between intended distance traveled and distance traveled after compensation
-   */
-  double runBackwardLimitCompensationTest();
-
 private:
   /** \brief interpolate from start to end state with a polynomial
    *
@@ -137,5 +132,7 @@ private:
   // successfully.
   // In streaming mode, trajectory duration is not extended until it successfully reaches the goal.
   bool use_streaming_mode_;
+
+  friend class AlgorithmTest;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint

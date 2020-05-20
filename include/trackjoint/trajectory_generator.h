@@ -83,14 +83,6 @@ public:
                               const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                               double nominal_timestep);
 
-  /** Run the BackwardLimitCompensation unit test
-   * return the difference between intended distance traveled and distance traveled after compensation
-   */
-  double runBackwardLimitCompensationTest()
-  {
-    return single_joint_generators_[0].runBackwardLimitCompensationTest();
-  }
-
 private:
   /** \brief Ensure limits are obeyed before outputting.
    *
@@ -135,5 +127,7 @@ private:
   std::vector<SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
-};                              // end class TrajectoryGenerator
+
+  friend class AlgorithmTest;
+};  // end class TrajectoryGenerator
 }  // namespace trackjoint
