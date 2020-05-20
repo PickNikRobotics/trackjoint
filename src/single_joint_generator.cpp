@@ -91,7 +91,7 @@ size_t SingleJointGenerator::getLastSuccessfulIndex()
   return index_last_successful_;
 }
 
-inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
+Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 {
   // See De Luca, "Trajectory Planning" pdf, slide 19
   // Interpolate a smooth trajectory from initial to final state while matching
@@ -122,7 +122,7 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
   return interpolated_position;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
 {
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
@@ -276,16 +276,7 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
   return ErrorCodeEnum::NO_ERROR;
 }
 
-inline void SingleJointGenerator::recordFailureTime(size_t current_index, size_t* index_last_successful)
-{
-  // Record the index when compensation first failed
-  if (current_index < *index_last_successful)
-  {
-    *index_last_successful = current_index;
-  }
-}
-
-inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double* excess_velocity)
+bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double* excess_velocity)
 {
   // The algorithm:
   // 1) check jerk limits, from beginning to end of trajectory. Don't bother
@@ -390,7 +381,7 @@ inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index
   return successful_compensation;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
+ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 {
   // Take a trajectory that could not reach the desired position in time.
   // Try increasing the duration until it is interpolated without violating
@@ -485,7 +476,7 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   return error_code;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_last_successful)
 {
   ErrorCodeEnum error_code = forwardLimitCompensation(index_last_successful);
   if (error_code)
@@ -509,7 +500,7 @@ inline ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* 
   return error_code;
 }
 
-inline void SingleJointGenerator::calculateDerivatives()
+void SingleJointGenerator::calculateDerivatives()
 {
   // From position vector, approximate velocity and acceleration.
   // velocity = (difference between adjacent position elements) / delta_t

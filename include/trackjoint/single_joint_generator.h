@@ -83,6 +83,16 @@ public:
   void updateTrajectoryDuration(double new_trajectory_duration);
 
 private:
+  /** \brief Record the index when compensation first failed */
+  inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
+  {
+    // Record the index when compensation first failed
+    if (current_index < *index_last_successful)
+    {
+      *index_last_successful = current_index;
+    }
+  };
+
   /** \brief interpolate from start to end state with a polynomial
    *
    * input times a vector of waypoint times.
@@ -100,9 +110,6 @@ private:
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
   ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
-
-  /** \brief Record the index when compensation first failed */
-  inline void recordFailureTime(size_t current_index, size_t* index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum predictTimeToReach();
