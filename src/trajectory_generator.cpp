@@ -7,7 +7,6 @@
  *********************************************************************/
 
 #include <fstream>
-#include "trackjoint/license_manager.h"
 #include "trackjoint/trajectory_generator.h"
 
 namespace trackjoint
@@ -26,8 +25,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
 {
-  trackjoint::LicenseManager license_client;
-  if (!license_client.CheckLicenseStatus())
+  if (!license_manager_.CheckLicenseStatus())
   {
     std::cerr << "Unrecognized license, check license status" << std::endl;
     exit(-1);
@@ -51,8 +49,7 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
                                 const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                                 const double position_tolerance, bool use_streaming_mode)
 {
-  trackjoint::LicenseManager license_client;
-  if (!license_client.CheckLicenseStatus())
+  if (!license_manager_.CheckLicenseStatus())
   {
     std::cerr << "Unrecognized license, check license status" << std::endl;
     exit(-1);
