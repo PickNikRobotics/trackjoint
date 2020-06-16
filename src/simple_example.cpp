@@ -21,9 +21,7 @@ int main(int argc, char** argv)
   // This example is for just one degree of freedom
   constexpr int num_dof = 1;
   // Timestep. Units don't matter as long as they're consistent
-  constexpr double timestep = 0.0075;
-  // Total desired trajectory duration
-  constexpr double desired_duration = 0.028322;
+  constexpr double timestep = 0.001;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
   constexpr double max_duration = 10;
@@ -31,32 +29,35 @@ int main(int argc, char** argv)
   // the whole trajectory at once.
   constexpr bool use_streaming_mode = false;
   // Optional logging of TrackJoint output
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
-  joint_state.position = 0.00596041;
-  joint_state.velocity = -0.176232;
-  joint_state.acceleration = -3.06289;
+  joint_state.position = 0;
+  joint_state.velocity = 0.57735;
+  joint_state.acceleration = 0;
   // This is the initial state of the joint
   current_joint_states[0] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states(1);
-  joint_state.position = -0.00121542;
-  joint_state.velocity = -0.289615;
-  joint_state.acceleration = -2.88021;
+  joint_state.position = 0.4;
+  joint_state.velocity = 0.57735;
+  joint_state.acceleration = 0;
   goal_joint_states[0] = joint_state;
 
   trackjoint::Limits single_joint_limits;
   // Typically, jerk limit >> acceleration limit > velocity limit
-  single_joint_limits.velocity_limit = 3.15;
-  single_joint_limits.acceleration_limit = 5;
-  single_joint_limits.jerk_limit = 5000;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 14;
+  single_joint_limits.jerk_limit = 20;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
   // It is used for calculations internally. It should be set to a smaller number than your task requires.
   const double position_tolerance = 1e-6;
+
+  // Total desired trajectory duration. Based on fastest possible time to reach
+  double desired_duration = 1; //fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
 
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
