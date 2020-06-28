@@ -333,9 +333,9 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
           break;
         }
       }
-      // else, can't make all of the correction in this timestep, so make as
-      // much of a change as possible
-      else
+
+      // Can't make all of the correction in this timestep, so make as much of a change as possible
+      if (!successful_compensation)
       {
         // This is what accel and jerk would be if we set velocity(index) to the
         // limit
