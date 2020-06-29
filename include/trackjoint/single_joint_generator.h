@@ -31,7 +31,6 @@ public:
   /** \brief Constructor
    *
    * input timestep desired time between waypoints
-   * input desired_duration total desired duration of the trajectory
    * input max_duration allow the trajectory to be extended up to this limit. Error if that cannot be done.
    * input current_joint_states vector of the initial kinematic states for each degree of freedom
    * input goal_joint_states vector of the target kinematic states for each degree of freedom
@@ -45,14 +44,14 @@ public:
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
    */
-  SingleJointGenerator(double timestep, double desired_duration, double max_duration,
+  SingleJointGenerator(double timestep, double max_duration,
                        const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
                        const Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
                        size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
                        bool use_streaming_mode);
 
   /** \brief reset data members and prepare to generate a new trajectory */
-  void reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
+  void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
              const double position_tolerance, bool use_streaming_mode);
 
