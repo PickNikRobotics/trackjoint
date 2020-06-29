@@ -10,7 +10,7 @@
 
 namespace trackjoint
 {
-SingleJointGenerator::SingleJointGenerator(double timestep, double desired_duration, double max_duration,
+SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
                                            const KinematicState& current_joint_state,
                                            const KinematicState& goal_joint_state, const Limits& limits,
                                            size_t desired_num_waypoints, size_t num_waypoints_threshold,
@@ -19,7 +19,6 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
   , timestep_(timestep)
-  , desired_duration_(desired_duration)
   , max_duration_(max_duration)
   , current_joint_state_(current_joint_state)
   , goal_joint_state_(goal_joint_state)
@@ -27,17 +26,21 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   , position_tolerance_(position_tolerance)
   , use_streaming_mode_(use_streaming_mode)
 {
+  // Start with this estimate of the shortest possible duration
+  // The shortest possible duration avoids oscillation, as much as possible
+  // Desired duration cannot be less than one timestep
+  desired_duration_ = std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
 
-void SingleJointGenerator::reset(double timestep, double desired_duration, double max_duration,
+void SingleJointGenerator::reset(double timestep, double max_duration,
                                  const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
                                  const Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
                                  bool use_streaming_mode)
 {
   timestep_ = timestep;
-  desired_duration_ = desired_duration;
   max_duration_ = max_duration;
   current_joint_state_ = current_joint_state;
   goal_joint_state_ = goal_joint_state;
