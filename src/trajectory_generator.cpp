@@ -309,6 +309,11 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     }
   }
 
+  std::cout << "INDEX OF LONGEST DURATION: " << index_of_longest_duration << std::endl;
+  std::cout << "INDEX OF LONGEST DURATION: " << index_of_longest_duration << std::endl;
+  std::cout << "INDEX OF LONGEST DURATION: " << index_of_longest_duration << std::endl;
+  std::cout << "INDEX OF LONGEST DURATION: " << index_of_longest_duration << std::endl;
+
   // Normal mode, extend to the longest duration so all components arrive at the same time
   if (!use_streaming_mode_)
   {
