@@ -23,7 +23,7 @@ int main(int argc, char** argv)
   // Timestep. Units don't matter as long as they're consistent
   constexpr double timestep = 0.0039;
   // Total desired trajectory duration
-  constexpr double desired_duration = 30 * timestep;
+  constexpr double desired_duration = timestep;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
   constexpr double max_duration = 30;
@@ -50,8 +50,8 @@ int main(int argc, char** argv)
   trackjoint::Limits single_joint_limits;
   // Typically, jerk limit >> acceleration limit > velocity limit
   single_joint_limits.velocity_limit = 3.15;
-  single_joint_limits.acceleration_limit = 100;
-  single_joint_limits.jerk_limit = 1e5;
+  single_joint_limits.acceleration_limit = 5;
+  single_joint_limits.jerk_limit = 1000;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
