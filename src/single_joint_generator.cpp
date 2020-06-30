@@ -455,7 +455,7 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
       desired_duration_ =
-          (1. + 0.1 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
+          (1. + 0.2 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
 
       std::cout << "---" << std::endl;
       std::cout << "index_last_successful_: " << index_last_successful_ << std::endl;
