@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
   // It is used for calculations internally. It should be set to a smaller number than your task requires.
-  const double position_tolerance = 1e-3;
+  const double position_tolerance = 1e-4;
 
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
