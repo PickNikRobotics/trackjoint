@@ -61,6 +61,22 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
   calculateDerivativesFromPosition();
 
+  std::cout << "Position i " << waypoints_.positions[0] << std::endl;
+  std::cout << "Position i " << waypoints_.positions[1] << std::endl;
+  std::cout << "Position i " << waypoints_.positions[2] << std::endl;
+
+  std::cout << "Velocity i " << waypoints_.velocities[0] << std::endl;
+  std::cout << "Velocity i " << waypoints_.velocities[1] << std::endl;
+  std::cout << "Velocity i " << waypoints_.velocities[2] << std::endl;
+
+  std::cout << "Acceleration i " << waypoints_.accelerations[0] << std::endl;
+  std::cout << "Acceleration i " << waypoints_.accelerations[1] << std::endl;
+  std::cout << "Acceleration i " << waypoints_.accelerations[2] << std::endl;
+
+  std::cout << "Jerk i " << waypoints_.jerks[0] << std::endl;
+  std::cout << "Jerk i " << waypoints_.jerks[1] << std::endl;
+  std::cout << "Jerk i " << waypoints_.jerks[2] << std::endl;
+
   ErrorCodeEnum error_code = positionVectorLimitLookAhead(&index_last_successful_);
   if (error_code)
   {
@@ -203,6 +219,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       }
       if (fabs(position_error) > position_tolerance_)
       {
+        std::cout << "Failed in jerk comp!" << std::endl;
         recordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -254,6 +271,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       }
       if (fabs(position_error) > position_tolerance_)
       {
+        std::cout << "Failed in accel. comp!" << std::endl;
         recordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -294,6 +312,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
           fabs(waypoints_.accelerations(index + 1)) > acceleration_limit ||
           fabs(waypoints_.jerks(index + 1)) > jerk_limit)
       {
+        std::cout << "Failed in vel. comp!" << std::endl;
         recordFailureTime(index, index_last_successful);
         // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
         // subsequent code
@@ -436,7 +455,13 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
       desired_duration_ =
-          1. + 0.5 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1)) * desired_duration_;
+          (1. + 0.1 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
+
+      std::cout << "---" << std::endl;
+      std::cout << "index_last_successful_: " << index_last_successful_ << std::endl;
+      std::cout << "total indices: " << waypoints_.positions.size() << std::endl;
+      std::cout << "new duration: " << desired_duration_ << std::endl;
+      std::cout << "---" << std::endl;
 
       // // Round to nearest timestep
       if (std::fmod(desired_duration_, timestep_) > 0.5 * timestep_)
@@ -539,6 +564,7 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
 inline void SingleJointGenerator::calculateDerivativesFromPosition()
 {
   // From position vector, approximate vel/accel/jerk.
+  std::cout << "TIMESTEP: " << timestep_ << std::endl;
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, timestep_, current_joint_state_.velocity);
   waypoints_.accelerations =
       DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
