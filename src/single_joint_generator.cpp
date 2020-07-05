@@ -48,6 +48,11 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   position_tolerance_ = position_tolerance;
   use_streaming_mode_ = use_streaming_mode;
 
+  // Start with this estimate of the shortest possible duration
+  // The shortest possible duration avoids oscillation, as much as possible
+  // Desired duration cannot be less than one timestep
+  desired_duration_ = std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
