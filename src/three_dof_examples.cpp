@@ -19,48 +19,48 @@
 int main(int argc, char** argv)
 {
   constexpr int num_dof = 3;
-  const double timestep = 0.001;
-  double desired_duration = 0.028322;
-  constexpr double max_duration = 10;
+  const double timestep = 0.0039;
+  double desired_duration = 0.162051;
+  constexpr double max_duration = 30;
   // Streaming mode returns just a few waypoints but executes very quickly.
   constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
-  constexpr double waypoint_position_tolerance = 1e-5;
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/trackjoint_data/output_joint";
+  constexpr double waypoint_position_tolerance = 1e-4;
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
 
-  ////////////////////////////////////////////////
-  // First example - small motions, come to a halt
-  ////////////////////////////////////////////////
-  std::cout << "EXAMPLE 1" << std::endl;
   std::vector<trackjoint::KinematicState> current_joint_states(3);
   trackjoint::KinematicState joint_state;
-  joint_state.position = 0.00596041;
-  joint_state.velocity = -0.176232;
-  joint_state.acceleration = -3.06289;
+  joint_state.position = 1.23984;
+  joint_state.velocity = 1.45704;
+  joint_state.acceleration = -0.0196446;
   current_joint_states[0] = joint_state;
-  joint_state.position = -0.596041;
-  joint_state.velocity = 0.2;
-  joint_state.acceleration = 2.39;
+  joint_state.position = -1.12637;
+  joint_state.velocity = -0.774015;
+  joint_state.acceleration = 0.0104357;
   current_joint_states[1] = joint_state;
-  joint_state.position = -0.1;
-  joint_state.velocity = 0.13;
-  joint_state.acceleration = 0.2;
+  joint_state.position = -0.014012;
+  joint_state.velocity = 0.583426;
+  joint_state.acceleration = -0.00786606;
   current_joint_states[2] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states(3);
-  joint_state.position = -0.00121542;
-  joint_state.velocity = 0;
-  joint_state.acceleration = 0;
+  joint_state.position = 1.4757;
+  joint_state.velocity = 1.45675;
+  joint_state.acceleration = 0.126129;
   goal_joint_states[0] = joint_state;
-  joint_state.position = -0.57;
+  joint_state.position = -0.545844;
+  joint_state.velocity = 1.81361;
+  joint_state.acceleration = 1.93357;
   goal_joint_states[1] = joint_state;
-  joint_state.position = 0;
+  joint_state.position = -0.447873;
+  joint_state.velocity = -1.35293;
+  joint_state.acceleration = -1.43058;
   goal_joint_states[2] = joint_state;
 
   trackjoint::Limits single_joint_limits;
   single_joint_limits.velocity_limit = 3.15;
   single_joint_limits.acceleration_limit = 5;
-  single_joint_limits.jerk_limit = 5000;
+  single_joint_limits.jerk_limit = 10000;
   std::vector<trackjoint::Limits> limits(3, single_joint_limits);
 
   // Initialize main class
