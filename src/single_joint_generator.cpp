@@ -86,9 +86,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
   // Otherwise, re-generate a new trajectory from scratch.
   if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    std::cout << "Stretching trajectory!" << std::endl;
-    std::cout << "New desired duration: " << desired_duration_ << std::endl;
-
     // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
     // This only decreases velocity/accel/jerk, so no worries re. limit violation
     //Eigen::VectorXd new_times;
@@ -107,8 +104,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
 
     for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
       waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
-
-    std::cout << "Final waypoint after stretching: " << waypoints_.positions[waypoints_.positions.size() - 1] << std::endl;
 
     calculateDerivativesFromPosition();
     return;
@@ -208,9 +203,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
                                      waypoints_.accelerations(index - 1) * timestep_ +
                                      0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
 
-      // Re-calculate derivatives from the updated velocity vector
-      calculateDerivativesFromVelocity();
-
       delta_v = 0.5 * delta_j * timestep_ * timestep_;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
@@ -251,8 +243,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
                                        waypoints_.accelerations(index - 1) * timestep_ +
                                        0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
-        // Re-calculate derivatives from the updated velocity vector
-        calculateDerivativesFromVelocity();
       }
       else
       {
@@ -293,8 +283,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
     {
       delta_v = std::copysign(velocity_limit, waypoints_.velocities(index)) - waypoints_.velocities(index);
       waypoints_.velocities(index) = std::copysign(velocity_limit, waypoints_.velocities(index));
-      // Re-calculate derivatives from the updated velocity vector
-      calculateDerivativesFromVelocity();
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
@@ -320,7 +308,11 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
     }
   }
 
-  return ErrorCodeEnum::NO_ERROR;
+
+  // Re-calculate derivatives from the updated velocity vector
+  calculateDerivativesFromVelocity();
+
+  return ErrorCodeEnum::kNoError;
 }
 
 inline void SingleJointGenerator::recordFailureTime(size_t current_index, size_t* index_last_successful)
