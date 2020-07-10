@@ -48,6 +48,11 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   position_tolerance_ = position_tolerance;
   use_streaming_mode_ = use_streaming_mode;
 
+  // Start with this estimate of the shortest possible duration
+  // The shortest possible duration avoids oscillation, as much as possible
+  // Desired duration cannot be less than one timestep
+  desired_duration_ = std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
@@ -81,11 +86,18 @@ void SingleJointGenerator::extendTrajectoryDuration()
   // Otherwise, re-generate a new trajectory from scratch.
   if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    // Fit and generate a spline function to the original (time, position)
-    Eigen::RowVectorXd time(waypoints_.elapsed_times);
+    std::cout << "Stretching trajectory!" << std::endl;
+    std::cout << "New desired duration: " << desired_duration_ << std::endl;
+
+    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
+    // This only decreases velocity/accel/jerk, so no worries re. limit violation
+    //Eigen::VectorXd new_times;
+    //new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
+    Eigen::RowVectorXd new_times;
+    new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd position(waypoints_.positions);
 
-    const auto fit = SplineFitting1D::Interpolate(position, 2, time);
+    const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
     Spline1D spline(fit);
 
     // New times, with the extended duration
@@ -96,17 +108,23 @@ void SingleJointGenerator::extendTrajectoryDuration()
     for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
       waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
 
+    std::cout << "Final waypoint after stretching: " << waypoints_.positions[waypoints_.positions.size() - 1] << std::endl;
+
     calculateDerivativesFromPosition();
     return;
   }
 
   // Plan a new trajectory from scratch:
   // Clear previous results
-  waypoints_ = JointTrajectory();
-  waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
-  waypoints_.positions = interpolate(waypoints_.elapsed_times);
-  calculateDerivativesFromPosition();
-  ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
+  else
+  {
+    waypoints_ = JointTrajectory();
+    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+    waypoints_.positions = interpolate(waypoints_.elapsed_times);
+    calculateDerivativesFromPosition();
+    ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
+  }
+
   return;
 }
 

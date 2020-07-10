@@ -331,6 +331,9 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
           single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
           single_joint_generators_[joint].extendTrajectoryDuration();
           output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
+
+          std::cout << "End position for Joint " << joint << ":  " <<
+            single_joint_generators_[joint].getTrajectory().positions[single_joint_generators_[joint].getTrajectory().positions.size()-1] << std::endl;
         }
         // If this was the index of longest duration, don't need to re-generate a trajectory
         else
@@ -369,28 +372,25 @@ void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* tra
 {
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    for (size_t joint = 0; joint < trajectory->size(); ++joint)
+    for (auto waypt = 0; waypt < trajectory->at(joint).velocities.size(); ++waypt)
     {
-      for (auto waypt = 0; waypt < trajectory->at(joint).velocities.size(); ++waypt)
-      {
-        // Velocity
-        if (trajectory->at(joint).velocities[waypt] > limits_[joint].velocity_limit)
-          trajectory->at(joint).velocities[waypt] = limits_[joint].velocity_limit;
-        if (trajectory->at(joint).velocities[waypt] < -limits_[joint].velocity_limit)
-          trajectory->at(joint).velocities[waypt] = -limits_[joint].velocity_limit;
+      // Velocity
+      if (trajectory->at(joint).velocities[waypt] > limits_[joint].velocity_limit)
+        trajectory->at(joint).velocities[waypt] = limits_[joint].velocity_limit;
+      if (trajectory->at(joint).velocities[waypt] < -limits_[joint].velocity_limit)
+        trajectory->at(joint).velocities[waypt] = -limits_[joint].velocity_limit;
 
-        // Acceleration
-        if (trajectory->at(joint).accelerations[waypt] > limits_[joint].acceleration_limit)
-          trajectory->at(joint).accelerations[waypt] = limits_[joint].acceleration_limit;
-        if (trajectory->at(joint).accelerations[waypt] < -limits_[joint].acceleration_limit)
-          trajectory->at(joint).accelerations[waypt] = -limits_[joint].acceleration_limit;
+      // Acceleration
+      if (trajectory->at(joint).accelerations[waypt] > limits_[joint].acceleration_limit)
+        trajectory->at(joint).accelerations[waypt] = limits_[joint].acceleration_limit;
+      if (trajectory->at(joint).accelerations[waypt] < -limits_[joint].acceleration_limit)
+        trajectory->at(joint).accelerations[waypt] = -limits_[joint].acceleration_limit;
 
-        // Jerk
-        if (trajectory->at(joint).jerks[waypt] > limits_[joint].jerk_limit)
-          trajectory->at(joint).jerks[waypt] = limits_[joint].jerk_limit;
-        if (trajectory->at(joint).jerks[waypt] < -limits_[joint].jerk_limit)
-          trajectory->at(joint).jerks[waypt] = -limits_[joint].jerk_limit;
-      }
+      // Jerk
+      if (trajectory->at(joint).jerks[waypt] > limits_[joint].jerk_limit)
+        trajectory->at(joint).jerks[waypt] = limits_[joint].jerk_limit;
+      if (trajectory->at(joint).jerks[waypt] < -limits_[joint].jerk_limit)
+        trajectory->at(joint).jerks[waypt] = -limits_[joint].jerk_limit;
     }
   }
 }
