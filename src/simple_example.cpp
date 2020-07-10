@@ -56,6 +56,7 @@ int main(int argc, char** argv)
   // This is the fastest possible trajectory execution time,
   // assuming the robot starts at full velocity.
   double desired_duration = fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
+  std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
   // It is used for calculations internally. It should be set to a smaller number than your task requires.
