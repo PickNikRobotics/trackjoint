@@ -53,8 +53,7 @@ int main(int argc, char** argv)
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // Estimate trajectory duration
-  // This is the fastest possible trajectory execution time,
-  // assuming the robot starts at full velocity.
+  // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
   double desired_duration = fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 

@@ -20,7 +20,6 @@ int main(int argc, char** argv)
 {
   constexpr int num_dof = 3;
   const double timestep = 0.0039;
-  double desired_duration = 0.162051;
   constexpr double max_duration = 30;
   // Streaming mode returns just a few waypoints but executes very quickly.
   constexpr bool use_streaming_mode = false;
@@ -62,6 +61,11 @@ int main(int argc, char** argv)
   single_joint_limits.acceleration_limit = 5;
   single_joint_limits.jerk_limit = 10000;
   std::vector<trackjoint::Limits> limits(3, single_joint_limits);
+
+  // Estimate trajectory duration
+  // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
+  double desired_duration = fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
+  std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
