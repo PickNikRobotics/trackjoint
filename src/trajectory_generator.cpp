@@ -119,7 +119,9 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
                                      Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector,
                                      Eigen::VectorXd* jerk_vector)
 {
-  // Need at least 2 waypoints
+  std::cout << "### TrajectoryGenerator::downSample" << std::endl;
+
+  // Need at least 3 waypoints
   if (time_vector->size() <= 2)
   {
     return;
@@ -356,32 +358,48 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     // Note that in the current test case failures, the trajectories are never
     // attempted to be expanded, so the error 'kMaxDurationExceeded' is incorrect
     //
+    // Should this check even be here? Shouldn't kMaxDurationExceeded errors
+    // be caught in predictTimeToReach and prevent synchronization from even
+    // being attempted? I am commenting it out for now
+    //
 
-    // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
-    if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_))
-    {
-      //
-      // This check needs to be fixed - it falsely triggers when the
-      // SingleJointGenerator constructor bug is fixed
-      //
-      std::cout << "###    error kMaxDurationExceeded" << std::endl;
-      std::cout << "###       longest_num_waypoints " << longest_num_waypoints << std::endl;
-      std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
-      std::cout << "###       upsampled_timestep_ " << upsampled_timestep_ << std::endl;
-      std::cout << "###       desired_duration_ / upsampled_timestep_ " << (desired_duration_ / upsampled_timestep_) << std::endl;
-      std::cout << "###       std::floor(desired_duration_ / upsampled_timestep_) " << std::floor(desired_duration_ / upsampled_timestep_) << std::endl;
-      return ErrorCodeEnum::kMaxDurationExceeded;
-    }
+    // // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
+    // if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_))
+    // {
+    //   //
+    //   // This check needs to be fixed - it falsely triggers when the
+    //   // SingleJointGenerator constructor bug is fixed
+    //   //
+    //   std::cout << "###    error kMaxDurationExceeded" << std::endl;
+    //   std::cout << "###       longest_num_waypoints " << longest_num_waypoints << std::endl;
+    //   std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
+    //   std::cout << "###       upsampled_timestep_ " << upsampled_timestep_ << std::endl;
+    //   std::cout << "###       desired_duration_ / upsampled_timestep_ " << (desired_duration_ / upsampled_timestep_) << std::endl;
+    //   std::cout << "###       std::floor(desired_duration_ / upsampled_timestep_) " << std::floor(desired_duration_ / upsampled_timestep_) << std::endl;
+    //   return ErrorCodeEnum::kMaxDurationExceeded;
+    // }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
     double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
+    std::cout << "###    new_desired_duration " << new_desired_duration << std::endl;
+    std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
+    std::cout << "###    desired_timestep_ " << desired_timestep_ << std::endl;
+    std::cout << "###    upsampled_timestep_ " << upsampled_timestep_ << std::endl;
 
     // If any of the component durations were changed, run them again
     if (new_desired_duration != desired_duration_)
     {
+      if (new_desired_duration < desired_duration_) {
+          // I think the spirit of this block of code assumes new_desired_duration > desired_duration_,
+          // but with the other changes in this PR this is no longer the case
+          //
+          // When new_desired_duration < desired_duration_, then we should be
+          // doing spline interpolation to fill out the remaining time
+          std::cout << "!!! new_desired_duration < desired_duration_" << std::endl;
+      }
       for (size_t joint = 0; joint < kNumDof; ++joint)
       {
-        if (joint != index_of_longest_duration)
+        if (kNumDof == 1 || joint != index_of_longest_duration)
         {
           single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
           single_joint_generators_[joint].extendTrajectoryDuration();
@@ -425,6 +443,8 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
 
 void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* trajectory)
 {
+  std::cout << "### TrajectoryGenerator::clipVectorsForOutput" << std::endl;
+
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     for (auto waypt = 0; waypt < trajectory->at(joint).velocities.size(); ++waypt)
@@ -460,6 +480,8 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
     if (error_code)
     {
       return error_code;
+    } else {
+    std::cout << "###    generateTrajectory OK" << std::endl;
     }
   }
 
@@ -468,6 +490,8 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
   if (error_code)
   {
     return error_code;
+  } else {
+    std::cout << "###    synchronizeTrajComponents OK" << std::endl;
   }
 
   // downSample all vectors, if needed, to the correct timestep
@@ -483,6 +507,10 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
 
   // To be on the safe side, ensure limits are obeyed
   clipVectorsForOutput(output_trajectories);
+
+  if (error_code == ErrorCodeEnum::kNoError) {
+    std::cout << "### OK" << std::endl;
+  }
 
   return error_code;
 }

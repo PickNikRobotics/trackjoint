@@ -46,10 +46,10 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   // Round to nearest timestep
   desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
   std::cout << "###    nearest timestep " << desired_duration_ << std::endl;
-  size_t num_waypoints = 1 + static_cast<size_t>(desired_duration_ / timestep_);
+  size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
-  // Ensure at least 2 waypoints
-  size_t min_num_waypoints = 2;
+  // Ensure at least 3 waypoints
+  size_t min_num_waypoints = 3;
   if(num_waypoints < min_num_waypoints) {
     std::cout << "###    ensure at least " << min_num_waypoints << " waypoints" << std::endl;
     num_waypoints = min_num_waypoints;
@@ -64,6 +64,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 
+  std::cout << "### sanity check 1" << std::endl;
   std::cout << "###    timestep_ " << timestep_ << std::endl;
   std::cout << "###    desired_num_waypoints " << desired_num_waypoints << std::endl;
   std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
@@ -93,12 +94,13 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   // Round to nearest timestep
   desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
   std::cout << "###    nearest timestep " << desired_duration_ << std::endl;
-  size_t num_waypoints = 1 + static_cast<size_t>(desired_duration_ / timestep_);
+  size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
-  // Ensure at least 2 waypoints
-  if(num_waypoints < 2) {
-    std::cout << "###    ensure at least 2 waypoints" << std::endl;
-    num_waypoints = 2;
+  // Ensure at least 3 waypoints
+  size_t min_num_waypoints = 3;
+  if(num_waypoints < min_num_waypoints) {
+    std::cout << "###    ensure at least " << min_num_waypoints << " waypoints" << std::endl;
+    num_waypoints = min_num_waypoints;
     desired_duration_ = (num_waypoints - 1) * timestep_;
   }
 
@@ -109,6 +111,7 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 
+  std::cout << "### sanity check 2" << std::endl;
   std::cout << "###    timestep_ " << timestep_ << std::endl;
   std::cout << "###    desired_num_waypoints " << desired_num_waypoints << std::endl;
   std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
@@ -156,6 +159,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     Eigen::RowVectorXd new_times;
     new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
 
+    std::cout << "### sanity check 3" << std::endl;
     std::cout << "###       timestep_ " << timestep_ << std::endl;
     std::cout << "###       waypoints_.elapsed_times.size() " << waypoints_.elapsed_times.size() << std::endl;
     std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
@@ -169,6 +173,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     // New times, with the extended duration
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
 
+    std::cout << "### sanity check 4" << std::endl;
     std::cout << "###       timestep_ " << timestep_ << std::endl;
     std::cout << "###       new_num_waypoints " << new_num_waypoints << std::endl;
     std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
@@ -191,6 +196,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     waypoints_ = JointTrajectory();
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
 
+    std::cout << "### sanity check 5" << std::endl;
     std::cout << "###    plan new trajectory" << std::endl;
     std::cout << "###       timestep_ " << timestep_ << std::endl;
     std::cout << "###       new_num_waypoints " << new_num_waypoints << std::endl;
@@ -553,7 +559,7 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 
       // Round to nearest timestep
       desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
-      new_num_waypoints = static_cast<size_t>( + desired_duration_ / timestep_);
+      new_num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
       // Ensure at least 1 new waypoint
       if(new_num_waypoints <= static_cast<size_t>(waypoints_.positions.size())) {
@@ -562,11 +568,13 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
       }
 
       // Cap the trajectory duration to maintain determinism
-      if (new_num_waypoints > kMaxNumWaypointsFullTrajectory)
+      if (new_num_waypoints > kMaxNumWaypointsFullTrajectory) {
         new_num_waypoints = kMaxNumWaypointsFullTrajectory;
-
+        desired_duration_ = (new_num_waypoints - 1) * timestep_;
+      }
       waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
 
+      std::cout << "### sanity check 6" << std::endl;
       std::cout << "###    timestep_ " << timestep_ << std::endl;
       std::cout << "###    new_num_waypoints " << new_num_waypoints << std::endl;
       std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
@@ -633,7 +641,7 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   }
 
   if (error_code == ErrorCodeEnum::kNoError) {
-    std::cout << "###    success kNoError" << std::endl;
+    std::cout << "###    predictTimeToReach OK" << std::endl;
   }
 
   return error_code;
@@ -693,6 +701,17 @@ inline void SingleJointGenerator::calculateDerivativesFromVelocity()
 
 void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_duration)
 {
+  std::cout << "### SingleJointGenerator::updateTrajectoryDuration" << std::endl;
+  //
+  // Should this check/enforce that new_trajectory_duration > current duration?
+  //
+  // Should we make num_waypoints_ a class variable and update it here?
+  //
+  if(new_trajectory_duration < desired_duration_) {
+    std::cout << "###    new_trajectory_duration " << new_trajectory_duration << std::endl;
+    std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
+    std::cout << "!!! new_trajectory_duration < desired_duration_" << std::endl;
+  }
   // The trajectory will be forced to have this duration (or fail) because
   // max_duration == desired_duration
   desired_duration_ = new_trajectory_duration;

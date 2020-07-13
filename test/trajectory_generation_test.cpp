@@ -207,6 +207,7 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   num_dof_ = 1;
   current_joint_states_.resize(num_dof_);
   goal_joint_states_.resize(num_dof_);
+  output_trajectories_.resize(num_dof_);
   limits_.resize(num_dof_);
 
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
