@@ -29,16 +29,16 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   // Start with this estimate of the shortest possible duration
   // The shortest possible duration avoids oscillation, as much as possible
   // Desired duration cannot be less than one timestep
-  desired_duration_ = std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  desired_duration_ =
+      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
 
-void SingleJointGenerator::reset(double timestep, double max_duration,
-                                 const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                                 const Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
-                                 bool use_streaming_mode)
+void SingleJointGenerator::reset(double timestep, double max_duration, const KinematicState& current_joint_state,
+                                 const KinematicState& goal_joint_state, const Limits& limits,
+                                 size_t desired_num_waypoints, const double position_tolerance, bool use_streaming_mode)
 {
   timestep_ = timestep;
   max_duration_ = max_duration;
@@ -51,7 +51,8 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   // Start with this estimate of the shortest possible duration
   // The shortest possible duration avoids oscillation, as much as possible
   // Desired duration cannot be less than one timestep
-  desired_duration_ = std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  desired_duration_ =
+      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -88,8 +89,8 @@ void SingleJointGenerator::extendTrajectoryDuration()
   {
     // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
     // This only decreases velocity/accel/jerk, so no worries re. limit violation
-    //Eigen::VectorXd new_times;
-    //new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
+    // Eigen::VectorXd new_times;
+    // new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd new_times;
     new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd position(waypoints_.positions);
@@ -530,8 +531,8 @@ inline ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* 
   // Helpful hint if limit comp fails on the first waypoint
   if (index_last_successful_ == 1)
   {
-    std::cout << "Limit compensation failed at the first waypoint. " <<
-              "Try a larger position_tolerance parameter or smaller timestep." << std::endl;
+    std::cout << "Limit compensation failed at the first waypoint. "
+              << "Try a larger position_tolerance parameter or smaller timestep." << std::endl;
   }
 
   // Re-compile the position with these modifications.

@@ -25,7 +25,8 @@ int main(int argc, char** argv)
   constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/"
+                                                                                "output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(3);
   trackjoint::KinematicState joint_state;
@@ -64,7 +65,8 @@ int main(int argc, char** argv)
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration = fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
+  double desired_duration =
+      fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // Initialize main class

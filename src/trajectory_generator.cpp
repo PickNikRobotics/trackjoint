@@ -32,8 +32,8 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_.push_back(
-        SingleJointGenerator(upsampled_timestep_, max_duration_, current_joint_states[joint],
-                             goal_joint_states[joint], limits[joint], upsampled_num_waypoints_, kNumWaypointsThreshold,
+        SingleJointGenerator(upsampled_timestep_, max_duration_, current_joint_states[joint], goal_joint_states[joint],
+                             limits[joint], upsampled_num_waypoints_, kNumWaypointsThreshold,
                              kMaxNumWaypointsFullTrajectory, position_tolerance, use_streaming_mode_));
   }
 }
@@ -59,9 +59,9 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_[joint].reset(upsampled_timestep_, max_duration_,
-                                          current_joint_states[joint], goal_joint_states[joint], limits[joint],
-                                          upsampled_num_waypoints_, position_tolerance, use_streaming_mode_);
+    single_joint_generators_[joint].reset(upsampled_timestep_, max_duration_, current_joint_states[joint],
+                                          goal_joint_states[joint], limits[joint], upsampled_num_waypoints_,
+                                          position_tolerance, use_streaming_mode_);
   }
 }
 
@@ -332,8 +332,11 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
           single_joint_generators_[joint].extendTrajectoryDuration();
           output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
 
-          std::cout << "End position for Joint " << joint << ":  " <<
-            single_joint_generators_[joint].getTrajectory().positions[single_joint_generators_[joint].getTrajectory().positions.size()-1] << std::endl;
+          std::cout << "End position for Joint " << joint << ":  "
+                    << single_joint_generators_[joint]
+                           .getTrajectory()
+                           .positions[single_joint_generators_[joint].getTrajectory().positions.size() - 1]
+                    << std::endl;
         }
         // If this was the index of longest duration, don't need to re-generate a trajectory
         else

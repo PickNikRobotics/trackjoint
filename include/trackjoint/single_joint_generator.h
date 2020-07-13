@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include <cmath>  // copysign
+#include <cmath>                      // copysign
 #include <unsupported/Eigen/Splines>  // Spline-fitting is used to extend trajectory duration
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
@@ -44,11 +44,10 @@ public:
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
    */
-  SingleJointGenerator(double timestep, double max_duration,
-                       const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
-                       size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
-                       bool use_streaming_mode);
+  SingleJointGenerator(double timestep, double max_duration, const KinematicState& current_joint_state,
+                       const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
+                       size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode,
+                       const double position_tolerance, bool use_streaming_mode);
 
   /** \brief reset data members and prepare to generate a new trajectory */
   void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
