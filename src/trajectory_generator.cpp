@@ -129,8 +129,16 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
   // Eigen::VectorXd does not provide .back(), so get the final time like this:
   double final_time = (*time_vector)[time_vector->size() - 1];
-  // minimum new_vector_size is two (initial waypoint and final waypoint)
-  size_t new_vector_size = std::max(size_t(1 + round(final_time / desired_timestep_)), size_t(2));
+  std::cout << "###    final_time " << final_time << std::endl;
+  std::cout << "###    desired_timestep_ " << desired_timestep_ << std::endl;
+  std::cout << "###    final_time / desired_timestep_ " << (final_time / desired_timestep_) << std::endl;
+
+  //
+  // Is minimum vector size 2 or 3? Right now size 2 means no limits get checked
+  //
+
+  // minimum new_vector_size is three (initial waypoint and final waypoint)
+  size_t new_vector_size = std::max(size_t(1 + round(final_time / desired_timestep_)), size_t(3));
 
   // Determine length of position/velocity/acceleration from length of time
   // vector:
@@ -146,23 +154,20 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   new_velocities[new_velocities.size() - 1] = (*velocity_vector)[velocity_vector->size() - 1];
   new_accelerations[new_accelerations.size() - 1] = (*acceleration_vector)[acceleration_vector->size() - 1];
 
-  if(fmod(desired_timestep_, upsampled_timestep_) == 0.0) {
-    // The upsampled timestep is evenly divisible into the desired downsample rate
+  if(fmod(desired_timestep_, upsampled_timestep_) == 0.0 &&
+    (position_vector->size() - 1) % (new_vector_size - 1) == 0) {
+    // The upsampled timestep is evenly divisible into the desired downsample rate and
+    // the upsampled vector is evenly divisible into the desired vector
+    // upsampled rate: 0.00625
+    // upsamped num waypoints: 49
+    // downsampled rate: 0.1
+    // downsamped num waypoints: 4
+    // 0.1 % 0.00625 = 0
+    // (49-1) % (4-1) = 0
+    // 0.1 * (4-1) = 0.3
+    // 0.00625 * (49-1) = 0.3
+    // 0.1 / 0.00625 = (49-1) / (4-1) = 16
     // This is small speed optimization
-    if((position_vector->size() - 1) % (new_vector_size - 1) != 0) {
-      //
-      // If the upsample timestep is evenly divisible by the original
-      // timestep, then the upsampled vector size should be evenly divisible
-      //  by the downsampled vector size. This is not the case for some reason.
-      //
-      std::cout << "!!! error in downsample divisible-ness: \n"
-         << "\t" << desired_timestep_ << " v " << upsampled_timestep_ << "\n"
-         << "\t" << position_vector->size() << " v " << new_vector_size << "\n"
-         << "\t" << desired_duration_ << "\n"
-         << "\t" << (*time_vector)[0] << " v " << (*time_vector)[1] << "\n"
-         << std::endl;
-      exit(-1);
-    }
 
     // Find the upsample ratio
     size_t num_elements_to_skip = desired_timestep_ / upsampled_timestep_;
@@ -174,6 +179,18 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
     }
 
   } else {
+    // Adjustments were made in single joint generator that made the num waypoints not evenly divisible
+    // upsampled rate: 0.00625
+    // upsamped num waypoints: 51
+    // downsampled rate: 0.1
+    // downsamped num waypoints: 4
+    // 0.1 % 0.00625 = 0
+    // 51-1 % 4-1 = 2
+    // 0.1 * (4-1) = 0.3
+    // 0.00625 * (51-1) = 0.3125
+    // 0.1 / 0.00625 = 16
+    // (51-1) / (4-1) = 16.6
+
     // The upsampled timestep is NOT evenly divisible into the desired downsample rate
     // Linearly interpolate the upsampled vector to get the downsampled vector
     // We have filled the first and last value, now fill remaining values

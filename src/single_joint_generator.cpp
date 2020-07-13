@@ -45,7 +45,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
 
   // Round to nearest timestep
   desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
-  std::cout << "###    nearest timestep " << desired_duration_ << std::endl;
+  std::cout << "###    nearest timestep duration " << desired_duration_ << std::endl;
   size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
   // Ensure at least 3 waypoints
