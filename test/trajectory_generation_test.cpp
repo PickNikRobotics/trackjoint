@@ -203,6 +203,12 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
   // Use the class defaults. This trajectory is easy, does not require limit
   // compensation or trajectory extension
 
+  // Make this 1 DOF for better readability in debugging
+  num_dof_ = 1;
+  current_joint_states_.resize(num_dof_);
+  goal_joint_states_.resize(num_dof_);
+  limits_.resize(num_dof_);
+
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
@@ -988,6 +994,119 @@ TEST_F(TrajectoryGenerationTest, SingleJointOscillation)
   const double timestep_tolerance = 0.0005;
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
+}
+
+TEST_F(TrajectoryGenerationTest, DownsampleEvenlyDivisible)
+{
+  // Test that downsampling a solution from an evenly divisible upsample rate yields the correct values
+  double duration = 1.;
+
+  double upsampled_timestep = 0.05;
+  double num_upsampled_waypoints = 1 + duration / upsampled_timestep;
+  Eigen::VectorXd time_vector;
+  time_vector.setLinSpaced(num_upsampled_waypoints, 0., duration);
+  Eigen::VectorXd position_vector;
+  position_vector.setLinSpaced(num_upsampled_waypoints, 0., duration);
+  Eigen::VectorXd velocity_vector;
+  Eigen::VectorXd acceleration_vector;
+  Eigen::VectorXd jerk_vector;
+
+  velocity_vector = DiscreteDifferentiation(position_vector, upsampled_timestep, 0.);
+  acceleration_vector = DiscreteDifferentiation(velocity_vector, upsampled_timestep, 0.);
+  jerk_vector = DiscreteDifferentiation(acceleration_vector, upsampled_timestep, 0.);
+
+  // Upsampled vector checks
+  EXPECT_EQ(time_vector.size(), 21);
+  EXPECT_EQ(position_vector.size(), 21);
+
+  double downsampled_timestep = 0.1;
+  double num_downsampled_waypoints = 1 + duration / downsampled_timestep;
+
+  EXPECT_EQ(fmod(downsampled_timestep, upsampled_timestep), 0.);
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+
+  traj_gen.upsampled_timestep_ = upsampled_timestep;
+  traj_gen.desired_timestep_ = downsampled_timestep;
+
+    traj_gen.downSample(
+      &time_vector,
+      &position_vector,
+      &velocity_vector,
+      &acceleration_vector,
+      &jerk_vector
+  );
+
+  // Compute values at downsampled rate
+  Eigen::VectorXd downsampled_time_vector;
+  downsampled_time_vector.setLinSpaced(num_downsampled_waypoints, 0., duration);
+  Eigen::VectorXd downsampled_position_vector;
+  downsampled_position_vector.setLinSpaced(num_downsampled_waypoints, 0., duration);
+
+  // Downsampled vector checks
+  EXPECT_EQ(time_vector.size(), 11);
+  EXPECT_EQ(position_vector.size(), 11);
+
+  EXPECT_TRUE(time_vector.isApprox(downsampled_time_vector));
+  EXPECT_TRUE(position_vector.isApprox(downsampled_position_vector));
+}
+
+TEST_F(TrajectoryGenerationTest, DownsampleUnevenlyDivisible)
+{
+  // Test that downsampling a solution from an unevenly divisible upsample rate yields the correct values
+  double duration = 2.;
+
+  double upsampled_timestep = 0.04;
+  double num_upsampled_waypoints = 1 + duration / upsampled_timestep;
+  Eigen::VectorXd time_vector;
+  time_vector.setLinSpaced(num_upsampled_waypoints, 0., duration);
+  Eigen::VectorXd position_vector;
+  // Linearly space out position values so we can easily check if the interpolation is correct
+  position_vector.setLinSpaced(num_upsampled_waypoints, 0., duration);
+  Eigen::VectorXd velocity_vector;
+  Eigen::VectorXd acceleration_vector;
+  Eigen::VectorXd jerk_vector;
+
+  velocity_vector = DiscreteDifferentiation(position_vector, upsampled_timestep, 0.);
+  acceleration_vector = DiscreteDifferentiation(velocity_vector, upsampled_timestep, 0.);
+  jerk_vector = DiscreteDifferentiation(acceleration_vector, upsampled_timestep, 0.);
+
+  // Upsampled vector checks
+  EXPECT_EQ(time_vector.size(), 51);
+  EXPECT_EQ(position_vector.size(), 51);
+
+  double downsampled_timestep = 0.1;
+  double num_downsampled_waypoints = 1 + duration / downsampled_timestep;
+
+  EXPECT_NE(fmod(downsampled_timestep, upsampled_timestep), 0.);
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+
+  traj_gen.upsampled_timestep_ = upsampled_timestep;
+  traj_gen.desired_timestep_ = downsampled_timestep;
+
+    traj_gen.downSample(
+      &time_vector,
+      &position_vector,
+      &velocity_vector,
+      &acceleration_vector,
+      &jerk_vector
+  );
+
+  // Compute values at downsampled rate
+  Eigen::VectorXd downsampled_time_vector;
+  downsampled_time_vector.setLinSpaced(num_downsampled_waypoints, 0., duration);
+  Eigen::VectorXd downsampled_position_vector;
+  downsampled_position_vector.setLinSpaced(num_downsampled_waypoints, 0., duration);
+
+  // Downsampled vector checks
+  EXPECT_EQ(time_vector.size(), 21);
+  EXPECT_EQ(position_vector.size(), 21);
+
+  EXPECT_TRUE(time_vector.isApprox(downsampled_time_vector));
+  EXPECT_TRUE(position_vector.isApprox(downsampled_position_vector));
 }
 }  // namespace trackjoint
 

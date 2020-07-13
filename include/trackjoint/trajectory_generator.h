@@ -25,6 +25,8 @@
 #include <memory>  // shared_ptr
 #include <vector>
 
+#include <gtest/gtest_prod.h>
+
 namespace trackjoint
 {
 /** \brief The top-level trajectory generation object. Stores and synchronized data for n degrees of freedom. */
@@ -84,6 +86,9 @@ public:
                               double nominal_timestep);
 
 private:
+  FRIEND_TEST(TrajectoryGenerationTest, DownsampleUnevenlyDivisible);
+  FRIEND_TEST(TrajectoryGenerationTest, DownsampleEvenlyDivisible);
+
   /** \brief Ensure limits are obeyed before outputting.
    *
    * input trajectory the calculated trajectories for n joints
