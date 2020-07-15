@@ -36,9 +36,9 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
     //
     size_t num_waypoints = round(desired_duration / timestep);
     timestep = desired_duration / num_waypoints;
+    std::cout << "!!! Modifying timestep to preserve num_waypoints: changing from " << desired_timestep_ << " to " << timestep << std::endl;
     desired_timestep_ = timestep;
     upsampled_timestep_ = timestep;
-
   }
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
@@ -68,6 +68,20 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
   upsampled_num_waypoints_ = 0;
   upsample_rounds_ = 0;
 
+  if(std::abs(remainder(desired_duration, timestep)) > REMAINDER_THRESHOLD) {
+    //
+    // Here we take in desired_duration and timestep, but don't enforce that
+    // they are evenly divisible.
+    //
+    // Adjust timestep so it evenly divides into desired_duration
+    //
+    size_t num_waypoints = round(desired_duration / timestep);
+    timestep = desired_duration / num_waypoints;
+    std::cout << "!!! Modifying timestep to preserve num_waypoints: changing from " << desired_timestep_ << " to " << timestep << std::endl;
+    desired_timestep_ = timestep;
+    upsampled_timestep_ = timestep;
+  }
+
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
 
@@ -91,6 +105,10 @@ void TrajectoryGenerator::upsample()
   // upsample_rounds_ tracks how many times this was applied so we can reverse
   // it later.
 
+  //
+  // TODO: This is where num_waypoints is set for streaming mode, but not
+  // where I would expect it to be (as it isn't being upsampled). Refactor.
+  //
   upsampled_num_waypoints_ = 1 + desired_duration_ / upsampled_timestep_;
 
   // streaming mode is designed to always return kNumWaypointsThreshold (or fewer, if only a few are successful)

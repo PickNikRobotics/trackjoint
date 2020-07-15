@@ -46,15 +46,30 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
   // Ensure at least 3 waypoints
+  //
+  // This used to be 2 (which is what streaming mode would use), but that
+  // prevents the limit checks in forwardLimitCompensation from being run. Once
+  // that is fixed we can do 2 waypoints again
+  //
   size_t min_num_waypoints = 3;
   if(num_waypoints < min_num_waypoints) {
+    std::cout << "!!! Ensure at least " << min_num_waypoints << " waypoints" << std::endl;
     num_waypoints = min_num_waypoints;
     desired_duration_ = (num_waypoints - 1) * timestep_;
   }
 
-  if(num_waypoints != desired_num_waypoints) {
-    std::cout << "!!! Modifying desired_num_waypoints to preserve timestep: changing from " << desired_num_waypoints << " to " << num_waypoints << std::endl;
-    desired_num_waypoints = num_waypoints;
+  if(!use_streaming_mode_) {
+    // If we are in full trajectory mode, used the shorest duration estimate to determine the # wp for this timestep
+    if(num_waypoints != desired_num_waypoints) {
+      std::cout << "!!! Modifying desired_num_waypoints to preserve timestep: changing from " << desired_num_waypoints << " to " << num_waypoints << std::endl;
+      desired_num_waypoints = num_waypoints;
+    }
+  } else {
+    // If we are in streaming mode, set duration from the # of wp
+    if(num_waypoints != desired_num_waypoints) {
+      std::cout << "!!! Modifying desired_duration_ to preserve desired_num_waypoints: changing from " << desired_duration_ << " to " << num_waypoints << std::endl;
+      desired_duration_ = desired_num_waypoints * timestep_;
+    }
   }
 
   // Waypoint times
@@ -86,14 +101,23 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   // Ensure at least 3 waypoints
   size_t min_num_waypoints = 3;
   if(num_waypoints < min_num_waypoints) {
+    std::cout << "!!! Ensure at least " << min_num_waypoints << " waypoints" << std::endl;
     num_waypoints = min_num_waypoints;
     desired_duration_ = (num_waypoints - 1) * timestep_;
   }
 
-  if(num_waypoints != desired_num_waypoints) {
-    std::cout << "!!! MODIFYING desired_num_waypoints to preserve timestep: changing from " << desired_num_waypoints << " to " << num_waypoints << std::endl;
-    desired_num_waypoints = num_waypoints;
+  if(!use_streaming_mode_) {
+    if(num_waypoints != desired_num_waypoints) {
+      std::cout << "!!! Modifying desired_num_waypoints to preserve timestep: changing from " << desired_num_waypoints << " to " << num_waypoints << std::endl;
+      desired_num_waypoints = num_waypoints;
+    }
+  } else {
+    if(num_waypoints != desired_num_waypoints) {
+      std::cout << "!!! Modifying desired_duration_ to preserve desired_num_waypoints: changing from " << desired_duration_ << " to " << num_waypoints << std::endl;
+      desired_duration_ = desired_num_waypoints * timestep_;
+    }
   }
+
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
@@ -246,7 +270,7 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
   // None of the checks below take place if index_last_successful == 1
   //
   if(*index_last_successful == 1) {
-    std::cout << "###    *index_last_successful == 1 in forwardLimitCompensation" << std::endl;
+    std::cout << "!!! *index_last_successful == 1 in forwardLimitCompensation" << std::endl;
   }
 
   for (size_t index = 1; index < *index_last_successful; ++index)
