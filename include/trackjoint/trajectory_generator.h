@@ -29,6 +29,9 @@
 
 namespace trackjoint
 {
+
+  constexpr double REMAINDER_THRESHOLD = 0.000001;
+
 /** \brief The top-level trajectory generation object. Stores and synchronized data for n degrees of freedom. */
 class TrajectoryGenerator
 {

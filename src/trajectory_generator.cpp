@@ -27,11 +27,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
 {
-  std::cout << "### TrajectoryGenerator::TrajectoryGenerator" << std::endl;
-  std::cout << "###    desired_duration " << desired_duration << std::endl;
-  std::cout << "###    timestep " << timestep << std::endl;
-
-  if(fmod(desired_duration, timestep) != 0.) {
+  if(std::abs(remainder(desired_duration, timestep)) > REMAINDER_THRESHOLD) {
     //
     // Here we take in desired_duration and timestep, but don't enforce that
     // they are evenly divisible.
@@ -40,7 +36,6 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
     //
     size_t num_waypoints = round(desired_duration / timestep);
     timestep = desired_duration / num_waypoints;
-    std::cout << "!!! Adjusting timestep from " << desired_timestep_ << " to " << timestep << " to evenly divide waypoints" << std::endl;
     desired_timestep_ = timestep;
     upsampled_timestep_ = timestep;
 
@@ -108,9 +103,6 @@ void TrajectoryGenerator::upsample()
 
       upsampled_timestep_ = desired_duration_ / (upsampled_num_waypoints_ - 1);
       ++upsample_rounds_;
-
-      std::cout << "###    upsampled_num_waypoints_ " << upsampled_num_waypoints_ << std::endl;
-      std::cout << "###    upsampled_timestep_ " << upsampled_timestep_ << std::endl;
     }
   }
 }
@@ -119,8 +111,6 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
                                      Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector,
                                      Eigen::VectorXd* jerk_vector)
 {
-  std::cout << "### TrajectoryGenerator::downSample" << std::endl;
-
   // Need at least 3 waypoints
   if (time_vector->size() <= 2)
   {
@@ -129,14 +119,10 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
   // Eigen::VectorXd does not provide .back(), so get the final time like this:
   double final_time = (*time_vector)[time_vector->size() - 1];
-  std::cout << "###    final_time " << final_time << std::endl;
-  std::cout << "###    desired_timestep_ " << desired_timestep_ << std::endl;
-  std::cout << "###    final_time / desired_timestep_ " << (final_time / desired_timestep_) << std::endl;
 
   //
   // Is minimum vector size 2 or 3? Right now size 2 means no limits get checked
   //
-
   // minimum new_vector_size is three (initial waypoint and final waypoint)
   size_t new_vector_size = std::max(size_t(1 + round(final_time / desired_timestep_)), size_t(3));
 
@@ -154,7 +140,7 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   new_velocities[new_velocities.size() - 1] = (*velocity_vector)[velocity_vector->size() - 1];
   new_accelerations[new_accelerations.size() - 1] = (*acceleration_vector)[acceleration_vector->size() - 1];
 
-  if(fmod(desired_timestep_, upsampled_timestep_) == 0.0 &&
+  if(std::abs(remainder(desired_timestep_, upsampled_timestep_)) > REMAINDER_THRESHOLD &&
     (position_vector->size() - 1) % (new_vector_size - 1) == 0) {
     // The upsampled timestep is evenly divisible into the desired downsample rate and
     // the upsampled vector is evenly divisible into the desired vector
@@ -330,7 +316,6 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
 
 ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories)
 {
-  std::cout << "### TrajectoryGenerator::synchronizeTrajComponents" << std::endl;
   // Normal mode: extend to the longest duration across all components
   // streaming mode: clip all components at the shortest successful number of waypoints
 
@@ -387,36 +372,30 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     //   // This check needs to be fixed - it falsely triggers when the
     //   // SingleJointGenerator constructor bug is fixed
     //   //
-    //   std::cout << "###    error kMaxDurationExceeded" << std::endl;
-    //   std::cout << "###       longest_num_waypoints " << longest_num_waypoints << std::endl;
-    //   std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
-    //   std::cout << "###       upsampled_timestep_ " << upsampled_timestep_ << std::endl;
-    //   std::cout << "###       desired_duration_ / upsampled_timestep_ " << (desired_duration_ / upsampled_timestep_) << std::endl;
-    //   std::cout << "###       std::floor(desired_duration_ / upsampled_timestep_) " << std::floor(desired_duration_ / upsampled_timestep_) << std::endl;
     //   return ErrorCodeEnum::kMaxDurationExceeded;
     // }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
     double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
-    std::cout << "###    new_desired_duration " << new_desired_duration << std::endl;
-    std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
-    std::cout << "###    desired_timestep_ " << desired_timestep_ << std::endl;
-    std::cout << "###    upsampled_timestep_ " << upsampled_timestep_ << std::endl;
+    bool update_and_extend_all = (kNumDof == 1);
 
     // If any of the component durations were changed, run them again
     if (new_desired_duration != desired_duration_)
     {
       if (new_desired_duration < desired_duration_) {
+          //
           // I think the spirit of this block of code assumes new_desired_duration > desired_duration_,
           // but with the other changes in this PR this is no longer the case
           //
           // When new_desired_duration < desired_duration_, then we should be
           // doing spline interpolation to fill out the remaining time
-          std::cout << "!!! new_desired_duration < desired_duration_" << std::endl;
+          std::cout << "!!! new_desired_duration (" << new_desired_duration << ") < desired_duration_ (" << desired_duration_ << "): keeping desired_duration_" << std::endl;
+          new_desired_duration = desired_duration_;
+          update_and_extend_all = true;
       }
       for (size_t joint = 0; joint < kNumDof; ++joint)
       {
-        if (kNumDof == 1 || joint != index_of_longest_duration)
+        if (update_and_extend_all || joint != index_of_longest_duration)
         {
           single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
           single_joint_generators_[joint].extendTrajectoryDuration();
@@ -460,8 +439,6 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
 
 void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* trajectory)
 {
-  std::cout << "### TrajectoryGenerator::clipVectorsForOutput" << std::endl;
-
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     for (auto waypt = 0; waypt < trajectory->at(joint).velocities.size(); ++waypt)
@@ -497,8 +474,6 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
     if (error_code)
     {
       return error_code;
-    } else {
-    std::cout << "###    generateTrajectory OK" << std::endl;
     }
   }
 
@@ -507,8 +482,6 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
   if (error_code)
   {
     return error_code;
-  } else {
-    std::cout << "###    synchronizeTrajComponents OK" << std::endl;
   }
 
   // downSample all vectors, if needed, to the correct timestep
@@ -524,10 +497,6 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
 
   // To be on the safe side, ensure limits are obeyed
   clipVectorsForOutput(output_trajectories);
-
-  if (error_code == ErrorCodeEnum::kNoError) {
-    std::cout << "### OK" << std::endl;
-  }
 
   return error_code;
 }

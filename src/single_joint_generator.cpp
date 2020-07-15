@@ -40,18 +40,14 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
 
   // Start with this estimate of the shortest possible duration
   desired_duration_ = fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit);
-  std::cout << "### SingleJointGenerator::SingleJointGenerator" << std::endl;
-  std::cout << "###    min time " << desired_duration_ << std::endl;
 
   // Round to nearest timestep
   desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
-  std::cout << "###    nearest timestep duration " << desired_duration_ << std::endl;
   size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
   // Ensure at least 3 waypoints
   size_t min_num_waypoints = 3;
   if(num_waypoints < min_num_waypoints) {
-    std::cout << "###    ensure at least " << min_num_waypoints << " waypoints" << std::endl;
     num_waypoints = min_num_waypoints;
     desired_duration_ = (num_waypoints - 1) * timestep_;
   }
@@ -63,12 +59,6 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
-
-  std::cout << "### sanity check 1" << std::endl;
-  std::cout << "###    timestep_ " << timestep_ << std::endl;
-  std::cout << "###    desired_num_waypoints " << desired_num_waypoints << std::endl;
-  std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
-  std::cout << "###    timesteps 0 and 1: " << nominal_times_[0] << " " << nominal_times_[1] << std::endl;
 }
 
 void SingleJointGenerator::reset(double timestep, double max_duration,
@@ -88,18 +78,14 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   // The shortest possible duration avoids oscillation, as much as possible
   // Desired duration cannot be less than one timestep
   desired_duration_ = fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit);
-  std::cout << "### SingleJointGenerator::reset" << std::endl;
-  std::cout << "###    min time " << desired_duration_ << std::endl;
 
   // Round to nearest timestep
   desired_duration_ = round(desired_duration_ / timestep_) * timestep_;
-  std::cout << "###    nearest timestep " << desired_duration_ << std::endl;
   size_t num_waypoints = static_cast<size_t>(desired_duration_ / timestep_) + 1;
 
   // Ensure at least 3 waypoints
   size_t min_num_waypoints = 3;
   if(num_waypoints < min_num_waypoints) {
-    std::cout << "###    ensure at least " << min_num_waypoints << " waypoints" << std::endl;
     num_waypoints = min_num_waypoints;
     desired_duration_ = (num_waypoints - 1) * timestep_;
   }
@@ -110,12 +96,6 @@ void SingleJointGenerator::reset(double timestep, double max_duration,
   }
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
-
-  std::cout << "### sanity check 2" << std::endl;
-  std::cout << "###    timestep_ " << timestep_ << std::endl;
-  std::cout << "###    desired_num_waypoints " << desired_num_waypoints << std::endl;
-  std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
-  std::cout << "###    timesteps 0 and 1: " << nominal_times_[0] << " " << nominal_times_[1] << std::endl;
 }
 
 ErrorCodeEnum SingleJointGenerator::generateTrajectory()
@@ -140,30 +120,17 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
 
 void SingleJointGenerator::extendTrajectoryDuration()
 {
-  std::cout << "### SingleJointGenerator::extendTrajectoryDuration" << std::endl;
-
   size_t new_num_waypoints = 1 + desired_duration_ / timestep_;
 
-  std::cout << "###    index_last_successful_ " << index_last_successful_ << std::endl;
-  std::cout << "###    waypoints_.elapsed_times.size() " << waypoints_.elapsed_times.size() << std::endl;
   // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
   // ^This is the best way because it reduces overshoot.
   // Otherwise, re-generate a new trajectory from scratch.
   if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    std::cout << "###    fit spline" << std::endl;
     // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
     // This only decreases velocity/accel/jerk, so no worries re. limit violation
-    //Eigen::VectorXd new_times;
-    //new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd new_times;
     new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
-
-    std::cout << "### sanity check 3" << std::endl;
-    std::cout << "###       timestep_ " << timestep_ << std::endl;
-    std::cout << "###       waypoints_.elapsed_times.size() " << waypoints_.elapsed_times.size() << std::endl;
-    std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
-    std::cout << "###       timesteps 0 and 1: " << new_times[0] << " " << new_times[1] << std::endl;
 
     Eigen::RowVectorXd position(waypoints_.positions);
 
@@ -172,12 +139,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
 
     // New times, with the extended duration
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
-
-    std::cout << "### sanity check 4" << std::endl;
-    std::cout << "###       timestep_ " << timestep_ << std::endl;
-    std::cout << "###       new_num_waypoints " << new_num_waypoints << std::endl;
-    std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
-    std::cout << "###       timesteps 0 and 1: " << waypoints_.elapsed_times[0] << " " << waypoints_.elapsed_times[1] << std::endl;
 
     // Retrieve new positions at the new times
     waypoints_.positions.resize(new_num_waypoints);
@@ -195,14 +156,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
   {
     waypoints_ = JointTrajectory();
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
-
-    std::cout << "### sanity check 5" << std::endl;
-    std::cout << "###    plan new trajectory" << std::endl;
-    std::cout << "###       timestep_ " << timestep_ << std::endl;
-    std::cout << "###       new_num_waypoints " << new_num_waypoints << std::endl;
-    std::cout << "###       desired_duration_ " << desired_duration_ << std::endl;
-    std::cout << "###       timesteps 0 and 1: " << waypoints_.elapsed_times[0] << " " << waypoints_.elapsed_times[1] << std::endl;
-
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
     ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
@@ -254,8 +207,6 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 
 inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
 {
-  std::cout << "### SingleJointGenerator::forwardLimitCompensation" << std::endl;
-
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
@@ -279,7 +230,6 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
   } else {
     *index_last_successful = kNumWaypointsThreshold - 1;
   }
-  std::cout << "###    index_last_successful " << *index_last_successful << std::endl;
 
   bool successful_compensation = false;
 
@@ -537,8 +487,6 @@ inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index
 
 inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 {
-  std::cout << "### SingleJointGenerator::predictTimeToReach" << std::endl;
-
   // Take a trajectory that could not reach the desired position in time.
   // Try increasing the duration until it is interpolated without violating limits.
   // This gives a new duration estimate.
@@ -573,13 +521,6 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
         desired_duration_ = (new_num_waypoints - 1) * timestep_;
       }
       waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
-
-      std::cout << "### sanity check 6" << std::endl;
-      std::cout << "###    timestep_ " << timestep_ << std::endl;
-      std::cout << "###    new_num_waypoints " << new_num_waypoints << std::endl;
-      std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
-      std::cout << "###    timesteps 0 and 1: " << waypoints_.elapsed_times[0] << " " << waypoints_.elapsed_times[1] << std::endl;
-
       waypoints_.positions.resize(waypoints_.elapsed_times.size());
       waypoints_.velocities.resize(waypoints_.elapsed_times.size());
       waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
@@ -640,10 +581,6 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     error_code = ErrorCodeEnum::kFailureToGenerateSingleWaypoint;
   }
 
-  if (error_code == ErrorCodeEnum::kNoError) {
-    std::cout << "###    predictTimeToReach OK" << std::endl;
-  }
-
   return error_code;
 }
 
@@ -701,15 +638,12 @@ inline void SingleJointGenerator::calculateDerivativesFromVelocity()
 
 void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_duration)
 {
-  std::cout << "### SingleJointGenerator::updateTrajectoryDuration" << std::endl;
   //
   // Should this check/enforce that new_trajectory_duration > current duration?
   //
   // Should we make num_waypoints_ a class variable and update it here?
   //
   if(new_trajectory_duration < desired_duration_) {
-    std::cout << "###    new_trajectory_duration " << new_trajectory_duration << std::endl;
-    std::cout << "###    desired_duration_ " << desired_duration_ << std::endl;
     std::cout << "!!! new_trajectory_duration < desired_duration_" << std::endl;
   }
   // The trajectory will be forced to have this duration (or fail) because

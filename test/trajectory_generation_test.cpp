@@ -1023,7 +1023,7 @@ TEST_F(TrajectoryGenerationTest, DownsampleEvenlyDivisible)
   double downsampled_timestep = 0.1;
   double num_downsampled_waypoints = 1 + duration / downsampled_timestep;
 
-  EXPECT_EQ(fmod(downsampled_timestep, upsampled_timestep), 0.);
+  EXPECT_LE(std::abs(remainder(downsampled_timestep, upsampled_timestep)), REMAINDER_THRESHOLD);
 
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
@@ -1080,7 +1080,7 @@ TEST_F(TrajectoryGenerationTest, DownsampleUnevenlyDivisible)
   double downsampled_timestep = 0.1;
   double num_downsampled_waypoints = 1 + duration / downsampled_timestep;
 
-  EXPECT_NE(fmod(downsampled_timestep, upsampled_timestep), 0.);
+  EXPECT_GT(std::abs(remainder(downsampled_timestep, upsampled_timestep)), REMAINDER_THRESHOLD);
 
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
