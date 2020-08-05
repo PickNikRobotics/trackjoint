@@ -25,6 +25,12 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
 {
+  if (!license_manager_.CheckLicenseStatus())
+  {
+    std::cerr << "Unrecognized license, check license status" << std::endl;
+    exit(-1);
+  }
+
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
 
@@ -43,6 +49,12 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
                                 const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                                 const double position_tolerance, bool use_streaming_mode)
 {
+  if (!license_manager_.CheckLicenseStatus())
+  {
+    std::cerr << "Unrecognized license, check license status" << std::endl;
+    exit(-1);
+  }
+
   desired_timestep_ = timestep;
   upsampled_timestep_ = timestep;
   desired_duration_ = desired_duration;

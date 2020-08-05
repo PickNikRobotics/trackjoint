@@ -16,6 +16,7 @@
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
+#include "trackjoint/license_manager.h"
 #include "trackjoint/limits.h"
 #include "trackjoint/single_joint_generator.h"
 #include "trackjoint/utilities.h"
@@ -127,5 +128,7 @@ private:
   std::vector<SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
-};                              // end class TrajectoryGenerator
+
+  LicenseManager license_manager_;
+};  // end class TrajectoryGenerator
 }  // namespace trackjoint

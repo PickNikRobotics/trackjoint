@@ -50,10 +50,29 @@ include_directories(
 
 include_directories(
   include
+  lib
   ${catkin_INCLUDE_DIRS}
 )
 
 set(LIBRARY_NAME trackjoint)
+
+# License manager
+add_library(
+  ${PROJECT_NAME}_license_manager
+  src/license_manager.cpp
+)
+set_target_properties(
+  ${PROJECT_NAME}_license_manager
+  PROPERTIES
+    OUTPUT_NAME license_manager PREFIX ""
+)
+target_link_libraries(
+  ${PROJECT_NAME}_license_manager
+  ${catkin_LIBRARIES}
+  ${PROJECT_SOURCE_DIR}/lib/libLexActivator.so
+)
+
+# TrackJoint
 add_library(${LIBRARY_NAME}
   src/trajectory_generator.cpp
   src/single_joint_generator.cpp
@@ -61,6 +80,7 @@ add_library(${LIBRARY_NAME}
 )
 target_link_libraries(
   ${LIBRARY_NAME}
+  ${LIBRARY_NAME}_license_manager
   ${catkin_LIBRARIES}
 )
 
@@ -115,6 +135,22 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
+# License client
+add_executable(
+  ${PROJECT_NAME}_license_client
+  src/license_client.cpp
+)
+set_target_properties(
+  ${PROJECT_NAME}_license_client
+  PROPERTIES
+    OUTPUT_NAME license_client PREFIX ""
+)
+target_link_libraries(
+  ${PROJECT_NAME}_license_client
+  ${LIBRARY_NAME}_license_manager
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
@@ -122,7 +158,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example
+    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example ${PROJECT_NAME}_license_client
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION
