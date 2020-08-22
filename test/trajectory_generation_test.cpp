@@ -71,7 +71,7 @@ protected:
   double max_duration_ = 10;
   std::vector<KinematicState> current_joint_states_, goal_joint_states_;
   std::vector<Limits> limits_;
-  double position_tolerance_ = 1e-6;
+  double position_tolerance_ = 1e-4;
   bool use_streaming_mode_ = false;
   bool write_output_ = true;
   std::vector<JointTrajectory> output_trajectories_;
