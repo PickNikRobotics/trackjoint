@@ -106,8 +106,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
   {
     // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
     // This only decreases velocity/accel/jerk, so no worries re. limit violation
-    // Eigen::VectorXd new_times;
-    // new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd new_times;
     new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd position(waypoints_.positions);
