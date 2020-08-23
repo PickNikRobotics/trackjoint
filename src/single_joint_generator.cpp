@@ -81,7 +81,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   waypoints_ = JointTrajectory();
   waypoints_.positions = interpolate(nominal_times_);
 
-  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
+  waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., (waypoints_.positions.size() - 1) * timestep_);
   calculateDerivativesFromPosition();
 
   ErrorCodeEnum error_code = positionVectorLimitLookAhead(&index_last_successful_);
@@ -116,7 +116,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     Spline1D spline(fit);
 
     // New times, with the extended duration
-    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
     // Retrieve new positions at the new times
     waypoints_.positions.resize(new_num_waypoints);
 
@@ -132,7 +132,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
   else
   {
     waypoints_ = JointTrajectory();
-    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
     ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
@@ -476,7 +476,7 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
       if (new_num_waypoints > kMaxNumWaypointsFullTrajectory)
         new_num_waypoints = kMaxNumWaypointsFullTrajectory;
 
-      waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., desired_duration_);
+      waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
       waypoints_.positions.resize(waypoints_.elapsed_times.size());
       waypoints_.velocities.resize(waypoints_.elapsed_times.size());
       waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
