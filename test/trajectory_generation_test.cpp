@@ -710,8 +710,8 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   const double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
   EXPECT_LT(position_error, position_tolerance);
   // Timestep
-  double timestep_tolerance = 0.1 * timestep_;
-  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+  double timestep_tolerance = 0.1 * timestep;
+  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep,
               timestep_tolerance);
   // Duration
   uint num_waypoint_tolerance = 1;
