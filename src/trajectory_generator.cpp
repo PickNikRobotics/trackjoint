@@ -29,12 +29,14 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   upsample();
 
   // Initialize a trajectory generator for each joint
+  bool timestep_was_upsampled = (upsample_rounds_ > 0) ? true : false;
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_.push_back(
         SingleJointGenerator(upsampled_timestep_, max_duration_, current_joint_states[joint],
                              goal_joint_states[joint], limits[joint], upsampled_num_waypoints_, kNumWaypointsThreshold,
-                             kMaxNumWaypointsFullTrajectory, position_tolerance, use_streaming_mode_));
+                             kMaxNumWaypointsFullTrajectory, position_tolerance, use_streaming_mode_,
+                             timestep_was_upsampled));
   }
 }
 
@@ -57,11 +59,13 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
   upsample();
 
   // Initialize a trajectory generator for each joint
+  bool timestep_was_upsampled = (upsample_rounds_ > 0) ? true : false;
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_[joint].reset(upsampled_timestep_, max_duration_,
                                           current_joint_states[joint], goal_joint_states[joint], limits[joint],
-                                          upsampled_num_waypoints_, position_tolerance, use_streaming_mode_);
+                                          upsampled_num_waypoints_, position_tolerance, use_streaming_mode_,
+                                          timestep_was_upsampled);
   }
 }
 

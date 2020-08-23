@@ -44,16 +44,17 @@ public:
    *                          Should be set lower than the accuracy requirements for your task
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
+   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust timestep
    */
   SingleJointGenerator(double timestep, double max_duration, const KinematicState& current_joint_state,
                        const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
                        size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode,
-                       const double position_tolerance, bool use_streaming_mode);
+                       const double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
 
   /** \brief reset data members and prepare to generate a new trajectory */
   void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
-             const double position_tolerance, bool use_streaming_mode);
+             const double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
 
   /** \brief Generate a jerk-limited trajectory for this joint
    *
