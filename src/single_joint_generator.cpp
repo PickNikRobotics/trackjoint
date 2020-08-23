@@ -10,7 +10,7 @@
 
 namespace trackjoint
 {
-SingleJointGenerator::SingleJointGenerator(double timestep, double desired_duration, double max_duration,
+SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
                                            const KinematicState& current_joint_state,
                                            const KinematicState& goal_joint_state, const Limits& limits,
                                            size_t desired_num_waypoints, size_t num_waypoints_threshold,
@@ -19,7 +19,6 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
   , timestep_(timestep)
-  , desired_duration_(desired_duration)
   , max_duration_(max_duration)
   , current_joint_state_(current_joint_state)
   , goal_joint_state_(goal_joint_state)
@@ -27,23 +26,33 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double desired_durat
   , position_tolerance_(position_tolerance)
   , use_streaming_mode_(use_streaming_mode)
 {
+  // Start with this estimate of the shortest possible duration
+  // The shortest possible duration avoids oscillation, as much as possible
+  // Desired duration cannot be less than one timestep
+  desired_duration_ =
+      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
 }
 
-void SingleJointGenerator::reset(double timestep, double desired_duration, double max_duration,
-                                 const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                                 const Limits& limits, size_t desired_num_waypoints, const double position_tolerance,
-                                 bool use_streaming_mode)
+void SingleJointGenerator::reset(double timestep, double max_duration, const KinematicState& current_joint_state,
+                                 const KinematicState& goal_joint_state, const Limits& limits,
+                                 size_t desired_num_waypoints, const double position_tolerance, bool use_streaming_mode)
 {
   timestep_ = timestep;
-  desired_duration_ = desired_duration;
   max_duration_ = max_duration;
   current_joint_state_ = current_joint_state;
   goal_joint_state_ = goal_joint_state;
   limits_ = limits;
   position_tolerance_ = position_tolerance;
   use_streaming_mode_ = use_streaming_mode;
+
+  // Start with this estimate of the shortest possible duration
+  // The shortest possible duration avoids oscillation, as much as possible
+  // Desired duration cannot be less than one timestep
+  desired_duration_ =
+      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -56,7 +65,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   waypoints_.positions = interpolate(nominal_times_);
 
   waypoints_.elapsed_times.setLinSpaced(waypoints_.positions.size(), 0., desired_duration_);
-  calculateDerivatives();
+  calculateDerivativesFromPosition();
 
   ErrorCodeEnum error_code = positionVectorLimitLookAhead(&index_last_successful_);
   if (error_code)
@@ -69,16 +78,16 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   return error_code;
 }
 
-ErrorCodeEnum SingleJointGenerator::extendTrajectoryDuration()
+void SingleJointGenerator::extendTrajectoryDuration()
 {
   // Clear previous results
   waypoints_ = JointTrajectory();
   size_t expected_num_waypoints = 1 + desired_duration_ / timestep_;
   waypoints_.elapsed_times.setLinSpaced(expected_num_waypoints, 0., desired_duration_);
   waypoints_.positions = interpolate(waypoints_.elapsed_times);
-  calculateDerivatives();
-  ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
-  return error_code;
+  calculateDerivativesFromPosition();
+  forwardLimitCompensation(&index_last_successful_);
+  return;
 }
 
 JointTrajectory SingleJointGenerator::getTrajectory()
@@ -161,13 +170,10 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
                                      waypoints_.accelerations(index - 1) * timestep_ +
                                      0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
 
-      // Re-calculate derivatives from the updated velocity vector
-      calculateDerivatives();
-
       delta_v = 0.5 * delta_j * timestep_ * timestep_;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -204,8 +210,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
                                        waypoints_.accelerations(index - 1) * timestep_ +
                                        0.5 * waypoints_.jerks(index) * timestep_ * timestep_;
-        // Re-calculate derivatives from the updated velocity vector
-        calculateDerivatives();
       }
       else
       {
@@ -218,7 +222,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       delta_v = delta_a * timestep_;
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -246,13 +250,11 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
     {
       delta_v = std::copysign(velocity_limit, waypoints_.velocities(index)) - waypoints_.velocities(index);
       waypoints_.velocities(index) = std::copysign(velocity_limit, waypoints_.velocities(index));
-      // Re-calculate derivatives from the updated velocity vector
-      calculateDerivatives();
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
       delta_v += position_error / timestep_;
-      successful_compensation = backwardLimitCompensation(index, &delta_v);
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
       if (!successful_compensation)
       {
         position_error = position_error + delta_v * timestep_;
@@ -273,10 +275,13 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
     }
   }
 
+  // Re-calculate derivatives from the updated velocity vector
+  calculateDerivativesFromVelocity();
+
   return ErrorCodeEnum::NO_ERROR;
 }
 
-bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double* excess_velocity)
+inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double excess_velocity)
 {
   // The algorithm:
   // 1) check jerk limits, from beginning to end of trajectory. Don't bother
@@ -297,10 +302,10 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
     if (fabs(waypoints_.velocities(index)) < limits_.velocity_limit)
     {
       // If the full change can be made in this timestep
-      if ((*excess_velocity > 0 && waypoints_.velocities(index) <= limits_.velocity_limit - *excess_velocity) ||
-          (*excess_velocity < 0 && waypoints_.velocities(index) >= -limits_.velocity_limit - *excess_velocity))
+      if ((excess_velocity > 0 && waypoints_.velocities(index) <= limits_.velocity_limit - excess_velocity) ||
+          (excess_velocity < 0 && waypoints_.velocities(index) >= -limits_.velocity_limit - excess_velocity))
       {
-        double new_velocity = waypoints_.velocities(index) + *excess_velocity;
+        double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / timestep_;
         double backward_jerk =
@@ -333,13 +338,13 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
           break;
         }
       }
-      // else, can't make all of the correction in this timestep, so make as
+      // Can't make all of the correction in this timestep, so make as much of a change as possible
       // much of a change as possible
-      else
+      if (!successful_compensation)
       {
         // This is what accel and jerk would be if we set velocity(index) to the
         // limit
-        double new_velocity = std::copysign(1.0, *excess_velocity) * limits_.velocity_limit;
+        double new_velocity = std::copysign(1.0, excess_velocity) * limits_.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / timestep_;
         double backward_jerk =
@@ -369,7 +374,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
             waypoints_.accelerations(index) = backward_accel;
             waypoints_.jerks(index) = backward_jerk;
           }
-          *excess_velocity = *excess_velocity - delta_v;
+          excess_velocity -= delta_v;
         }
       }
     }
@@ -384,8 +389,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 {
   // Take a trajectory that could not reach the desired position in time.
-  // Try increasing the duration until it is interpolated without violating
-  // limits.
+  // Try increasing the duration until it is interpolated without violating limits.
   // This gives a new duration estimate.
 
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
@@ -400,7 +404,7 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
       desired_duration_ =
-          1. + 0.5 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1)) * desired_duration_;
+          (1. + 0.2 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
 
       // // Round to nearest timestep
       if (std::fmod(desired_duration_, timestep_) > 0.5 * timestep_)
@@ -422,7 +426,7 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
       // Try to create the trajectory again, with the new duration
       ////////////////////////////////////////////////////////////
       waypoints_.positions = interpolate(waypoints_.elapsed_times);
-      calculateDerivatives();
+      calculateDerivativesFromPosition();
       positionVectorLimitLookAhead(&index_last_successful_);
     }
   }
@@ -482,6 +486,13 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   if (error_code)
     return error_code;
 
+  // Helpful hint if limit comp fails on the first waypoint
+  if (index_last_successful_ == 1)
+  {
+    std::cout << "Limit compensation failed at the first waypoint. "
+              << "Try a larger position_tolerance parameter or smaller timestep." << std::endl;
+  }
+
   // Re-compile the position with these modifications.
   // Ensure the first and last elements are a perfect match with initial/final
   // conditions
@@ -500,12 +511,18 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   return error_code;
 }
 
-void SingleJointGenerator::calculateDerivatives()
+inline void SingleJointGenerator::calculateDerivativesFromPosition()
 {
-  // From position vector, approximate velocity and acceleration.
-  // velocity = (difference between adjacent position elements) / delta_t
-  // acceleration = (difference between adjacent velocity elements) / delta_t
+  // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, timestep_, current_joint_state_.velocity);
+  waypoints_.accelerations =
+      DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
+  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);
+}
+
+inline void SingleJointGenerator::calculateDerivativesFromVelocity()
+{
+  // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
       DiscreteDifferentiation(waypoints_.velocities, timestep_, current_joint_state_.acceleration);
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);

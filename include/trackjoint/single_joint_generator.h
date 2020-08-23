@@ -13,6 +13,7 @@
 #pragma once
 
 #include <cmath>  // copysign
+#include <unsupported/Eigen/Splines>  // Spline-fitting is used to extend trajectory duration
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
@@ -21,6 +22,9 @@
 
 namespace trackjoint
 {
+typedef Eigen::Spline<double, 1, 2> Spline1D;
+typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
+
 class SingleJointGenerator
 {
 public:
@@ -41,14 +45,13 @@ public:
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
    */
-  SingleJointGenerator(double timestep, double desired_duration, double max_duration,
-                       const KinematicState& current_joint_state, const KinematicState& goal_joint_state,
-                       const Limits& limits, size_t desired_num_waypoints, size_t num_waypoints_threshold,
-                       size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
-                       bool use_streaming_mode);
+  SingleJointGenerator(double timestep, double max_duration, const KinematicState& current_joint_state,
+                       const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
+                       size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode,
+                       const double position_tolerance, bool use_streaming_mode);
 
   /** \brief reset data members and prepare to generate a new trajectory */
-  void reset(double timestep, double desired_duration, double max_duration, const KinematicState& current_joint_state,
+  void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
              const double position_tolerance, bool use_streaming_mode);
 
@@ -58,16 +61,10 @@ public:
    */
   ErrorCodeEnum generateTrajectory();
 
-  /** \brief Calculate a trajectory once duration is known. Similar to generateTrajectory minus predictTimeToReach().
-   *
-   * return a TrackJoint status code
-   */
-  ErrorCodeEnum extendTrajectoryDuration();
+  /** \brief Extend a trajectory to a new duration. Magnitudes of vel/accel/jerk will be decreased. */
+  void extendTrajectoryDuration();
 
-  /** \brief Get the generated trajectory
-   *
-   * return a vector of kinematic states for the joint
-   */
+  /** \brief Extend a trajectory to a new duration. Magnitudes of vel/accel/jerk will be decreased. */
   JointTrajectory getTrajectory();
 
   /** \brief Get the last waypoint that successfully matched the polynomial interpolation
@@ -105,7 +102,7 @@ private:
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool backwardLimitCompensation(size_t limited_index, double* excess_velocity);
+  bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
 
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
@@ -115,7 +112,11 @@ private:
   ErrorCodeEnum predictTimeToReach();
 
   /** \brief Calculate vel/accel/jerk from position */
-  void calculateDerivatives();
+  void calculateDerivativesFromPosition();
+
+
+  /** \brief Calculate accel/jerk from velocity */
+  void calculateDerivativesFromVelocity();
 
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
