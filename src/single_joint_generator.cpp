@@ -15,7 +15,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
                                            const KinematicState& goal_joint_state, const Limits& limits,
                                            size_t desired_num_waypoints, size_t num_waypoints_threshold,
                                            size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
-                                           bool use_streaming_mode)
+                                           bool use_streaming_mode, bool timestep_was_upsampled)
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
   , timestep_(timestep)
@@ -29,8 +29,16 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   // Start with this estimate of the shortest possible duration
   // The shortest possible duration avoids oscillation, as much as possible
   // Desired duration cannot be less than one timestep
-  desired_duration_ =
-      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  if (!timestep_was_upsampled)
+  {
+    desired_duration_ =
+        std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  }
+  // If upsampling was used, we don't want to mess with the timestep or duration minimization
+  else
+  {
+    desired_duration_ = (desired_num_waypoints - 1) * timestep;
+  }
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
@@ -38,7 +46,8 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
 
 void SingleJointGenerator::reset(double timestep, double max_duration, const KinematicState& current_joint_state,
                                  const KinematicState& goal_joint_state, const Limits& limits,
-                                 size_t desired_num_waypoints, const double position_tolerance, bool use_streaming_mode)
+                                 size_t desired_num_waypoints, const double position_tolerance, bool use_streaming_mode,
+                                 bool timestep_was_upsampled)
 {
   timestep_ = timestep;
   max_duration_ = max_duration;
@@ -51,8 +60,16 @@ void SingleJointGenerator::reset(double timestep, double max_duration, const Kin
   // Start with this estimate of the shortest possible duration
   // The shortest possible duration avoids oscillation, as much as possible
   // Desired duration cannot be less than one timestep
-  desired_duration_ =
-      std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  if (!timestep_was_upsampled)
+  {
+    desired_duration_ =
+        std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
+  }
+  // If upsampling was used, we don't want to mess with the timestep or duration minimization
+  else
+  {
+    desired_duration_ = (desired_num_waypoints - 1) * timestep;
+  }
 
   // Waypoint times
   nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
