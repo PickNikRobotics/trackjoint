@@ -24,6 +24,7 @@ SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
   , goal_joint_state_(goal_joint_state)
   , limits_(limits)
   , position_tolerance_(position_tolerance)
+  , index_last_successful_(0)
   , use_streaming_mode_(use_streaming_mode)
 {
   // Start with this estimate of the shortest possible duration
@@ -55,6 +56,7 @@ void SingleJointGenerator::reset(double timestep, double max_duration, const Kin
   goal_joint_state_ = goal_joint_state;
   limits_ = limits;
   position_tolerance_ = position_tolerance;
+  index_last_successful_ = 0;
   use_streaming_mode_ = use_streaming_mode;
 
   // Start with this estimate of the shortest possible duration
