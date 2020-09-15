@@ -120,7 +120,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     // Retrieve new positions at the new times
     waypoints_.positions.resize(new_num_waypoints);
 
-    for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
+    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
       waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
 
     calculateDerivativesFromPosition();
