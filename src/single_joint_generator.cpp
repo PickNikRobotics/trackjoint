@@ -10,39 +10,12 @@
 
 namespace trackjoint
 {
-SingleJointGenerator::SingleJointGenerator(double timestep, double max_duration,
-                                           const KinematicState& current_joint_state,
-                                           const KinematicState& goal_joint_state, const Limits& limits,
-                                           size_t desired_num_waypoints, size_t num_waypoints_threshold,
-                                           size_t max_num_waypoints_trajectory_mode, const double position_tolerance,
-                                           bool use_streaming_mode, bool timestep_was_upsampled)
+SingleJointGenerator::SingleJointGenerator(size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode)
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
-  , timestep_(timestep)
-  , max_duration_(max_duration)
-  , current_joint_state_(current_joint_state)
-  , goal_joint_state_(goal_joint_state)
-  , limits_(limits)
-  , position_tolerance_(position_tolerance)
-  , index_last_successful_(0)
-  , use_streaming_mode_(use_streaming_mode)
-{
-  // Start with this estimate of the shortest possible duration
-  // The shortest possible duration avoids oscillation, as much as possible
-  // Desired duration cannot be less than one timestep
-  if (!timestep_was_upsampled)
-  {
-    desired_duration_ =
-        std::max(timestep_, fabs((goal_joint_state.position - current_joint_state.position) / limits_.velocity_limit));
-  }
-  // If upsampling was used, we don't want to mess with the timestep or duration minimization
-  else
-  {
-    desired_duration_ = (desired_num_waypoints - 1) * timestep;
-  }
+  , is_reset_(false)
 
-  // Waypoint times
-  nominal_times_ = Eigen::VectorXd::LinSpaced(desired_num_waypoints, 0, desired_duration_);
+{
 }
 
 void SingleJointGenerator::reset(double timestep, double max_duration, const KinematicState& current_joint_state,
@@ -58,6 +31,7 @@ void SingleJointGenerator::reset(double timestep, double max_duration, const Kin
   position_tolerance_ = position_tolerance;
   index_last_successful_ = 0;
   use_streaming_mode_ = use_streaming_mode;
+  is_reset_ = true;
 
   // Start with this estimate of the shortest possible duration
   // The shortest possible duration avoids oscillation, as much as possible
@@ -79,6 +53,9 @@ void SingleJointGenerator::reset(double timestep, double max_duration, const Kin
 
 ErrorCodeEnum SingleJointGenerator::generateTrajectory()
 {
+  if (!is_reset_)
+    return ErrorCodeEnum::OBJECT_NOT_RESET;
+
   // Clear previous results
   waypoints_ = JointTrajectory();
   waypoints_.positions = interpolate(nominal_times_);
