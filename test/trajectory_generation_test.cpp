@@ -430,7 +430,6 @@ TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
   // Duration
-  const double duration_tolerance = 5e-3;
   size_t vector_length = output_trajectories_[0].elapsed_times.size() - 1;
   EXPECT_LE(output_trajectories_[0].elapsed_times(vector_length), desired_duration_);
 }
