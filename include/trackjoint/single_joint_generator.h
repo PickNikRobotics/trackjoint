@@ -17,6 +17,7 @@
 #include "trackjoint/error_codes.h"
 #include "trackjoint/joint_trajectory.h"
 #include "trackjoint/kinematic_state.h"
+#include "trackjoint/configuration.h"
 #include "trackjoint/limits.h"
 #include "trackjoint/utilities.h"
 
@@ -35,6 +36,19 @@ public:
    * is required
    */
   SingleJointGenerator(size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode);
+
+  /** \brief reset data members and prepare to generate a new trajectory
+   *
+   * input configuration A `Configuration` object
+   * input current_joint_states vector of the initial kinematic states for each degree of freedom
+   * input goal_joint_states vector of the target kinematic states for each degree of freedom
+   * input desired_num_waypoints nominal number of waypoints, calculated from user-supplied duration and timestep
+   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust
+   * timestep
+   *
+   */
+  void reset(const Configuration& configuration, const KinematicState& current_joint_state,
+             const KinematicState& goal_joint_state, size_t desired_num_waypoints, bool timestep_was_upsampled);
 
   /** \brief reset data members and prepare to generate a new trajectory
    *
@@ -123,23 +137,13 @@ private:
 
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
-  double timestep_;
-  double desired_duration_, max_duration_;
+  Configuration configuration_;
+  double desired_duration_;
   KinematicState current_joint_state_;
   KinematicState goal_joint_state_;
-  Limits limits_;
-  double position_tolerance_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
   size_t index_last_successful_;
-
-  // If streaming mode is enabled, trajectories are clipped at kNumWaypointsThreshold so the algorithm runs very
-  // quickly.
-  // streaming mode is intended for realtime streaming applications.
-  // There could be even fewer waypoints than that if the goal is very close or the algorithm only finds a few waypoints
-  // successfully.
-  // In streaming mode, trajectory duration is not extended until it successfully reaches the goal.
-  bool use_streaming_mode_;
   bool is_reset_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
