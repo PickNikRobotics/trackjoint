@@ -135,7 +135,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
-    ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
+    forwardLimitCompensation(&index_last_successful_);
   }
 
   return;
