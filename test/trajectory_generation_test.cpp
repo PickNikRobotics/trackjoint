@@ -504,6 +504,24 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   limits_[1] = single_joint_limits;
   limits_[2] = single_joint_limits;
 
+  // For recording actual followed trajectory
+  std::vector<JointTrajectory> recorded_trajectories(num_dof_);
+  for (size_t joint = 0; joint < num_dof_; ++joint)
+  {
+    // Resize vector
+    recorded_trajectories[joint].positions.resize(num_waypoints);
+    recorded_trajectories[joint].velocities.resize(num_waypoints);
+    recorded_trajectories[joint].accelerations.resize(num_waypoints);
+    recorded_trajectories[joint].jerks.resize(num_waypoints);
+    recorded_trajectories[joint].elapsed_times.resize(num_waypoints);
+    // Set initial waypoint
+    recorded_trajectories[joint].positions(0) = current_joint_states_[joint].position;
+    recorded_trajectories[joint].velocities(0) = current_joint_states_[joint].velocity;
+    recorded_trajectories[joint].accelerations(0) = current_joint_states_[joint].acceleration;
+    recorded_trajectories[joint].jerks(0) = 0;
+    recorded_trajectories[joint].elapsed_times(0) = 0;
+  }
+
   Eigen::VectorXd x_desired(num_waypoints);
   Eigen::VectorXd x_smoothed(num_waypoints);
 
@@ -535,6 +553,16 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
     // ... and setting the next current position as the updated x_smoothed
     joint_state.position = x_smoothed(waypoint);
 
+    // Record next point
+    for (size_t joint = 0; joint < num_dof_; joint++)
+    {
+      recorded_trajectories[joint].positions(waypoint) = output_trajectories_[joint].positions(1);
+      recorded_trajectories[joint].velocities(waypoint) = output_trajectories_[joint].velocities(1);
+      recorded_trajectories[joint].accelerations(waypoint) = output_trajectories_[joint].accelerations(1);
+      recorded_trajectories[joint].jerks(waypoint) = output_trajectories_[joint].jerks(1);
+      recorded_trajectories[joint].elapsed_times(waypoint) = time;
+    }
+
     current_joint_states_[0] = joint_state;
     current_joint_states_[1] = joint_state;
     current_joint_states_[2] = joint_state;
@@ -544,6 +572,9 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   uint num_waypoint_tolerance = 1;
   uint expected_num_waypoints = num_waypoints;
   EXPECT_NEAR(uint(x_smoothed.size()), expected_num_waypoints, num_waypoint_tolerance);
+
+  // Put recorded trajectories where the tearDown() method will check them
+  output_trajectories_ = recorded_trajectories;
 }
 
 TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
