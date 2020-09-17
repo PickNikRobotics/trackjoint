@@ -70,15 +70,15 @@ int main(int argc, char** argv)
   trackjoint::ErrorCodeEnum error_code = traj_gen.inputChecking(start_state, goal_joint_states, limits, timestep);
   if (error_code)
   {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
     return -1;
   }
 
   // Generate the initial trajectory
   error_code = traj_gen.generateTrajectories(&output_trajectories);
-  if (error_code != trackjoint::ErrorCodeEnum::kNoError)
+  if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
     return -1;
   }
   std::cout << "Initial trajectory calculation:" << std::endl;
@@ -110,9 +110,9 @@ int main(int argc, char** argv)
     std::cout << "Run time (microseconds): "
               << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << std::endl;
 
-    if (error_code != trackjoint::ErrorCodeEnum::kNoError)
+    if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
     {
-      std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+      std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
       return -1;
     }
 

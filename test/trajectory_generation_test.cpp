@@ -205,7 +205,7 @@ TEST_F(TrajectoryGenerationTest, EasyDefaultTrajectory)
 
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 1e-4;
@@ -252,7 +252,7 @@ TEST_F(TrajectoryGenerationTest, OneTimestepDuration)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   double position_tolerance = 1e-4;
@@ -286,7 +286,7 @@ TEST_F(TrajectoryGenerationTest, RoughlyTwoTimestepDuration)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 1e-4;
@@ -322,7 +322,7 @@ TEST_F(TrajectoryGenerationTest, FourTimestepDuration)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 1e-4;
@@ -373,7 +373,7 @@ TEST_F(TrajectoryGenerationTest, SixTimestepDuration)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   double position_tolerance = 1e-4;
@@ -417,7 +417,7 @@ TEST_F(TrajectoryGenerationTest, VelAccelJerkLimit)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   verifyVelAccelJerkLimits(output_trajectories_, limits_);
 
@@ -605,7 +605,7 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
     // Saving Trackjoint output to .csv files for plotting
     traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH + "_joint");
 
-    EXPECT_EQ(ErrorCodeEnum::kNoError, error_code);
+    EXPECT_EQ(ErrorCodeEnum::NO_ERROR, error_code);
     // Timestep
     const double timestep_tolerance = 0.25 * timestep_;
     EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
@@ -653,7 +653,7 @@ TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   traj_gen.generateTrajectories(&output_trajectories_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   double position_tolerance = 1e-4;
@@ -703,7 +703,7 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
 
   TrajectoryGenerator traj_gen(num_dof_, timestep, desired_duration, max_duration, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 1e-4;
@@ -756,7 +756,7 @@ TEST_F(TrajectoryGenerationTest, DurationExtension)
 
   TrajectoryGenerator traj_gen(num_dof_, timestep, desired_duration, max_duration, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 5e-4;
@@ -814,7 +814,7 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
 
   TrajectoryGenerator traj_gen(num_dof_, timestep, desired_duration, max_duration, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 1e-4;
@@ -862,9 +862,9 @@ TEST_F(TrajectoryGenerationTest, TimestepDidNotMatch)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   output_trajectories_.resize(num_dof_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError,
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR,
             traj_gen.inputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 2e-3;
@@ -923,7 +923,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, waypoint_position_tolerance, use_streaming_mode_);
   ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories_);
-  EXPECT_EQ(error_code, ErrorCodeEnum::kNoError);
+  EXPECT_EQ(error_code, ErrorCodeEnum::NO_ERROR);
 
   double position_error = std::numeric_limits<double>::max();
   double velocity_error = std::numeric_limits<double>::max();
@@ -935,7 +935,7 @@ TEST_F(TrajectoryGenerationTest, CustomerStreaming)
     traj_gen.reset(timestep_, desired_duration, max_duration_, current_joint_states_, goal_joint_states_, limits_,
                    waypoint_position_tolerance, use_streaming_mode_);
     error_code = traj_gen.generateTrajectories(&output_trajectories_);
-    EXPECT_EQ(error_code, ErrorCodeEnum::kNoError);
+    EXPECT_EQ(error_code, ErrorCodeEnum::NO_ERROR);
     // Get a new seed state for next trajectory generation
     if ((std::size_t)output_trajectories_.at(joint_to_update).positions.size() > next_waypoint)
     {
@@ -970,7 +970,7 @@ TEST_F(TrajectoryGenerationTest, StreamingTooFewTimesteps)
 
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
-  EXPECT_EQ(ErrorCodeEnum::kLessThanTenTimestepsForStreamingMode,
+  EXPECT_EQ(ErrorCodeEnum::LESS_THAN_TEN_TIMESTEPS_FOR_STREAMING_MODE,
             traj_gen.inputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
 }
 
@@ -1007,9 +1007,9 @@ TEST_F(TrajectoryGenerationTest, SingleJointOscillation)
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
   output_trajectories_.resize(num_dof_);
 
-  EXPECT_EQ(ErrorCodeEnum::kNoError,
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR,
             traj_gen.inputChecking(current_joint_states_, goal_joint_states_, limits_, timestep_));
-  EXPECT_EQ(ErrorCodeEnum::kNoError, traj_gen.generateTrajectories(&output_trajectories_));
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
   const double position_tolerance = 2e-3;
