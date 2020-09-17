@@ -552,6 +552,8 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
     x_smoothed(waypoint) = output_trajectories_.at(0).positions(1);
     // ... and setting the next current position as the updated x_smoothed
     joint_state.position = x_smoothed(waypoint);
+    joint_state.velocity = output_trajectories_.at(0).velocities(1);
+    joint_state.acceleration = output_trajectories_.at(0).accelerations(1);
 
     // Record next point
     for (size_t joint = 0; joint < num_dof_; joint++)
