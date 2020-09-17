@@ -25,8 +25,9 @@ int main(int argc, char** argv)
   constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/"
-                                                                                "output_joint";
+  const std::string output_path_base = "/home/" + std::string(getenv("USER")) +
+                                       "/Downloads/trackjoint_data/"
+                                       "output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(3);
   trackjoint::KinematicState joint_state;

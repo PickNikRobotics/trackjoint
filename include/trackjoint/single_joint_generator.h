@@ -43,7 +43,8 @@ public:
    *                          Should be set lower than the accuracy requirements for your task
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
-   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust timestep
+   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust
+   * timestep
    */
   SingleJointGenerator(double timestep, double max_duration, const KinematicState& current_joint_state,
                        const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,

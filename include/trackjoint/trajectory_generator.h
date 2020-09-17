@@ -78,7 +78,7 @@ public:
    * input limits vector of kinematic limits for each degree of freedom
    * input nominal_timestep the user-requested time between waypoints
    * returna TrackJoint status code
-  */
+   */
   ErrorCodeEnum inputChecking(const std::vector<KinematicState>& current_joint_states,
                               const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                               double nominal_timestep);
@@ -87,7 +87,7 @@ private:
   /** \brief Ensure limits are obeyed before outputting.
    *
    * input trajectory the calculated trajectories for n joints
-  */
+   */
   void clipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
 
   /** \brief upsample if num. waypoints would be short. Helps with accuracy. */
@@ -100,7 +100,7 @@ private:
    * input velocity_vector a vector of velocities
    * input acceleration_vector a vector of accelerations
    * input jerk_vector a vector of jerks
-  */
+   */
   void downSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
                   Eigen::VectorXd* acceleration_vector, Eigen::VectorXd* jerk_vector);
 
@@ -108,7 +108,7 @@ private:
    *
    * input output_trajectories the calculated trajectories for n joints
    * returna TrackJoint status code
-  */
+   */
   ErrorCodeEnum synchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
   // TODO(andyz): set this back to a small number when done testing
