@@ -67,7 +67,7 @@ protected:
   // Default test parameters for 3 joints
   double timestep_ = 0.01;
   double desired_duration_ = 1;
-  int num_dof_ = 3;
+  size_t num_dof_ = 3;
   double max_duration_ = 10;
   std::vector<KinematicState> current_joint_states_, goal_joint_states_;
   std::vector<Limits> limits_;
@@ -78,7 +78,7 @@ protected:
 
   void checkBounds()
   {
-    for (int i = 0; i < static_cast<int>(output_trajectories_.size()); ++i)
+    for (size_t i = 0; i < output_trajectories_.size(); ++i)
     {
       if (output_trajectories_[i].elapsed_times.size() == 0)
       {
@@ -566,7 +566,7 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
     goal_joint_states_.clear();
 
     // for each joint
-    for (int joint = 0; joint < num_dof_; ++joint)
+    for (size_t joint = 0; joint < num_dof_; ++joint)
     {
       // Save the start state of the robot
       joint_state.position = moveit_des_positions[point][joint];
