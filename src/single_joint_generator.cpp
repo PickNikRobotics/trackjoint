@@ -113,7 +113,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
     Eigen::RowVectorXd position(waypoints_.positions);
 
     const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
-    Spline1D spline(fit);
 
     // New times, with the extended duration
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
@@ -121,7 +120,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     waypoints_.positions.resize(new_num_waypoints);
 
     for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
-      waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
+      waypoints_.positions[idx] = fit(waypoints_.elapsed_times(idx)).coeff(0);
 
     calculateDerivativesFromPosition();
     return;
