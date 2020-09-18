@@ -293,8 +293,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
   position_error = 0;
   for (size_t index = 1; index < *index_last_successful; ++index)
   {
-    delta_v = 0;
-
     // If the velocity limit would be exceeded
     if (fabs(waypoints_.velocities(index)) > velocity_limit)
     {
