@@ -148,7 +148,13 @@ protected:
       final_positions(joint) = trajectory.at(joint).positions((trajectory.at(joint).positions.size() - 1));
     }
 
-    double error = (final_positions - goal_positions).norm();
+    // Make clang-tidy happy about taking the norm() of a zero-length
+    // vector
+    Eigen::VectorXd errors = final_positions - goal_positions;
+    if (errors.size() < 1)
+      return 0;
+
+    double error = (errors).norm();
 
     return error;
   }
