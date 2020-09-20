@@ -43,7 +43,8 @@ public:
    *                          Should be set lower than the accuracy requirements for your task
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
    * waypoints.
-   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust timestep
+   * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust
+   * timestep
    */
   SingleJointGenerator(double timestep, double max_duration, const KinematicState& current_joint_state,
                        const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
@@ -83,6 +84,16 @@ public:
   void updateTrajectoryDuration(double new_trajectory_duration);
 
 private:
+  /** \brief Record the index when compensation first failed */
+  inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
+  {
+    // Record the index when compensation first failed
+    if (current_index < *index_last_successful)
+    {
+      *index_last_successful = current_index;
+    }
+  };
+
   /** \brief interpolate from start to end state with a polynomial
    *
    * input times a vector of waypoint times.
@@ -100,9 +111,6 @@ private:
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
   ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
-
-  /** \brief Record the index when compensation first failed */
-  inline void recordFailureTime(size_t current_index, size_t* index_last_successful);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum predictTimeToReach();

@@ -25,8 +25,8 @@ int main(int argc, char** argv)
   constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/"
-                                                                                "output_joint";
+  const std::string output_path_base =
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(3);
   trackjoint::KinematicState joint_state;
@@ -80,9 +80,9 @@ int main(int argc, char** argv)
 
   // Input error handling - if an error is found, the trajectory is not
   // generated.
-  if (error_code != trackjoint::ErrorCodeEnum::kNoError)
+  if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
     return -1;
   }
 
@@ -92,9 +92,9 @@ int main(int argc, char** argv)
   auto end = std::chrono::system_clock::now();
 
   // Trajectory generation error handling
-  if (error_code != trackjoint::ErrorCodeEnum::kNoError)
+  if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
     return -1;
   }
 
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
   std::cout << "Runtime: " << elapsed_seconds.count() << std::endl;
   std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << std::endl;
-  std::cout << "Error code: " << trackjoint::kErrorCodeMap.at(error_code) << std::endl;
+  std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
 
   // Save the synchronized trajectories to .csv files
   traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base);

@@ -29,14 +29,13 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   upsample();
 
   // Initialize a trajectory generator for each joint
-  bool timestep_was_upsampled = (upsample_rounds_ > 0) ? true : false;
+  bool timestep_was_upsampled = upsample_rounds_ > 0;
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_.push_back(
-        SingleJointGenerator(upsampled_timestep_, max_duration_, current_joint_states[joint], goal_joint_states[joint],
-                             limits[joint], upsampled_num_waypoints_, kNumWaypointsThreshold,
-                             kMaxNumWaypointsFullTrajectory, position_tolerance, use_streaming_mode_,
-                             timestep_was_upsampled));
+    single_joint_generators_.push_back(SingleJointGenerator(
+        upsampled_timestep_, max_duration_, current_joint_states[joint], goal_joint_states[joint], limits[joint],
+        upsampled_num_waypoints_, kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory, position_tolerance,
+        use_streaming_mode_, timestep_was_upsampled));
   }
 }
 
@@ -59,7 +58,7 @@ void TrajectoryGenerator::reset(double timestep, double desired_duration, double
   upsample();
 
   // Initialize a trajectory generator for each joint
-  bool timestep_was_upsampled = (upsample_rounds_ > 0) ? true : false;
+  bool timestep_was_upsampled = upsample_rounds_ > 0;
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
     single_joint_generators_[joint].reset(upsampled_timestep_, max_duration_, current_joint_states[joint],
@@ -203,13 +202,13 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
   // Need at least 1 timestep
   if (rounded_duration < nominal_timestep)
   {
-    return ErrorCodeEnum::kDesiredDurationTooShort;
+    return ErrorCodeEnum::DESIRED_DURATION_TOO_SHORT;
   }
 
   // Maximum duration must be equal to or longer than the nominal, goal duration
   if (max_duration_ < rounded_duration)
   {
-    return ErrorCodeEnum::kMaxDurationLessThanDesiredDuration;
+    return ErrorCodeEnum::MAX_DURATION_LESS_THAN_DESIRED_DURATION;
   }
 
   // Check that current vels. are less than the limits.
@@ -217,42 +216,42 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
   {
     if (abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit)
     {
-      return ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::VELOCITY_EXCEEDS_LIMIT;
     }
 
     // Check that goal vels. are less than the limits.
     if (abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit)
     {
-      return ErrorCodeEnum::kVelocityExceedsLimit;
+      return ErrorCodeEnum::VELOCITY_EXCEEDS_LIMIT;
     }
 
     // Check that current accels. are less than the limits.
     if (abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
     {
-      return ErrorCodeEnum::kAccelExceedsLimit;
+      return ErrorCodeEnum::ACCEL_EXCEEDS_LIMIT;
     }
 
     // Check that goal accels. are less than the limits.
     if (abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
     {
-      return ErrorCodeEnum::kAccelExceedsLimit;
+      return ErrorCodeEnum::ACCEL_EXCEEDS_LIMIT;
     }
 
     // Check for positive limits.
     if (limits[joint].velocity_limit <= 0 || limits[joint].acceleration_limit <= 0 || limits[joint].jerk_limit <= 0)
     {
-      return ErrorCodeEnum::kLimitNotPositive;
+      return ErrorCodeEnum::LIMIT_NOT_POSITIVE;
     }
 
     // In streaming mode, the user-requested duration should be >= kNumWaypointsThreshold * timestep.
     // upsample and downSample aren't used in streaming mode.
     if (rounded_duration < kNumWaypointsThreshold * nominal_timestep && use_streaming_mode_)
     {
-      return ErrorCodeEnum::kLessThanTenTimestepsForStreamingMode;
+      return ErrorCodeEnum::LESS_THAN_TEN_TIMESTEPS_FOR_STREAMING_MODE;
     }
   }
 
-  return ErrorCodeEnum::kNoError;
+  return ErrorCodeEnum::NO_ERROR;
 }
 
 void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajectory>& output_trajectories,
@@ -318,7 +317,7 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     // This indicates that a successful trajectory wasn't found, even when the trajectory was extended to max_duration
     if ((longest_num_waypoints - 1) < std::floor(desired_duration_ / upsampled_timestep_) && !use_streaming_mode_)
     {
-      return ErrorCodeEnum::kMaxDurationExceeded;
+      return ErrorCodeEnum::MAX_DURATION_EXCEEDED;
     }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
@@ -371,7 +370,7 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     }
   }
 
-  return ErrorCodeEnum::kNoError;
+  return ErrorCodeEnum::NO_ERROR;
 }
 
 void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* trajectory)
@@ -403,7 +402,7 @@ void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* tra
 
 ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTrajectory>* output_trajectories)
 {
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
   // Generate individual joint trajectories
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {

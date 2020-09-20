@@ -35,7 +35,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
  * input joint the index of a joint
  * input output_trajectories the calculated trajectories for n joints
  * input desired_duration the user-requested duration of the trajectory
-*/
+ */
 void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration);
 

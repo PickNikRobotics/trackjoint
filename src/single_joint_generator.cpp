@@ -113,15 +113,14 @@ void SingleJointGenerator::extendTrajectoryDuration()
     Eigen::RowVectorXd position(waypoints_.positions);
 
     const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
-    Spline1D spline(fit);
 
     // New times, with the extended duration
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
     // Retrieve new positions at the new times
     waypoints_.positions.resize(new_num_waypoints);
 
-    for (size_t idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
-      waypoints_.positions[idx] = spline(waypoints_.elapsed_times(idx)).coeff(0);
+    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
+      waypoints_.positions[idx] = fit(waypoints_.elapsed_times(idx)).coeff(0);
 
     calculateDerivativesFromPosition();
     return;
@@ -135,7 +134,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * timestep_);
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
-    ErrorCodeEnum error_code = forwardLimitCompensation(&index_last_successful_);
+    forwardLimitCompensation(&index_last_successful_);
   }
 
   return;
@@ -151,7 +150,7 @@ size_t SingleJointGenerator::getLastSuccessfulIndex()
   return index_last_successful_;
 }
 
-inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
+Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 {
   // See De Luca, "Trajectory Planning" pdf, slide 19
   // Interpolate a smooth trajectory from initial to final state while matching
@@ -182,7 +181,7 @@ inline Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
   return interpolated_position;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
 {
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
@@ -294,8 +293,6 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
   position_error = 0;
   for (size_t index = 1; index < *index_last_successful; ++index)
   {
-    delta_v = 0;
-
     // If the velocity limit would be exceeded
     if (fabs(waypoints_.velocities(index)) > velocity_limit)
     {
@@ -329,19 +326,10 @@ inline ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* inde
   // Re-calculate derivatives from the updated velocity vector
   calculateDerivativesFromVelocity();
 
-  return ErrorCodeEnum::kNoError;
+  return ErrorCodeEnum::NO_ERROR;
 }
 
-inline void SingleJointGenerator::recordFailureTime(size_t current_index, size_t* index_last_successful)
-{
-  // Record the index when compensation first failed
-  if (current_index < *index_last_successful)
-  {
-    *index_last_successful = current_index;
-  }
-}
-
-inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double excess_velocity)
+bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double excess_velocity)
 {
   // The algorithm:
   // 1) check jerk limits, from beginning to end of trajectory. Don't bother
@@ -445,13 +433,13 @@ inline bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index
   return successful_compensation;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
+ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 {
   // Take a trajectory that could not reach the desired position in time.
   // Try increasing the duration until it is interpolated without violating limits.
   // This gives a new duration estimate.
 
-  ErrorCodeEnum error_code = ErrorCodeEnum::kNoError;
+  ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
 
   // If in normal mode, we can extend trajectories
   if (!use_streaming_mode_)
@@ -528,18 +516,18 @@ inline ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   // Normal mode: Error if we extended the duration to the maximum and it still wasn't successful
   if (!use_streaming_mode_ && index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    error_code = ErrorCodeEnum::kMaxDurationExceeded;
+    error_code = ErrorCodeEnum::MAX_DURATION_EXCEEDED;
   }
   // Error if not even a single waypoint could be generated
   if (waypoints_.positions.size() < 2)
   {
-    error_code = ErrorCodeEnum::kFailureToGenerateSingleWaypoint;
+    error_code = ErrorCodeEnum::FAILURE_TO_GENERATE_SINGLE_WAYPOINT;
   }
 
   return error_code;
 }
 
-inline ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_last_successful)
 {
   ErrorCodeEnum error_code = forwardLimitCompensation(index_last_successful);
   if (error_code)
@@ -570,7 +558,7 @@ inline ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* 
   return error_code;
 }
 
-inline void SingleJointGenerator::calculateDerivativesFromPosition()
+void SingleJointGenerator::calculateDerivativesFromPosition()
 {
   // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities = DiscreteDifferentiation(waypoints_.positions, timestep_, current_joint_state_.velocity);
@@ -579,7 +567,7 @@ inline void SingleJointGenerator::calculateDerivativesFromPosition()
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, timestep_, 0);
 }
 
-inline void SingleJointGenerator::calculateDerivativesFromVelocity()
+void SingleJointGenerator::calculateDerivativesFromVelocity()
 {
   // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
