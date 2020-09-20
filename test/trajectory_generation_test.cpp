@@ -552,12 +552,13 @@ TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 
   // Reading MoveIt experimental data from .txt files
   moveit_des_positions = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt");
-  moveit_des_velocities = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/"
-                                                           "moveit_des_vel.txt");
-  moveit_des_accelerations = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/"
-                                                              "moveit_des_acc.txt");
-  moveit_times_from_start = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/"
-                                                             "moveit_time_from_start.txt");
+  moveit_des_velocities = loadWaypointsFromFile(REF_PATH +
+                                                "/test/data/30_percent_speed_oscillation/"
+                                                "moveit_des_vel.txt");
+  moveit_des_accelerations =
+      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_acc.txt");
+  moveit_times_from_start =
+      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_time_from_start.txt");
 
   // For each MoveIt waypoint
   for (std::size_t point = 0; point < moveit_times_from_start.size() - 1; ++point)
