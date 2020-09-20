@@ -19,3 +19,7 @@
 
 # SSH Keys (used for Docker)
 id_rsa
+
+# Catkin tools
+/.catkin-tools/
+

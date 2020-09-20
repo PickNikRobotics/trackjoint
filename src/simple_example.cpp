@@ -29,8 +29,8 @@ int main(int argc, char** argv)
   // the whole trajectory at once.
   constexpr bool use_streaming_mode = false;
   // Optional logging of TrackJoint output
-  const std::string output_path_base = "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/"
-                                                                                "output_joint";
+  const std::string output_path_base =
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
