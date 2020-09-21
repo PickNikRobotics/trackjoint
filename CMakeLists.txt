@@ -155,6 +155,7 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
   )
 
+  add_rostest(test/test_examples.test)
 endif()
 
 ## Test for correct C++ source code

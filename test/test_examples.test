@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <test pkg="trackjoint" type="test_examples.py" test-name="simple_example_test"
+	time-limit="10" args=""/>
+</launch>
