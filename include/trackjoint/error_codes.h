@@ -37,6 +37,7 @@ enum ErrorCodeEnum
 /**
  * \brief Use this map to look up human-readable strings for each error code
  */
+// clang-format off
 const std::unordered_map<uint, std::string> ERROR_CODE_MAP(
     { { NO_ERROR, "No error, trajectory generation was successful" },
       { DESIRED_DURATION_TOO_SHORT, "Desired duration is too short, cannot have less than one timestep in a "
@@ -50,4 +51,5 @@ const std::unordered_map<uint, std::string> ERROR_CODE_MAP(
       { FAILURE_TO_GENERATE_SINGLE_WAYPOINT, "Failed to generate even a single new waypoint" },
       { LESS_THAN_TEN_TIMESTEPS_FOR_STREAMING_MODE, "In streaming mode, desired duration should be at least 10 "
                                                     "timesteps" } });
+// clang-format on
 }  // end namespace trackjoint
