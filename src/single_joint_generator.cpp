@@ -535,7 +535,7 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
     return error_code;
 
   // Helpful hint if limit comp fails on the first waypoint
-  if (index_last_successful_ == 1)
+  if (*index_last_successful == 1)
   {
     std::cout << "Limit compensation failed at the first waypoint. "
               << "Try a larger position_tolerance parameter or smaller timestep." << std::endl;
