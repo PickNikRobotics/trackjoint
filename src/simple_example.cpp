@@ -66,6 +66,8 @@ int main(int argc, char** argv)
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
                                            goal_joint_states, limits, position_tolerance, use_streaming_mode);
+  traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
+                 position_tolerance, use_streaming_mode);
   // This vector holds the trajectories for each DOF
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
   // Optionally, check user input for common errors, like current velocities being less than velocity limits
