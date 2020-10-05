@@ -65,6 +65,8 @@ int main(int argc, char** argv)
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, start_state,
                                            goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
+  traj_gen.reset(timestep, desired_duration, max_duration, start_state, goal_joint_states, limits,
+                 waypoint_position_tolerance, use_streaming_mode);
 
   // An example of optional input validation
   trackjoint::ErrorCodeEnum error_code = traj_gen.inputChecking(start_state, goal_joint_states, limits, timestep);

@@ -72,6 +72,8 @@ int main(int argc, char** argv)
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
                                            goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
+  traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
+                 waypoint_position_tolerance, use_streaming_mode);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
 
