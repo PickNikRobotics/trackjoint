@@ -447,6 +447,9 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
            (desired_duration_ < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
     {
       // Try increasing the duration, based on fraction of states that weren't reached successfully
+      // Choice of 0.2 is subjective but it should be between 0-1.
+      // A smaller fraction will find a solution that's closer to time-optimal because it adds fewer new waypoints to
+      // the search. But, a smaller fraction likely increases runtime.
       desired_duration_ =
           (1. + 0.2 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
 
