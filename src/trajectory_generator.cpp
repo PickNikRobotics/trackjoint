@@ -256,6 +256,13 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
   std::ofstream output_file;
   std::string output_path;
 
+  // Warning if the folder does not exist
+  if (!boost::filesystem::exists(base_filepath))
+  {
+    std::cout << "Directory " << base_filepath << " does not exist. Cannot save results." << std::endl;
+    return;
+  }
+
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
   {
     output_path = base_filepath + std::to_string(joint + 1) + ".csv";

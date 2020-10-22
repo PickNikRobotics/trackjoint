@@ -21,6 +21,7 @@
 #include "trackjoint/utilities.h"
 
 // C++
+#include <boost/filesystem.hpp>
 #include <Eigen/Geometry>
 #include <memory>  // shared_ptr
 #include <vector>
