@@ -75,6 +75,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
     return error_code;
   }
 
+  // Extend the trajectory duration, if needed
   error_code = predictTimeToReach();
 
   return error_code;
@@ -528,13 +529,6 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   ErrorCodeEnum error_code = forwardLimitCompensation(index_last_successful);
   if (error_code)
     return error_code;
-
-  // Helpful hint if limit comp fails on the first waypoint
-  if (*index_last_successful == 1)
-  {
-    std::cout << "Limit compensation failed at the first waypoint. "
-              << "Try a larger position_tolerance parameter or smaller timestep." << std::endl;
-  }
 
   // Re-compile the position with these modifications.
   // Ensure the first and last elements are a perfect match with initial/final
