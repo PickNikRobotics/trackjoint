@@ -83,40 +83,37 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
 
 void SingleJointGenerator::extendTrajectoryDuration()
 {
+  size_t orig_num_waypoints = waypoints_.elapsed_times.size();
   size_t new_num_waypoints = 1 + desired_duration_ / configuration_.timestep;
-//  // A new vector of regularly-spaced timesteps, with the extended duration
-//  Eigen::RowVectorXd new_times;
-//  new_times.setLinSpaced(new_num_waypoints, 0, desired_duration_);
 
   // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
   // ^This is the best way because it reduces overshoot.
   // Otherwise, re-generate a new trajectory from scratch.
   if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
   {
-    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
-    // This only decreases velocity/accel/jerk, so no worries re. limit violation
+    // Fit a spline function to the original positions but new (extended) duration
 
     // The algorithm:
     // Fit a spline function to the original waypoints, same number of waypoints, new (stretched) timesteps
-    // Ensure slopes at timestep(1:2) and timestep(end-1 : end) do not change (initial and goal slopes) 
+    // Ensure slopes at timestep(0:1) and timestep(end-1 : end) do not change (initial and goal slopes) 
     // Re-sample positions from the spline at the correct delta-t
     // Run forwardLimitCompensation() to ensure limits are obeyed
-    Eigen::RowVectorXd stretched_times = Eigen::RowVectorXd::Zero(waypoints_.elapsed_times.size()); //(waypoints_.elapsed_times.size());
+    Eigen::RowVectorXd stretched_times = Eigen::RowVectorXd::Zero(orig_num_waypoints);
     // Gradually stretch the time steps -- no stretch at either end, 2*nominal duration extension in the middle
     // This ends up with an average stretch as desired.
     // We do not stretch either end so that initial slope & final slope do not change
-    size_t orig_num_waypoints = waypoints_.elapsed_times.size();
-    double net_stretch = desired_duration_ / waypoints_.elapsed_times(waypoints_.elapsed_times.size() - 1);
+    double net_stretch = desired_duration_ / waypoints_.elapsed_times(orig_num_waypoints - 1);
     double stretch_factor = 0;
-    for (size_t timestep_idx = 1; timestep_idx < new_num_waypoints; ++timestep_idx)
+    for (size_t timestep_idx = 1; timestep_idx < orig_num_waypoints; ++timestep_idx)
     {
       if (timestep_idx <= orig_num_waypoints / 2)
       {
-        stretch_factor = 1 + 4. * (net_stretch - 1) * timestep_idx / orig_num_waypoints;
+        stretch_factor = 1 + 4. * (net_stretch - 1) * static_cast<double>(timestep_idx) / static_cast<double>(orig_num_waypoints);
       }
       else
       {
-        stretch_factor = -timestep_idx * (4 * net_stretch - 2) / orig_num_waypoints + 4 * net_stretch - 1;
+        stretch_factor = -static_cast<double>(timestep_idx) * (4 * net_stretch - 2) / static_cast<double>(orig_num_waypoints) + 4 * net_stretch - 1;
+        std::cout << -static_cast<double>(timestep_idx) << "  " << stretch_factor << std::endl;
       }
       stretched_times(timestep_idx) = stretched_times(timestep_idx - 1) + configuration_.timestep * stretch_factor;
     }
