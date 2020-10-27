@@ -103,6 +103,7 @@ void SingleJointGenerator::extendTrajectoryDuration()
     // This ends up with an average stretch as desired.
     // We do not stretch either end so that initial slope & final slope do not change
     double net_stretch = desired_duration_ / waypoints_.elapsed_times(orig_num_waypoints - 1);
+    std::cout << "Net stretch: " << net_stretch << std::endl;
     double stretch_factor = 0;
     for (size_t timestep_idx = 1; timestep_idx < orig_num_waypoints; ++timestep_idx)
     {
@@ -113,10 +114,12 @@ void SingleJointGenerator::extendTrajectoryDuration()
       else
       {
         stretch_factor = -static_cast<double>(timestep_idx) * (4 * net_stretch - 2) / static_cast<double>(orig_num_waypoints) + 4 * net_stretch - 1;
-        std::cout << -static_cast<double>(timestep_idx) << "  " << stretch_factor << std::endl;
       }
+      std::cout << stretch_factor << std::endl;
       stretched_times(timestep_idx) = stretched_times(timestep_idx - 1) + configuration_.timestep * stretch_factor;
     }
+    // Final time is the new desired_duration_
+    stretched_times(orig_num_waypoints - 1) = desired_duration_;
 
     Eigen::RowVectorXd position(waypoints_.positions);
     const auto fit = SplineFitting1D::Interpolate(position, 2, stretched_times);
