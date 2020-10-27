@@ -104,19 +104,15 @@ void SingleJointGenerator::extendTrajectoryDuration()
     // This ends up with an average stretch as desired.
     // We do not stretch either end so that initial slope & final slope do not change
     double net_stretch = desired_duration_ / waypoints_.elapsed_times(orig_num_waypoints - 1);
-    std::cout << "Net stretch: " << net_stretch << std::endl;
-    std::cout << "Original num waypoints: " << orig_num_waypoints << std::endl;
     double stretch_factor = 0;
     for (size_t timestep_idx = 1; timestep_idx < orig_num_waypoints; ++timestep_idx)
     {
       if (timestep_idx <= orig_num_waypoints / 2.)
       {
         stretch_factor = 1 + 4. * (net_stretch - 1) * static_cast<double>(timestep_idx) / static_cast<double>(orig_num_waypoints);
-        std::cout << "Ramping up!  Waypoint idx: " << timestep_idx << "   " << stretch_factor << std::endl;
       }
       else
       {
-        std::cout << "Ramping down!  Waypoint idx: " << timestep_idx << "   " << stretch_factor << std::endl;
         stretch_factor = ((4 - 4 * net_stretch) / static_cast<double>(orig_num_waypoints)) * static_cast<double>(timestep_idx) + 4. * net_stretch - 3. - 2. / static_cast<double>(orig_num_waypoints);
       }
       stretched_times(timestep_idx) = stretched_times(timestep_idx - 1) + configuration_.timestep * stretch_factor;
@@ -134,8 +130,6 @@ void SingleJointGenerator::extendTrajectoryDuration()
 
     for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
       waypoints_.positions[idx] = fit(waypoints_.elapsed_times(idx)).coeff(0);
-
-    std::cout << waypoints_.positions.matrix() << std::endl;
 
     calculateDerivativesFromPosition();
     forwardLimitCompensation(&index_last_successful_);
