@@ -22,6 +22,7 @@ env:
       - TEST=clang-format    # check code formatting for compliance to .clang-format rules
       - TEST=clang-tidy-fix  # perform static code analysis and compliance check against .clang-tidy rules
       - TEST=catkin_lint     # perform catkin_lint checks
+      - TEST=code-coverage   # check test coverage
       # pull in packages from a local .rosinstall file
       - UPSTREAM_WORKSPACE=trackjoint.rosinstall
 
