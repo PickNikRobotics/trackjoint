@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+#
+# sudo apt-get install python3-pandas
+import pandas
+import matplotlib.pyplot as plt
+import sys
+
+# Read command-line args
+if len(sys.argv) < 2:
+    sys.stderr.write(f"Usage: {sys.argv[0]} FILE.csv [YLIM_MIN YLIM_MAX]\n")
+    sys.exit(1)
+fname = sys.argv[1]
+ylim = tuple([int(i) for i in (sys.argv[2:] + [-2000, 2000])[:2]])
+
+# Generate and show plot
+data = pandas.read_csv(fname, sep=' ')
+data.columns=['t', 'd', 'v', 'a', 'j']
+ax = data.plot(x='t', ylim=ylim)
+plt.show()
