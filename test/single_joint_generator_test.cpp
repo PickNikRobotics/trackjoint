@@ -69,7 +69,7 @@ protected:
 
   Eigen::Index size()
   {
-    assert (num_waypoints_ > 0);
+    assert(num_waypoints_ > 0);
     return num_waypoints_;
   }
 
@@ -85,68 +85,57 @@ protected:
     if (max_duration_ == 0)
       max_duration_ = desired_duration_;
 
-    SingleJointGenerator gen(kNumWaypointsThreshold_,
-                             kMaxNumWaypointsFullTrajectory_);
-    gen.reset(timestep_, max_duration_, current_joint_state_,
-              goal_joint_state_, joint_limits_, num_waypoints_,
+    SingleJointGenerator gen(kNumWaypointsThreshold_, kMaxNumWaypointsFullTrajectory_);
+    gen.reset(timestep_, max_duration_, current_joint_state_, goal_joint_state_, joint_limits_, num_waypoints_,
               position_tolerance_, use_streaming_mode_, true);
     int err = gen.generateTrajectory();
-    std::cerr << name() << " Error: "
-              << trackjoint::ERROR_CODE_MAP.at(err) << std::endl;
+    std::cerr << name() << " Error: " << trackjoint::ERROR_CODE_MAP.at(err) << std::endl;
     EXPECT_EQ(ErrorCodeEnum::NO_ERROR, err);
     output_trajectory_ = gen.getTrajectory();
   }
 
   void checkBounds()
   {
-      if (output_trajectory_.elapsed_times.size() == 0)
-        return;
+    if (output_trajectory_.elapsed_times.size() == 0)
+      return;
 
-      // Sanity check vector lengths
-      EXPECT_EQ(output_trajectory_.elapsed_times.size(), size());
-      EXPECT_EQ(output_trajectory_.positions.size(), size());
-      EXPECT_EQ(output_trajectory_.velocities.size(), size());
-      EXPECT_EQ(output_trajectory_.accelerations.size(), size());
-      EXPECT_EQ(output_trajectory_.jerks.size(), size());
+    // Sanity check vector lengths
+    EXPECT_EQ(output_trajectory_.elapsed_times.size(), size());
+    EXPECT_EQ(output_trajectory_.positions.size(), size());
+    EXPECT_EQ(output_trajectory_.velocities.size(), size());
+    EXPECT_EQ(output_trajectory_.accelerations.size(), size());
+    EXPECT_EQ(output_trajectory_.jerks.size(), size());
 
-      double elapsed_time = output_trajectory_.elapsed_times[size() - 1];
+    double elapsed_time = output_trajectory_.elapsed_times[size() - 1];
 
-      // Get estimate of min/max position and velocity using start and
-      // end states
-      double min_pos = std::min(current_joint_state_.position,
-                                goal_joint_state_.position);
-      double max_pos = std::max(current_joint_state_.position,
-                                goal_joint_state_.position);
-      double max_vel_mag =
-          std::max(std::fabs(current_joint_state_.velocity),
-                   std::fabs(goal_joint_state_.velocity));
+    // Get estimate of min/max position and velocity using start and
+    // end states
+    double min_pos = std::min(current_joint_state_.position, goal_joint_state_.position);
+    double max_pos = std::max(current_joint_state_.position, goal_joint_state_.position);
+    double max_vel_mag = std::max(std::fabs(current_joint_state_.velocity), std::fabs(goal_joint_state_.velocity));
 
-      // Here, we consider two cases to estimate worst case min/max
-      //
-      // Case 1: We move at the maximum start/end velocity for half of
-      // the trajectory duration
-      // Needed for cases where we do a S curve
-      double potential_min_duration = min_pos - max_vel_mag * elapsed_time / 2.0;
-      double potential_max_duration = max_pos + max_vel_mag * elapsed_time / 2.0;
+    // Here, we consider two cases to estimate worst case min/max
+    //
+    // Case 1: We move at the maximum start/end velocity for half of
+    // the trajectory duration
+    // Needed for cases where we do a S curve
+    double potential_min_duration = min_pos - max_vel_mag * elapsed_time / 2.0;
+    double potential_max_duration = max_pos + max_vel_mag * elapsed_time / 2.0;
 
-      // Case 2: We move at the velocity needed to move from start to
-      // end for half of the trajectory duration
-      // Needed for cases with start and end velocity of 0
-      double dist_vel_mag =
-          std::fabs((goal_joint_state_.position - current_joint_state_.position)
-                    / elapsed_time);
-      double potential_min_duration_2 = min_pos - dist_vel_mag * elapsed_time / 2.0;
-      double potential_max_duration_2 = max_pos + dist_vel_mag * elapsed_time / 2.0;
+    // Case 2: We move at the velocity needed to move from start to
+    // end for half of the trajectory duration
+    // Needed for cases with start and end velocity of 0
+    double dist_vel_mag = std::fabs((goal_joint_state_.position - current_joint_state_.position) / elapsed_time);
+    double potential_min_duration_2 = min_pos - dist_vel_mag * elapsed_time / 2.0;
+    double potential_max_duration_2 = max_pos + dist_vel_mag * elapsed_time / 2.0;
 
-      min_pos = std::min(potential_min_duration, potential_min_duration_2);
-      max_pos = std::max(potential_max_duration, potential_max_duration_2);
+    min_pos = std::min(potential_min_duration, potential_min_duration_2);
+    max_pos = std::max(potential_max_duration, potential_max_duration_2);
 
-      EXPECT_TRUE(VerifyVectorWithinBounds(min_pos, max_pos,
-                                           output_trajectory_.positions));
+    EXPECT_TRUE(VerifyVectorWithinBounds(min_pos, max_pos, output_trajectory_.positions));
   }
 
-  double calculatePositionAccuracy(KinematicState goal_joint_state,
-                                   JointTrajectory& trajectory)
+  double calculatePositionAccuracy(KinematicState goal_joint_state, JointTrajectory& trajectory)
   {
     double goal_position = goal_joint_state_.position;
     double final_position = trajectory.positions((size() - 1));
@@ -157,17 +146,15 @@ protected:
 
   void checkPositionError()
   {
-    position_error_ = calculatePositionAccuracy(
-      goal_joint_state_, output_trajectory_);
+    position_error_ = calculatePositionAccuracy(goal_joint_state_, output_trajectory_);
     EXPECT_LT(position_error_, position_tolerance_);
   }
 
   void checkTimestep()
   {
     double timestep_tolerance = 0.1 * timestep_;
-    EXPECT_NEAR(output_trajectory_.elapsed_times[1]
-                - output_trajectory_.elapsed_times[0],
-                timestep_, timestep_tolerance);
+    EXPECT_NEAR(output_trajectory_.elapsed_times[1] - output_trajectory_.elapsed_times[0], timestep_,
+                timestep_tolerance);
   }
 
   void checkDuration()
@@ -179,14 +166,11 @@ protected:
 
   void verifyVelAccelJerkLimits()
   {
-    double maxVelocityMagnitude = \
-      output_trajectory_.velocities.cwiseAbs().maxCoeff();
+    double maxVelocityMagnitude = output_trajectory_.velocities.cwiseAbs().maxCoeff();
     EXPECT_LE(maxVelocityMagnitude, joint_limits_.velocity_limit);
-    double maxAccelerationMagnitude = \
-      output_trajectory_.accelerations.cwiseAbs().maxCoeff();
+    double maxAccelerationMagnitude = output_trajectory_.accelerations.cwiseAbs().maxCoeff();
     EXPECT_LE(maxAccelerationMagnitude, joint_limits_.acceleration_limit);
-    double maxJerkMagnitude = \
-      output_trajectory_.jerks.cwiseAbs().maxCoeff();
+    double maxJerkMagnitude = output_trajectory_.jerks.cwiseAbs().maxCoeff();
     EXPECT_LE(maxJerkMagnitude, joint_limits_.jerk_limit);
   }
 
@@ -199,10 +183,8 @@ protected:
     output_file.open(file, std::ofstream::out);
     for (Eigen::Index waypoint = 0; waypoint < output_trajectory_.positions.size(); ++waypoint)
     {
-      output_file << output_trajectory_.elapsed_times(waypoint) << " "
-                  << output_trajectory_.positions(waypoint) << " "
-                  << output_trajectory_.velocities(waypoint) << " "
-                  << output_trajectory_.accelerations(waypoint) << " "
+      output_file << output_trajectory_.elapsed_times(waypoint) << " " << output_trajectory_.positions(waypoint) << " "
+                  << output_trajectory_.velocities(waypoint) << " " << output_trajectory_.accelerations(waypoint) << " "
                   << output_trajectory_.jerks(waypoint) << std::endl;
     }
     output_file.clear();
