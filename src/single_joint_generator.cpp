@@ -344,10 +344,9 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
-        double backward_jerk =
-            (backward_accel -
-             (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) / configuration_.timestep) /
-            configuration_.timestep;
+        double backward_jerk = (backward_accel - (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) /
+                                                     configuration_.timestep) /
+                               configuration_.timestep;
         // Accel and jerk, calculated from upcoming waypoints
         double forward_accel = (waypoints_.velocities(index + 1) - new_velocity) / configuration_.timestep;
         double forward_jerk =
@@ -386,10 +385,9 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
-        double backward_jerk =
-            (backward_accel -
-             (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) / configuration_.timestep) /
-            configuration_.timestep;
+        double backward_jerk = (backward_accel - (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) /
+                                                     configuration_.timestep) /
+                               configuration_.timestep;
         // Accel and jerk, calculated from upcoming waypoints
         double forward_accel = (waypoints_.velocities(index + 1) - new_velocity) / configuration_.timestep;
         double forward_jerk =

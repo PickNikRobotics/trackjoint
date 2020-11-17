@@ -155,6 +155,15 @@ if(CATKIN_ENABLE_TESTING)
     ${catkin_LIBRARIES}
   )
 
+  add_rostest_gtest(single_joint_generator_test
+    test/single_joint_generator_test.test
+    test/single_joint_generator_test.cpp
+  )
+  target_link_libraries(single_joint_generator_test
+    ${LIBRARY_NAME}
+    ${catkin_LIBRARIES}
+  )
+
 endif()
 
 ## Test for correct C++ source code
