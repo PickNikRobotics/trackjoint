@@ -96,18 +96,18 @@ protected:
       // Here, we consider two cases to estimate worst case min/max
       // Case 1: We move at the maximum start/end velocity for half of the trajectory duration
       // Needed for cases where we do a S curve
-      double potential_min = min_pos - max_vel_mag * elapsed_time / 2.0;
-      double potential_max = max_pos + max_vel_mag * elapsed_time / 2.0;
+      double potential_min_duration = min_pos - max_vel_mag * elapsed_time / 2.0;
+      double potential_max_duration = max_pos + max_vel_mag * elapsed_time / 2.0;
 
       // Case 2: We move at the velocity needed to move from start to end for half of the trajectory duration
       // Needed for cases with start and end velocity of 0
       double dist_vel_mag =
           std::fabs((goal_joint_states_[i].position - current_joint_states_[i].position) / elapsed_time);
-      double potential_min_2 = min_pos - dist_vel_mag * elapsed_time / 2.0;
-      double potential_max_2 = max_pos + dist_vel_mag * elapsed_time / 2.0;
+      double potential_min_duration_2 = min_pos - dist_vel_mag * elapsed_time / 2.0;
+      double potential_max_duration_2 = max_pos + dist_vel_mag * elapsed_time / 2.0;
 
-      min_pos = std::min(potential_min, potential_min_2);
-      max_pos = std::max(potential_max, potential_max_2);
+      min_pos = std::min(potential_min_duration, potential_min_duration_2);
+      max_pos = std::max(potential_max_duration, potential_max_duration_2);
 
       EXPECT_TRUE(VerifyVectorWithinBounds(min_pos, max_pos, output_trajectories_[i].positions));
     }
