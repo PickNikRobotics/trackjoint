@@ -169,7 +169,9 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 {
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
-  // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
+  // Use a first-order integration for velocity (i.e. based only on acceleration) since we use first-order
+  // differentiation, too.
+  // 2. vel(i) == vel(i-1) + accel(i) * dt
 
   // Start with the assumption that the entire trajectory can be completed.
   // Streaming mode returns at the minimum number of waypoints.
