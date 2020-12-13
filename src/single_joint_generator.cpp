@@ -169,9 +169,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 {
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
-  // Use a first-order integration for velocity (i.e. based only on acceleration) since we use first-order
-  // differentiation, too.
-  // 2. vel(i) == vel(i-1) + accel(i) * dt
+  // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
 
   // Start with the assumption that the entire trajectory can be completed.
   // Streaming mode returns at the minimum number of waypoints.
@@ -203,7 +201,9 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
       waypoints_.accelerations(index) =
           waypoints_.accelerations(index - 1) + waypoints_.jerks(index) * configuration_.timestep;
-      waypoints_.velocities(index) = waypoints_.velocities(index - 1) + waypoints_.accelerations(index);
+      waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
+                                     waypoints_.accelerations(index - 1) * configuration_.timestep +
+                                     0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
       delta_v = 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
@@ -245,8 +245,8 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
             (waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep;
         // Use a first-order integration (based only on acceleration) since we use first-order differentiation, too
         waypoints_.velocities(index) =
-            waypoints_.velocities(index - 1) + waypoints_.accelerations(index) * configuration_.timestep;
-        std::cout << "Index: " << index << " Accel: " << (waypoints_.velocities(index) - waypoints_.velocities(index-1)) / configuration_.timestep << std::endl;
+            waypoints_.velocities(index - 1) + waypoints_.accelerations(index - 1) * configuration_.timestep +
+            0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
       }
       else
       {
@@ -272,22 +272,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         break;
       }
     }
-    // If accel limit didn't change, we still need to update the velocity vector based on changes at previous waypoints
-    else
-    {
-      waypoints_.velocities(index) = waypoints_.velocities(index - 1) + waypoints_.accelerations(index) * configuration_.timestep;
-    }
   }
-  std::cout << "accel for all waypoints:" << std::endl;
-// //  std::cout << waypoints_.accelerations.array() << std::endl;
-  for (size_t i = 1; i < waypoints_.velocities.size(); ++i)
-  {
-    std::cout << "Index: " << i << " Accel: " << (waypoints_.velocities[i] - waypoints_.velocities[i-1])/configuration_.timestep << std::endl;
-  }
-
-  // Re-calculate derivatives from the updated velocity vector
-  calculateDerivativesFromVelocity();
-  std::cout << "Max accel after accel comp: " << waypoints_.accelerations.cwiseAbs().maxCoeff() << std::endl;
 
   // Compensate for velocity limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
