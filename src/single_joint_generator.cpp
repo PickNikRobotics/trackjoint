@@ -243,7 +243,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) =
             (waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep;
-        // Use a first-order integration (only look at acceleration) since we use first-order differentiation, too
+        // Use a first-order integration (based only on acceleration) since we use first-order differentiation, too
         waypoints_.velocities(index) =
             waypoints_.velocities(index - 1) + waypoints_.accelerations(index) * configuration_.timestep;// +
             //0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
@@ -257,20 +257,20 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         break;
       }
 
-      // // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      // delta_v = delta_a * configuration_.timestep;
-      // successful_compensation = backwardLimitCompensation(index, -delta_v);
-      // if (!successful_compensation)
-      // {
-      //   position_error = position_error + delta_v * configuration_.timestep;
-      // }
-      // if (fabs(position_error) > configuration_.position_tolerance)
-      // {
-      //   recordFailureTime(index, index_last_successful);
-      //   // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-      //   // subsequent code
-      //   break;
-      // }
+      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+      delta_v = delta_a * configuration_.timestep;
+      successful_compensation = backwardLimitCompensation(index, -delta_v);
+      if (!successful_compensation)
+      {
+        position_error = position_error + delta_v * configuration_.timestep;
+      }
+      if (fabs(position_error) > configuration_.position_tolerance)
+      {
+        recordFailureTime(index, index_last_successful);
+        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
+        // subsequent code
+        break;
+      }
     }
   }
 
