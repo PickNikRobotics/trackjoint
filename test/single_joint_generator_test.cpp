@@ -227,23 +227,23 @@ TEST_F(SingleJointGeneratorTest, LimitAcceleration)
   runTest();
 }
 
-TEST_F(SingleJointGeneratorTest, LimitVelocity)
-{
-  // Limit only velocity
-  // Derived from LinuxCNC "limit3/limit-velocity" test
+// TEST_F(SingleJointGeneratorTest, LimitVelocity)
+// {
+//   // Limit only velocity
+//   // Derived from LinuxCNC "limit3/limit-velocity" test
 
-  goal_joint_state_.position = 400;
+//   goal_joint_state_.position = 400;
 
-  joint_limits_.velocity_limit = 500;
-  joint_limits_.acceleration_limit = 1e99;
-  joint_limits_.jerk_limit = 1e99;
+//   joint_limits_.velocity_limit = 500;
+//   joint_limits_.acceleration_limit = 1e99;
+//   joint_limits_.jerk_limit = 1e99;
 
-  desired_duration_ = 0.800;
-  max_duration_ = 10.0;
-  timestep_ = 0.001;
+//   desired_duration_ = 0.800;
+//   max_duration_ = 10.0;
+//   timestep_ = 0.001;
 
-  runTest();
-}
+//   runTest();
+// }
 
 }  // namespace trackjoint
 

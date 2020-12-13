@@ -237,15 +237,16 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       // Check jerk limit before applying the change.
       // The first condition checks if the new jerk(i) is going to exceed the limit. Pretty straightforward.
       // We also calculate a new jerk(i+1). The second condition checks if jerk(i+1) would exceed the limit.
-      if ((fabs((temp_accel - waypoints_.accelerations(index)) / configuration_.timestep) <= jerk_limit) &&
+      if ((fabs((temp_accel - waypoints_.accelerations(index - 1)) / configuration_.timestep) <= jerk_limit) &&
           (fabs(waypoints_.jerks(index) + delta_a / configuration_.timestep) <= jerk_limit))
       {
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) =
             (waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep;
+        // Use a first-order integration (only look at acceleration) since we use first-order differentiation, too
         waypoints_.velocities(index) =
-            waypoints_.velocities(index - 1) + waypoints_.accelerations(index - 1) * configuration_.timestep +
-            0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
+            waypoints_.velocities(index - 1) + waypoints_.accelerations(index) * configuration_.timestep;// +
+            //0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
       }
       else
       {
@@ -256,20 +257,20 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         break;
       }
 
-      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      delta_v = delta_a * configuration_.timestep;
-      successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
-      {
-        position_error = position_error + delta_v * configuration_.timestep;
-      }
-      if (fabs(position_error) > configuration_.position_tolerance)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
+      // // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+      // delta_v = delta_a * configuration_.timestep;
+      // successful_compensation = backwardLimitCompensation(index, -delta_v);
+      // if (!successful_compensation)
+      // {
+      //   position_error = position_error + delta_v * configuration_.timestep;
+      // }
+      // if (fabs(position_error) > configuration_.position_tolerance)
+      // {
+      //   recordFailureTime(index, index_last_successful);
+      //   // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
+      //   // subsequent code
+      //   break;
+      // }
     }
   }
 
@@ -311,6 +312,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
   // Re-calculate derivatives from the updated velocity vector
   calculateDerivativesFromVelocity();
+  std::cout << "Max accel after vel comp: " << waypoints_.accelerations.cwiseAbs().maxCoeff() << std::endl;
 
   return ErrorCodeEnum::NO_ERROR;
 }
@@ -326,10 +328,8 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 
   bool successful_compensation = false;
 
-  // Add a bit of velocity at step i to compensate for the limit at timestep
-  // i+1.
-  // Cannot go beyond index 2 because we use a 2-index window for derivative
-  // calculations.
+  // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
+  // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
   for (size_t index = limited_index; index > 2; --index)
   {
     // if there is some room to increase the velocity at timestep i
@@ -380,8 +380,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       // Can't make all of the correction in this timestep, so make as much of a change as possible
       if (!successful_compensation)
       {
-        // This is what accel and jerk would be if we set velocity(index) to the
-        // limit
+        // This is what accel and jerk would be if we set velocity(index) to the limit
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
