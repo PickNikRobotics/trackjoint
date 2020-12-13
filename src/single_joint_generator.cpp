@@ -229,7 +229,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
   position_error = 0;
   for (size_t index = 1; index < *index_last_successful; ++index)
   {
-    if (fabs(waypoints_.accelerations(index)) > acceleration_limit)
+    if (fabs((waypoints_.velocities(index) - waypoints_.velocities(index - 1)) / configuration_.timestep) > acceleration_limit)
     {
       double temp_accel = std::copysign(acceleration_limit, waypoints_.accelerations(index));
       delta_a = temp_accel - waypoints_.accelerations(index);
