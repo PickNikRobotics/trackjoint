@@ -243,7 +243,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) =
             (waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep;
-        // Use a first-order integration (based only on acceleration) since we use first-order differentiation, too
         waypoints_.velocities(index) =
             waypoints_.velocities(index - 1) + waypoints_.accelerations(index - 1) * configuration_.timestep +
             0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
