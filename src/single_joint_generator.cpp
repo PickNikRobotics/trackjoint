@@ -449,13 +449,11 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   const double one_sixth = 0.166667;
   // Initial waypoint
   waypoints_.positions(0) = current_joint_state_.position;
-  for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()) - 1; ++index)
+  for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()); ++index)
     waypoints_.positions(index) = waypoints_.positions(index - 1) +
                                   waypoints_.velocities(index - 1) * configuration_.timestep +
                                   0.5 * waypoints_.accelerations(index - 1) * pow(configuration_.timestep, 2) +
                                   one_sixth * waypoints_.jerks(index - 1) * pow(configuration_.timestep, 3);
-
-  waypoints_.positions(waypoints_.positions.size() - 1) = goal_joint_state_.position;
 
   return error_code;
 }
