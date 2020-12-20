@@ -189,7 +189,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
   // Do not want to affect vel/accel at the first/last timestep
   for (size_t index = 1; index < *index_last_successful; ++index)
   {
-    if (fabs(waypoints_.jerks(index)) > jerk_limit)
+    if (fabs((waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep) > jerk_limit)
     {
       double delta_j = std::copysign(jerk_limit, waypoints_.jerks(index)) - waypoints_.jerks(index);
       waypoints_.jerks(index) = std::copysign(jerk_limit, waypoints_.jerks(index));
