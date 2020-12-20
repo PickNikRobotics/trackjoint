@@ -204,24 +204,12 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
-      {
-        position_error = position_error + delta_v * configuration_.timestep;
-      }
-      if (fabs(position_error) > configuration_.position_tolerance)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
     }
   }
 
   // Compensate for acceleration limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided acceleration at the first timestep, so start at index 2.
   // Also do not want to affect user-provided acceleration at the last timestep.
-  position_error = 0;
   for (size_t index = 1; index < *index_last_successful; ++index)
   {
     if (fabs((waypoints_.velocities(index) - waypoints_.velocities(index - 1)) / configuration_.timestep) > acceleration_limit)
@@ -241,30 +229,12 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.velocities(index) =
             waypoints_.velocities(index - 1) + waypoints_.accelerations(index - 1) * configuration_.timestep +
             0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
-      }
-      else
-      {
-        // Acceleration and jerk limits cannot both be satisfied
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
 
-      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      delta_v = delta_a * configuration_.timestep;
-      successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
-      {
-        position_error = position_error + delta_v * configuration_.timestep;
+        // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+        delta_v = delta_a * configuration_.timestep;
+        successful_compensation = backwardLimitCompensation(index, -delta_v);
       }
-      if (fabs(position_error) > configuration_.position_tolerance)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
+      // TODO(andyz): need an "else" here, to make as much of an acceleration correction as possible
     }
   }
 
@@ -290,17 +260,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       }
       else
         position_error = 0;
-
-      if (fabs(position_error) > configuration_.position_tolerance ||
-          fabs(waypoints_.accelerations(index)) > acceleration_limit || fabs(waypoints_.jerks(index)) > jerk_limit ||
-          fabs(waypoints_.accelerations(index + 1)) > acceleration_limit ||
-          fabs(waypoints_.jerks(index + 1)) > jerk_limit)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
     }
   }
 
