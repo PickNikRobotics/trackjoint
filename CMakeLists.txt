@@ -81,23 +81,6 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
-# A streaming example (update within a loop)
-add_executable(
-  ${PROJECT_NAME}_streaming_example
-  src/streaming_example.cpp
-)
-# Rename C++ executable without namespace
-set_target_properties(
-  ${PROJECT_NAME}_streaming_example
-  PROPERTIES
-    OUTPUT_NAME streaming_example PREFIX ""
-)
-target_link_libraries(
-  ${PROJECT_NAME}_streaming_example
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
-)
-
 add_executable(
   ${PROJECT_NAME}_three_dof_examples
   src/three_dof_examples.cpp
@@ -122,7 +105,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example
+    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION

@@ -21,8 +21,6 @@ int main(int argc, char** argv)
   constexpr int num_dof = 3;
   const double timestep = 0.0039;
   constexpr double max_duration = 30;
-  // Streaming mode returns just a few waypoints but executes very quickly.
-  constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
   const std::string output_path_base =
@@ -71,9 +69,9 @@ int main(int argc, char** argv)
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
-                                           goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
+                                           goal_joint_states, limits, waypoint_position_tolerance);
   traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
-                 waypoint_position_tolerance, use_streaming_mode);
+                 waypoint_position_tolerance);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
 

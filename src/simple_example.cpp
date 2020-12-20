@@ -25,9 +25,6 @@ int main(int argc, char** argv)
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
   constexpr double max_duration = 5;
-  // streaming mode returns just a few waypoints but executes very quickly. We won't use it here -- we'll calculate
-  // the whole trajectory at once.
-  constexpr bool use_streaming_mode = false;
   // Optional logging of TrackJoint output
   const std::string output_path_base =
       "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
@@ -65,9 +62,9 @@ int main(int argc, char** argv)
 
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
-                                           goal_joint_states, limits, position_tolerance, use_streaming_mode);
+                                           goal_joint_states, limits, position_tolerance);
   traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
-                 position_tolerance, use_streaming_mode);
+                 position_tolerance);
   // This vector holds the trajectories for each DOF
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
   // Optionally, check user input for common errors, like current velocities being less than velocity limits

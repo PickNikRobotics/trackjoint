@@ -60,7 +60,6 @@ protected:
   Limits joint_limits_;
   double position_error_;
   double position_tolerance_ = 1e-4;
-  bool use_streaming_mode_ = false;
   bool write_output_ = true;
   JointTrajectory output_trajectory_;
   // From trajectory_generator.h
@@ -87,7 +86,7 @@ protected:
 
     SingleJointGenerator gen(kNumWaypointsThreshold_, kMaxNumWaypointsFullTrajectory_);
     gen.reset(timestep_, max_duration_, current_joint_state_, goal_joint_state_, joint_limits_, num_waypoints_,
-              position_tolerance_, use_streaming_mode_, true);
+              position_tolerance_, true);
     int err = gen.generateTrajectory();
     std::cerr << name() << " Error: " << trackjoint::ERROR_CODE_MAP.at(err) << std::endl;
     EXPECT_EQ(ErrorCodeEnum::NO_ERROR, err);

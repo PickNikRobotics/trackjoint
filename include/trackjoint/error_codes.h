@@ -31,8 +31,7 @@ enum ErrorCodeEnum
   LIMIT_NOT_POSITIVE = 6,
   GOAL_POSITION_MISMATCH = 7,
   FAILURE_TO_GENERATE_SINGLE_WAYPOINT = 8,
-  LESS_THAN_TEN_TIMESTEPS_FOR_STREAMING_MODE = 9,
-  OBJECT_NOT_RESET = 10,
+  OBJECT_NOT_RESET = 9
 };
 
 /**
@@ -50,8 +49,6 @@ const std::unordered_map<uint, std::string> ERROR_CODE_MAP({
     { LIMIT_NOT_POSITIVE, "Vel/accel/jerk limits should be greater than zero" },
     { GOAL_POSITION_MISMATCH, "Mismatch between the final position and the goal position" },
     { FAILURE_TO_GENERATE_SINGLE_WAYPOINT, "Failed to generate even a single new waypoint" },
-    { LESS_THAN_TEN_TIMESTEPS_FOR_STREAMING_MODE,
-      "In streaming mode, desired duration should be at least 10 timesteps" },
     { OBJECT_NOT_RESET, "Must call reset() before generating trajectory" },
 
 });

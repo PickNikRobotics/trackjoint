@@ -31,7 +31,7 @@ class SingleJointGenerator
 public:
   /** \brief Constructor
    *
-   * input num_waypoints_threshold minimum/maximum number of waypoints for full trajectory/streaming modes, respectively
+   * input num_waypoints_threshold minimum/maximum number of waypoints
    * input max_num_waypoints_trajectory_mode to maintain determinism, return an error if more than this many waypoints
    * is required
    */
@@ -60,15 +60,13 @@ public:
    * input desired_num_waypoints nominal number of waypoints, calculated from user-supplied duration and timestep
    * input position_tolerance tolerance for how close the final trajectory should follow a smooth interpolation.
    *                          Should be set lower than the accuracy requirements for your task
-   * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
-   *                          waypoints.
    * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust
    * timestep
    *
    */
   void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
-             const double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
+             const double position_tolerance, bool timestep_was_upsampled);
 
   /** \brief Generate a jerk-limited trajectory for this joint
    *

@@ -19,7 +19,7 @@ TODO(andyze): fix Travis badge:
 
 ## Run
 
-1. rosrun trackjoint simple_example  (or streaming_example)
+1. rosrun trackjoint simple_example
 
 (You don't need to start `roscore` because the executable doesn't use ROS)
 
