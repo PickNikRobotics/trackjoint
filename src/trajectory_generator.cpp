@@ -284,15 +284,15 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
   // Find longest and shortest durations
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    if (single_joint_generators_[joint].getLastSuccessfulIndex() > longest_num_waypoints)
+    if (single_joint_generators_[joint].getTrajectoryLength() > longest_num_waypoints)
     {
-      longest_num_waypoints = single_joint_generators_[joint].getLastSuccessfulIndex() + 1;
+      longest_num_waypoints = single_joint_generators_[joint].getTrajectoryLength() ;
       index_of_longest_duration = joint;
     }
 
-    if (single_joint_generators_[joint].getLastSuccessfulIndex() < shortest_num_waypoints)
+    if (single_joint_generators_[joint].getTrajectoryLength() < shortest_num_waypoints)
     {
-      shortest_num_waypoints = single_joint_generators_[joint].getLastSuccessfulIndex() + 1;
+      shortest_num_waypoints = single_joint_generators_[joint].getTrajectoryLength();
     }
   }
 

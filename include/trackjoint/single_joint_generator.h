@@ -83,11 +83,8 @@ public:
    */
   JointTrajectory getTrajectory();
 
-  /** \brief Get the last waypoint that successfully matched the polynomial interpolation
-   *
-   * return the waypoint index
-   */
-  size_t getLastSuccessfulIndex();
+  /** \brief Get the number of waypoints */
+  size_t getTrajectoryLength();
 
   /** \brief Update desired_duration_ for this joint
    *
@@ -96,16 +93,6 @@ public:
   void updateTrajectoryDuration(double new_trajectory_duration);
 
 private:
-  /** \brief Record the index when compensation first failed */
-  inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
-  {
-    // Record the index when compensation first failed
-    if (current_index < *index_last_successful)
-    {
-      *index_last_successful = current_index;
-    }
-  };
-
   /** \brief interpolate from start to end state with a polynomial
    *
    * input times a vector of waypoint times.
@@ -114,7 +101,7 @@ private:
   Eigen::VectorXd interpolate(Eigen::VectorXd& times);
 
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
-  ErrorCodeEnum forwardLimitCompensation(size_t* index_last_successful);
+  ErrorCodeEnum forwardLimitCompensation(bool& successful_limit_comp);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
@@ -122,7 +109,7 @@ private:
 
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
-  ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
+  ErrorCodeEnum positionVectorLimitLookAhead(bool& successful_limit_comp);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum predictTimeToReach();
@@ -141,7 +128,7 @@ private:
   KinematicState goal_joint_state_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
-  size_t index_last_successful_;
+  bool successful_limit_comp_;
   bool is_reset_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint
