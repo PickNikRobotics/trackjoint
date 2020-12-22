@@ -266,8 +266,10 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // Re-calculate derivatives from the updated velocity vector
   calculateDerivativesFromVelocity();
 
-  // TODO(andyz): actually check for success
-  successful_limit_comp = true;
+  // Check for success
+  // TODO(andyz): check limits too
+  if ((waypoints_.positions(waypoints_.positions.size() - 1) - goal_joint_state_.position) < configuration_.position_tolerance)
+    successful_limit_comp = true;
 
   return ErrorCodeEnum::NO_ERROR;
 }

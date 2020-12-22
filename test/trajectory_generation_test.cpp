@@ -773,15 +773,15 @@ TEST_F(TrajectoryGenerationTest, LimitCompensation)
   const double desired_duration = 2.5;
   const double max_duration = desired_duration;
   const double timestep = 0.001;
+  const double position_tolerance = 0.002;
 
   TrajectoryGenerator traj_gen(num_dof_, timestep, desired_duration, max_duration, current_joint_states_,
-                               goal_joint_states_, limits_, position_tolerance_);
+                               goal_joint_states_, limits_, position_tolerance);
   traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states_, goal_joint_states_, limits_,
-                 position_tolerance_);
+                 position_tolerance);
   EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
-  const double position_tolerance = 1e-4;
   const double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
   EXPECT_LT(position_error, position_tolerance);
   // Timestep
@@ -888,15 +888,15 @@ TEST_F(TrajectoryGenerationTest, PositiveAndNegativeLimits)
   const double timestep = 0.001;
   const double desired_duration = 1800 * timestep;
   const double max_duration = 1800 * timestep;
+  const double position_tolerance = 1e-3;
 
   TrajectoryGenerator traj_gen(num_dof_, timestep, desired_duration, max_duration, current_joint_states_,
-                               goal_joint_states_, limits_, position_tolerance_);
+                               goal_joint_states_, limits_, position_tolerance);
   traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states_, goal_joint_states_, limits_,
-                 position_tolerance_);
+                 position_tolerance);
   EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
 
   // Position error
-  const double position_tolerance = 1e-4;
   const double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
   EXPECT_LT(position_error, position_tolerance);
   // Timestep
