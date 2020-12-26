@@ -187,7 +187,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
 
   // Compensate for jerk limits at each timestep, starting near the beginning
   // Do not want to affect vel/accel at the first/last timestep
-  for (size_t index = 1; index < waypoints_.positions.size() - 1; ++index)
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
     if (fabs((waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep) > jerk_limit)
     {
@@ -210,7 +210,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // Compensate for acceleration limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided acceleration at the first timestep, so start at index 2.
   // Also do not want to affect user-provided acceleration at the last timestep.
-  for (size_t index = 1; index < waypoints_.positions.size() - 1; ++index)
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
     if (fabs((waypoints_.velocities(index) - waypoints_.velocities(index - 1)) / configuration_.timestep) > acceleration_limit)
     {
@@ -242,7 +242,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
   // Also do not want to affect user-provided velocity at the last timestep.
   position_error = 0;
-  for (size_t index = 1; index < waypoints_.positions.size() - 1; ++index)
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
     // If the velocity limit would be exceeded
     if (fabs(waypoints_.velocities(index)) > velocity_limit)
