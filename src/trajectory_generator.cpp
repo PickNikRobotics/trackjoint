@@ -275,10 +275,6 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
 
 ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories)
 {
-  // No need to synchronize if there's only one joint
-  if (kNumDof == 1)
-    return ErrorCodeEnum::NO_ERROR;
-
   size_t longest_num_waypoints = 0;
   size_t index_of_longest_duration = 0;
   size_t shortest_num_waypoints = SIZE_MAX;

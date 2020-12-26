@@ -393,15 +393,13 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
 
   size_t new_num_waypoints = 0;
+  const double duration_extension_factor = 1.05;
   // Iterate over new durations until the position error is acceptable or the maximum duration is reached
   while (!successful_limit_comp_ &&
-         (desired_duration_ < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
+         ((duration_extension_factor * desired_duration_) < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
   {
-    // Try increasing the duration, based on fraction of states that weren't reached successfully
-    // Choice of 0.2 is subjective but it should be between 0-1.
-    // A smaller fraction will find a solution that's closer to time-optimal because it adds fewer new waypoints to
-    // the search. But, a smaller fraction likely increases runtime.
-    desired_duration_ = 1.1 * desired_duration_;
+    // Try increasing the duration
+    desired_duration_ = duration_extension_factor * desired_duration_;
 
     // // Round to nearest timestep
     if (std::fmod(desired_duration_, configuration_.timestep) > 0.5 * configuration_.timestep)
