@@ -174,8 +174,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
 
   successful_limit_comp = false;
 
-  bool successful_backward_compensation = false;
-
   // Discrete differentiation introduces small numerical errors, so allow a small tolerance
   const double limit_relative_tol = 0.999999;
   const double jerk_limit = limit_relative_tol * configuration_.limits.jerk_limit;
@@ -195,13 +193,14 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
       double delta_j = std::copysign(jerk_limit, waypoints_.jerks(index)) - waypoints_.jerks(index);
       waypoints_.jerks(index) = std::copysign(jerk_limit, waypoints_.jerks(index));
 
+      delta_a = delta_j * configuration_.timestep;
       waypoints_.accelerations(index) =
           waypoints_.accelerations(index - 1) + waypoints_.jerks(index) * configuration_.timestep;
       waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
                                      waypoints_.accelerations(index - 1) * configuration_.timestep +
                                      0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
-      delta_v = 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
+      delta_v = delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
       successful_jerk_comp = backwardLimitCompensation(index, -delta_v);
@@ -243,7 +242,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // Compensate for velocity limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
   // Also do not want to affect user-provided velocity at the last timestep.
-  position_error = 0;
+  // position_error = 0;
   double successful_velocity_comp = true;
   for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
