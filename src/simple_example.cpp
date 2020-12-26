@@ -27,7 +27,7 @@ int main(int argc, char** argv)
   constexpr double max_duration = 0.8;
   // Optional logging of TrackJoint output
   const std::string output_path_base =
-      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/";
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
