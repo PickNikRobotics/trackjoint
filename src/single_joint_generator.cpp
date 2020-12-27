@@ -235,7 +235,11 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
         delta_v = delta_a * configuration_.timestep;
         successful_acceleration_comp = backwardLimitCompensation(index, -delta_v);
       }
-      // TODO(andyz): need an "else" here, to make as much of an acceleration correction as possible
+      else
+      {
+        successful_acceleration_comp = false;
+        break;
+      }
     }
   }
 
