@@ -332,33 +332,6 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
   return ErrorCodeEnum::NO_ERROR;
 }
 
-void TrajectoryGenerator::clipVectorsForOutput(std::vector<JointTrajectory>* trajectory)
-{
-  for (size_t joint = 0; joint < kNumDof; ++joint)
-  {
-    for (auto waypt = 0; waypt < trajectory->at(joint).velocities.size(); ++waypt)
-    {
-      // Velocity
-      if (trajectory->at(joint).velocities[waypt] > limits_[joint].velocity_limit)
-        trajectory->at(joint).velocities[waypt] = limits_[joint].velocity_limit;
-      if (trajectory->at(joint).velocities[waypt] < -limits_[joint].velocity_limit)
-        trajectory->at(joint).velocities[waypt] = -limits_[joint].velocity_limit;
-
-      // Acceleration
-      if (trajectory->at(joint).accelerations[waypt] > limits_[joint].acceleration_limit)
-        trajectory->at(joint).accelerations[waypt] = limits_[joint].acceleration_limit;
-      if (trajectory->at(joint).accelerations[waypt] < -limits_[joint].acceleration_limit)
-        trajectory->at(joint).accelerations[waypt] = -limits_[joint].acceleration_limit;
-
-      // Jerk
-      if (trajectory->at(joint).jerks[waypt] > limits_[joint].jerk_limit)
-        trajectory->at(joint).jerks[waypt] = limits_[joint].jerk_limit;
-      if (trajectory->at(joint).jerks[waypt] < -limits_[joint].jerk_limit)
-        trajectory->at(joint).jerks[waypt] = -limits_[joint].jerk_limit;
-    }
-  }
-}
-
 ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTrajectory>* output_trajectories)
 {
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
@@ -389,9 +362,6 @@ ErrorCodeEnum TrajectoryGenerator::generateTrajectories(std::vector<JointTraject
                  &output_trajectories->at(joint).jerks);
     }
   }
-
-  // To be on the safe side, ensure limits are obeyed
-  clipVectorsForOutput(output_trajectories);
 
   return error_code;
 }

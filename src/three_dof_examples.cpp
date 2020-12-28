@@ -20,11 +20,11 @@ int main(int argc, char** argv)
 {
   constexpr int num_dof = 6;
   const double timestep = 0.005;
-  constexpr double max_duration = 1;
+  constexpr double max_duration = 1.5;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
   const std::string output_path_base =
-      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/";
 
   std::vector<trackjoint::KinematicState> current_joint_states(6);
   trackjoint::KinematicState joint_state;

@@ -229,7 +229,7 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
       // The first condition checks if the new jerk(i) is going to exceed the limit. Pretty straightforward.
       // We also calculate a new jerk(i+1). The second condition checks if jerk(i+1) would exceed the limit.
       if ((fabs((temp_accel - waypoints_.accelerations(index - 1)) / configuration_.timestep) <= jerk_limit) &&
-          (fabs(waypoints_.jerks(index) + delta_a / configuration_.timestep) <= jerk_limit))
+          (fabs((waypoints_.accelerations(index + 1) - temp_accel) / configuration_.timestep) <= jerk_limit))
       {
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) =

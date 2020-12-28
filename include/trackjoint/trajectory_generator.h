@@ -83,12 +83,6 @@ public:
                               double nominal_timestep);
 
 private:
-  /** \brief Ensure limits are obeyed before outputting.
-   *
-   * input trajectory the calculated trajectories for n joints
-   */
-  void clipVectorsForOutput(std::vector<JointTrajectory>* trajectory);
-
   /** \brief upsample if num. waypoints would be short. Helps with accuracy. */
   void upsample();
 
