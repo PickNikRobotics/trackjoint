@@ -203,7 +203,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
       delta_v = position_error / configuration_.timestep + delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      delta_v += position_error / configuration_.timestep;
       successful_jerk_comp = backwardLimitCompensation(index, -delta_v);
       if (!successful_jerk_comp)
       {
