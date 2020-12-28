@@ -200,13 +200,13 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
                                      waypoints_.accelerations(index - 1) * configuration_.timestep +
                                      0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
-      delta_v = position_error / configuration_.timestep + delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
+      delta_v = delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      successful_jerk_comp = backwardLimitCompensation(index, -delta_v);
+      successful_jerk_comp = backwardLimitCompensation(index, -(delta_v + position_error / configuration_.timestep));
       if (!successful_jerk_comp)
       {
-        position_error = position_error + delta_v * configuration_.timestep;
+        position_error += delta_v * configuration_.timestep;
       }
       else
         position_error = 0;
@@ -264,11 +264,10 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
-      delta_v += position_error / configuration_.timestep;
-      successful_velocity_comp = backwardLimitCompensation(index, -delta_v);
+      successful_velocity_comp = backwardLimitCompensation(index, -(delta_v + position_error / configuration_.timestep));
       if (!successful_velocity_comp)
       {
-        position_error = position_error + delta_v * configuration_.timestep;
+        position_error += delta_v * configuration_.timestep;
       }
       else
       {
