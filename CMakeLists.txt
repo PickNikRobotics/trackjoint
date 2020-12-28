@@ -82,18 +82,18 @@ target_link_libraries(
 )
 
 add_executable(
-  ${PROJECT_NAME}_three_dof_examples
-  src/three_dof_examples.cpp
+  ${PROJECT_NAME}_six_dof_examples
+  src/six_dof_examples.cpp
 )
 
 set_target_properties(
-  ${PROJECT_NAME}_three_dof_examples
+  ${PROJECT_NAME}_six_dof_examples
   PROPERTIES
-    OUTPUT_NAME three_dof_examples PREFIX ""
+    OUTPUT_NAME six_dof_examples PREFIX ""
 )
 
 target_link_libraries(
-  ${PROJECT_NAME}_three_dof_examples
+  ${PROJECT_NAME}_six_dof_examples
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
