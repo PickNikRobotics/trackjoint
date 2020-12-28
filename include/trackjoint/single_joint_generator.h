@@ -117,9 +117,6 @@ private:
   /** \brief Calculate vel/accel/jerk from position */
   void calculateDerivativesFromPosition();
 
-  /** \brief Calculate accel/jerk from velocity */
-  void calculateDerivativesFromVelocity();
-
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
   Configuration configuration_;

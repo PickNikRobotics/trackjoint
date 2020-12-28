@@ -278,9 +278,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
     }
   }
 
-  // Re-calculate derivatives from the updated velocity vector
-  calculateDerivativesFromVelocity();
-
   // Check for success
   // TODO(andyz): check limits too
   if (successful_jerk_comp && successful_acceleration_comp && successful_velocity_comp &&
@@ -482,14 +479,6 @@ void SingleJointGenerator::calculateDerivativesFromPosition()
   // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities =
       DiscreteDifferentiation(waypoints_.positions, configuration_.timestep, current_joint_state_.velocity);
-  waypoints_.accelerations =
-      DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
-}
-
-void SingleJointGenerator::calculateDerivativesFromVelocity()
-{
-  // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
       DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
