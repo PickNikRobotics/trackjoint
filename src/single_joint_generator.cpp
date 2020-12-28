@@ -200,10 +200,17 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
                                      waypoints_.accelerations(index - 1) * configuration_.timestep +
                                      0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
-      delta_v = delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
+      delta_v = position_error / configuration_.timestep + delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+      delta_v += position_error / configuration_.timestep;
       successful_jerk_comp = backwardLimitCompensation(index, -delta_v);
+      if (!successful_jerk_comp)
+      {
+        position_error = position_error + delta_v * configuration_.timestep;
+      }
+      else
+        position_error = 0;
     }
   }
 
@@ -232,13 +239,14 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
             0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
         // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+        // Try to account for position error, too.
         delta_v = delta_a * configuration_.timestep;
         successful_acceleration_comp = backwardLimitCompensation(index, -delta_v);
       }
       else
       {
-        successful_acceleration_comp = false;
-        break;
+        successful_limit_comp = false;
+        return ErrorCodeEnum::NO_ERROR;
       }
     }
   }
@@ -246,7 +254,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // Compensate for velocity limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
   // Also do not want to affect user-provided velocity at the last timestep.
-  // position_error = 0;
   double successful_velocity_comp = true;
   for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
@@ -265,7 +272,9 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
         position_error = position_error + delta_v * configuration_.timestep;
       }
       else
+      {
         position_error = 0;
+      }
     }
   }
 
