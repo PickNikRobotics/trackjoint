@@ -171,7 +171,6 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_li
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
-
   successful_limit_comp = false;
 
   // Discrete differentiation introduces small numerical errors, so allow a small tolerance
@@ -406,7 +405,9 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
 
   size_t new_num_waypoints = 0;
-  const double duration_extension_factor = 1.05;
+  // duration_extension_factor affects runtime, and effects how close the duration is too optimal
+  // (smaller -> calculated duration will be closer to optimal, but longer runtime)
+  const double duration_extension_factor = 1.02;
   // Iterate over new durations until the position error is acceptable or the maximum duration is reached
   while (!successful_limit_comp_ &&
          ((duration_extension_factor * desired_duration_) < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
