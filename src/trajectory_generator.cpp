@@ -306,10 +306,28 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
   // If any of the component durations were changed, run them again
   if (new_desired_duration != desired_duration_)
   {
+    // The algorithm:
+    // Check if each dimension needs extension
+    // Fit a spline function to the original positions, same number of waypoints, new (stretched) timesteps
+    // Ensure slopes at timestep(1:2) and timestep(end-1 : end) do not change (initial and goal slopes)
+    // Re-sample positions from the spline at the correct delta-t
+    // Run extendTrajectoryDuration() to ensure limits are obeyed
+    // A spreadsheet for calculation checks is here:
+    // https://docs.google.com/spreadsheets/d/1GoTcM25O5Tys8hHnADvdMYSAQzBi76lYpW9f0bHpxSo/edit#gid=201708322
+
     for (size_t joint = 0; joint < kNumDof; ++joint)
     {
       if (joint != index_of_longest_duration)
       {
+        // Calculate new timestamps
+        single_joint_generators_[joint].calculateStretchedTimes(new_desired_duration);
+        // Evaluate a spline at the new times
+        //single_joint_generators_[joint].extendTrajectoryDuration();
+
+
+
+
+
         single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
         single_joint_generators_[joint].extendTrajectoryDuration();
         output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();

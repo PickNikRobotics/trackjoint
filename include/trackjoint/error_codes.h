@@ -31,7 +31,8 @@ enum ErrorCodeEnum
   LIMIT_NOT_POSITIVE = 6,
   GOAL_POSITION_MISMATCH = 7,
   FAILURE_TO_GENERATE_SINGLE_WAYPOINT = 8,
-  OBJECT_NOT_RESET = 9
+  OBJECT_NOT_RESET = 9,
+  ERROR_IN_TIMESTEP_STRETCHING = 10
 };
 
 /**
@@ -50,6 +51,6 @@ const std::unordered_map<uint, std::string> ERROR_CODE_MAP({
     { GOAL_POSITION_MISMATCH, "Mismatch between the final position and the goal position" },
     { FAILURE_TO_GENERATE_SINGLE_WAYPOINT, "Failed to generate even a single new waypoint" },
     { OBJECT_NOT_RESET, "Must call reset() before generating trajectory" },
-
+    { ERROR_IN_TIMESTEP_STRETCHING, "Error during timestep stretching" }
 });
 }  // end namespace trackjoint

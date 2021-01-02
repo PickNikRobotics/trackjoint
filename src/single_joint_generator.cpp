@@ -490,4 +490,96 @@ void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_durati
   desired_duration_ = new_trajectory_duration;
   configuration_.max_duration = new_trajectory_duration;
 }
+
+ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(double new_duration)
+{
+  // Gradually stretch the time steps - add the "extra time" to each existing timestep such that the new timesteps
+  // resemble a triangle wave.
+  // We do not stretch either end so that initial slope & final slope do not change.
+  // The first and last modified timestep have an extra factor of 1/2 because it is half a timestep to the average value
+  // of the waypoint.
+  // The algorithm is slightly different for even vs. odd num waypoints
+  // Spreadsheet for reference:
+  // https://docs.google.com/spreadsheets/d/1GoTcM25O5Tys8hHnADvdMYSAQzBi76lYpW9f0bHpxSo/edit#gid=515349804
+
+  updateTrajectoryDuration(new_duration);
+  size_t num_waypts = waypoints_.elapsed_times.size();
+  size_t num_timesteps_to_stretch = num_waypts - 3;
+  // Chop because the initial and final slopes don't change
+  double chopped_new_duration = new_duration - 2 * configuration_.timestep;
+  double avg_stretched_timestep = chopped_new_duration / double(num_timesteps_to_stretch);
+  // Number of timesteps is equal to number of waypoints minus one (to account for the starting waypoint)
+  Eigen::VectorXd stretched_timesteps = Eigen::VectorXd::Zero(num_waypts - 1);
+  // Do not stretch the initial and final timesteps
+  stretched_timesteps(0) = configuration_.timestep;
+  stretched_timesteps(stretched_timesteps.size() - 1) = configuration_.timestep;
+  // Begin calculations to linearly ramp up the timestep (up to n/2)
+  // For stretched_timesteps(1) (and its mirrored counterpart) divide timestep by an additional factor of 2 because it is
+  // half a timestep to the average value of the waypoint. Then a full timestep between average values after that.
+  stretched_timesteps(1) = stretched_timesteps(0) + (avg_stretched_timestep - configuration_.timestep) / (double(num_timesteps_to_stretch) / 2.);
+  // For an odd number of waypoints
+  if (fmod(stretched_timesteps.size(), 2) != 0)
+  {
+    for (size_t idx = 2; idx <= ceil(num_timesteps_to_stretch / 2.); ++idx)
+    {
+      stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
+    }
+
+    // The middle 2 waypoints (for symmetry) have a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = 0.5 * (new_duration - 2. * stretched_timesteps.sum());
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = 0.5 * (new_duration - 2. * stretched_timesteps.sum());
+
+    // Mirror the elements beyond n/2
+    size_t ramp_up_idx = double(num_timesteps_to_stretch) / 2.;
+    for (size_t ramp_down_idx = 3 + double(num_timesteps_to_stretch) / 2; ramp_down_idx < num_waypts - 1; ++ramp_down_idx)
+    {
+      stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
+      --ramp_up_idx;
+    }
+  }
+  // For an even number of waypoints
+  else
+  {
+    for (size_t idx = 2; idx < ceil(num_timesteps_to_stretch / 2.); ++idx)
+    {
+      stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
+    }
+
+    // The middle waypoint has a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = new_duration - 2 * stretched_timesteps.sum();
+
+    // Mirror the elements beyond n/2
+    size_t ramp_up_idx = ceil(num_timesteps_to_stretch / 2.) - 1;
+    for (size_t ramp_down_idx = 1 + ceil(num_timesteps_to_stretch / 2.); ramp_up_idx > 0; ++ramp_down_idx)
+    {
+      stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
+      --ramp_up_idx;
+    }
+  }
+
+  // Sum the timesteps to get new 'times' vector
+  // First element is zero
+  Eigen::VectorXd stretched_times = Eigen::VectorXd::Zero(stretched_timesteps.size() + 1);
+  for (int idx = 0; idx < stretched_timesteps.size(); ++idx)
+  {
+    stretched_times(idx + 1) = stretched_times(idx) + stretched_timesteps(idx);
+  }
+
+  // TODO(andyz): tolerance should be 1 * configuration_.timestep
+  if (fabs(stretched_times(stretched_times.size() - 1) - new_duration) > 2 * configuration_.timestep)
+  {
+    std::cout << "Duration does not match" << std::endl;
+    std::cout << "Expected duration: " << new_duration << std::endl;
+    std::cout << "Actual duration: " << stretched_times(stretched_times.size() - 1) << std::endl;
+    return ErrorCodeEnum::ERROR_IN_TIMESTEP_STRETCHING;
+  }
+
+  if (stretched_times.size() != 1 + new_duration / configuration_.timestep)
+  {
+    std::cout << "Stretched times vector does not have the right length" << std::endl;
+    return ErrorCodeEnum::ERROR_IN_TIMESTEP_STRETCHING;
+  }
+
+  return ErrorCodeEnum::NO_ERROR;
+}
 }  // end namespace trackjoint

@@ -92,6 +92,11 @@ public:
    */
   void updateTrajectoryDuration(double new_trajectory_duration);
 
+  /** \brief Gradually stretch timesteps so trajectory duration is extended to new_duration.
+   *
+   */
+  ErrorCodeEnum calculateStretchedTimes(double new_duration);
+
 private:
   /** \brief interpolate from start to end state with a polynomial
    *
