@@ -526,10 +526,6 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_dur
       stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
     }
 
-    // The middle 2 waypoints (for symmetry) have a special formula - stretch it to ensure the duration ends up perfect
-    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = 0.5 * (new_duration - 2. * stretched_timesteps.sum());
-    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.);
-
     // Mirror the elements beyond n/2
     size_t ramp_up_idx = double(num_timesteps_to_stretch) / 2.;
     for (size_t ramp_down_idx = 3 + double(num_timesteps_to_stretch) / 2; ramp_down_idx < num_waypts - 1; ++ramp_down_idx)
@@ -537,6 +533,13 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_dur
       stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
       --ramp_up_idx;
     }
+    stretched_timesteps(stretched_timesteps.size() - 2) = stretched_timesteps(1);
+
+    // The middle 2 waypoints (for symmetry) have a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = 0;
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = 0;
+    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = (new_duration - stretched_timesteps.sum()) / 2.;
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.);
   }
   // For an even number of waypoints
   else
@@ -553,8 +556,11 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_dur
       stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
       --ramp_up_idx;
     }
+    stretched_timesteps(stretched_timesteps.size() - 2) = stretched_timesteps(1);
 
-    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = (stretched_timesteps(ceil(num_timesteps_to_stretch / 2.) - 1) + stretched_timesteps(ceil(num_timesteps_to_stretch / 2.) + 1)) / 2.;
+    // The middle waypoint has a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = 0;
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = new_duration - stretched_timesteps.sum();
   }
 
   // Sum the timesteps to get new 'times' vector
@@ -570,12 +576,6 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_dur
     std::cout << "Duration does not match" << std::endl;
     std::cout << "Expected duration: " << new_duration << std::endl;
     std::cout << "Actual duration: " << stretched_times(stretched_times.size() - 1) << std::endl;
-    return ErrorCodeEnum::ERROR_IN_TIMESTEP_STRETCHING;
-  }
-
-  if (stretched_times.size() != 1 + new_duration / configuration_.timestep)
-  {
-    std::cout << "Stretched times vector does not have the right length" << std::endl;
     return ErrorCodeEnum::ERROR_IN_TIMESTEP_STRETCHING;
   }
 

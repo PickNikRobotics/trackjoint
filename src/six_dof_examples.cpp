@@ -74,8 +74,7 @@ int main(int argc, char** argv)
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration = 1.005;
-      //fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
+  double desired_duration = fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // Initialize main class
