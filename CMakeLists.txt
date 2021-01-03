@@ -69,7 +69,6 @@ add_executable(
   ${PROJECT_NAME}_simple_example
   src/simple_example.cpp
 )
-# Rename C++ executable without namespace
 set_target_properties(
   ${PROJECT_NAME}_simple_example
   PROPERTIES
@@ -85,15 +84,28 @@ add_executable(
   ${PROJECT_NAME}_six_dof_examples
   src/six_dof_examples.cpp
 )
-
 set_target_properties(
   ${PROJECT_NAME}_six_dof_examples
   PROPERTIES
     OUTPUT_NAME six_dof_examples PREFIX ""
 )
-
 target_link_libraries(
   ${PROJECT_NAME}_six_dof_examples
+  ${LIBRARY_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(
+  ${PROJECT_NAME}_streaming_example
+  src/streaming_example.cpp
+)
+set_target_properties(
+  ${PROJECT_NAME}_streaming_example
+  PROPERTIES
+    OUTPUT_NAME streaming_example PREFIX ""
+)
+target_link_libraries(
+  ${PROJECT_NAME}_streaming_example
   ${LIBRARY_NAME}
   ${catkin_LIBRARIES}
 )
