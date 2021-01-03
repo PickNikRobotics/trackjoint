@@ -86,42 +86,42 @@ void SingleJointGenerator::extendTrajectoryDuration(const Eigen::VectorXd stretc
 {
   size_t new_num_waypoints = 1 + desired_duration_ / configuration_.timestep;
 
-  // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
-  // ^This is the best way because it reduces overshoot.
-  // Otherwise, re-generate a new trajectory from scratch.
-  if (successful_limit_comp_)
-  {
-    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
-    // This only decreases velocity/accel/jerk, so no worries re. limit violation
-    Eigen::RowVectorXd new_times;
-    new_times.setLinSpaced(stretched_times.size(), 0, desired_duration_);
-    Eigen::RowVectorXd position(waypoints_.positions);
-
-    const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
-
-    // New times, with the extended duration
-    waypoints_.elapsed_times = stretched_times;
-    // Retrieve new positions at the new times
-    waypoints_.positions.resize(stretched_times.size());
-
-    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
-      waypoints_.positions[idx] = fit(stretched_times(idx)).coeff(0);
-
-    calculateDerivativesFromPosition();
-    forwardLimitCompensation(successful_limit_comp_);
-    return;
-  }
-
-  // Plan a new trajectory from scratch:
-  // Clear previous results
-  else
-  {
+//  // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
+//  // ^This is the best way because it reduces overshoot.
+//  // Otherwise, re-generate a new trajectory from scratch.
+//  if (successful_limit_comp_)
+//  {
+//    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
+//    // This only decreases velocity/accel/jerk, so no worries re. limit violation
+//    Eigen::RowVectorXd new_times;
+//    new_times.setLinSpaced(stretched_times.size(), 0, desired_duration_);
+//    Eigen::RowVectorXd position(waypoints_.positions);
+//
+//    const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
+//
+//    // New times, with the extended duration
+//    waypoints_.elapsed_times = stretched_times;
+//    // Retrieve new positions at the new times
+//    waypoints_.positions.resize(stretched_times.size());
+//
+//    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
+//      waypoints_.positions[idx] = fit(stretched_times(idx)).coeff(0);
+//
+//    calculateDerivativesFromPosition();
+//    forwardLimitCompensation(successful_limit_comp_);
+//    return;
+//  }
+//
+//  // Plan a new trajectory from scratch:
+//  // Clear previous results
+//  else
+//  {
     waypoints_ = JointTrajectory();
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
     forwardLimitCompensation(successful_limit_comp_);
-  }
+//  }
 
   return;
 }
