@@ -75,7 +75,7 @@ public:
   ErrorCodeEnum generateTrajectory();
 
   /** \brief Extend a trajectory to a new duration. Magnitudes of vel/accel/jerk will be decreased. */
-  void extendTrajectoryDuration();
+  void extendTrajectoryDuration(const Eigen::VectorXd stretched_times);
 
   /** \brief Get the generated trajectory
    *
@@ -95,7 +95,7 @@ public:
   /** \brief Gradually stretch timesteps so trajectory duration is extended to new_duration.
    *
    */
-  ErrorCodeEnum calculateStretchedTimes(double new_duration);
+  ErrorCodeEnum calculateStretchedTimes(const double new_duration, Eigen::VectorXd& stretched_times);
 
 private:
   /** \brief interpolate from start to end state with a polynomial

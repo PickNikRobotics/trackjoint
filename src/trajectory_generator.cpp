@@ -320,16 +320,16 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
       if (joint != index_of_longest_duration)
       {
         // Calculate new timestamps
-        single_joint_generators_[joint].calculateStretchedTimes(new_desired_duration);
-        // Evaluate a spline at the new times
-        //single_joint_generators_[joint].extendTrajectoryDuration();
-
-
-
-
-
         single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
-        single_joint_generators_[joint].extendTrajectoryDuration();
+        Eigen::VectorXd stretched_times;
+        auto error_code = single_joint_generators_[joint].calculateStretchedTimes(new_desired_duration, stretched_times);
+        if (error_code != ErrorCodeEnum::NO_ERROR)
+        {
+          return error_code;
+        }
+        // Evaluate a spline at the new times
+        single_joint_generators_[joint].extendTrajectoryDuration(stretched_times);
+
         output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
       }
       // If this was the index of longest duration, don't need to re-generate a trajectory

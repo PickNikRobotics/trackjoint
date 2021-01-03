@@ -82,7 +82,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   return error_code;
 }
 
-void SingleJointGenerator::extendTrajectoryDuration()
+void SingleJointGenerator::extendTrajectoryDuration(const Eigen::VectorXd stretched_times)
 {
   size_t new_num_waypoints = 1 + desired_duration_ / configuration_.timestep;
 
@@ -94,20 +94,21 @@ void SingleJointGenerator::extendTrajectoryDuration()
     // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
     // This only decreases velocity/accel/jerk, so no worries re. limit violation
     Eigen::RowVectorXd new_times;
-    new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
+    new_times.setLinSpaced(stretched_times.size(), 0, desired_duration_);
     Eigen::RowVectorXd position(waypoints_.positions);
 
     const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
 
     // New times, with the extended duration
-    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
+    waypoints_.elapsed_times = stretched_times;
     // Retrieve new positions at the new times
-    waypoints_.positions.resize(new_num_waypoints);
+    waypoints_.positions.resize(stretched_times.size());
 
     for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
-      waypoints_.positions[idx] = fit(waypoints_.elapsed_times(idx)).coeff(0);
+      waypoints_.positions[idx] = fit(stretched_times(idx)).coeff(0);
 
     calculateDerivativesFromPosition();
+    forwardLimitCompensation(successful_limit_comp_);
     return;
   }
 
@@ -491,7 +492,7 @@ void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_durati
   configuration_.max_duration = new_trajectory_duration;
 }
 
-ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(double new_duration)
+ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_duration, Eigen::VectorXd& stretched_times)
 {
   // Gradually stretch the time steps - add the "extra time" to each existing timestep such that the new timesteps
   // resemble a triangle wave.
@@ -527,7 +528,7 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(double new_duration)
 
     // The middle 2 waypoints (for symmetry) have a special formula - stretch it to ensure the duration ends up perfect
     stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = 0.5 * (new_duration - 2. * stretched_timesteps.sum());
-    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = 0.5 * (new_duration - 2. * stretched_timesteps.sum());
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.);
 
     // Mirror the elements beyond n/2
     size_t ramp_up_idx = double(num_timesteps_to_stretch) / 2.;
@@ -545,9 +546,6 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(double new_duration)
       stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
     }
 
-    // The middle waypoint has a special formula - stretch it to ensure the duration ends up perfect
-    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = new_duration - 2 * stretched_timesteps.sum();
-
     // Mirror the elements beyond n/2
     size_t ramp_up_idx = ceil(num_timesteps_to_stretch / 2.) - 1;
     for (size_t ramp_down_idx = 1 + ceil(num_timesteps_to_stretch / 2.); ramp_up_idx > 0; ++ramp_down_idx)
@@ -555,18 +553,19 @@ ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(double new_duration)
       stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
       --ramp_up_idx;
     }
+
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = (stretched_timesteps(ceil(num_timesteps_to_stretch / 2.) - 1) + stretched_timesteps(ceil(num_timesteps_to_stretch / 2.) + 1)) / 2.;
   }
 
   // Sum the timesteps to get new 'times' vector
   // First element is zero
-  Eigen::VectorXd stretched_times = Eigen::VectorXd::Zero(stretched_timesteps.size() + 1);
+  stretched_times = Eigen::VectorXd::Zero(stretched_timesteps.size() + 1);
   for (int idx = 0; idx < stretched_timesteps.size(); ++idx)
   {
     stretched_times(idx + 1) = stretched_times(idx) + stretched_timesteps(idx);
   }
 
-  // TODO(andyz): tolerance should be 1 * configuration_.timestep
-  if (fabs(stretched_times(stretched_times.size() - 1) - new_duration) > 2 * configuration_.timestep)
+  if (fabs(stretched_times(stretched_times.size() - 1) - new_duration) > configuration_.timestep)
   {
     std::cout << "Duration does not match" << std::endl;
     std::cout << "Expected duration: " << new_duration << std::endl;
