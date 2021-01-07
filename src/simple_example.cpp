@@ -21,7 +21,7 @@ int main(int argc, char** argv)
   // This example is for just one degree of freedom
   constexpr int num_dof = 1;
   // Timestep. Units don't matter as long as they're consistent
-  constexpr double timestep = 0.005;
+  constexpr double timestep = 0.0002;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
   constexpr double max_duration = 0.8;
@@ -31,16 +31,16 @@ int main(int argc, char** argv)
 
   std::vector<trackjoint::KinematicState> current_joint_states(1);
   trackjoint::KinematicState joint_state;
-  joint_state.position = 0.238288;
+  joint_state.position = 0.216199;
   joint_state.velocity = 0;
   joint_state.acceleration = 0;
   // This is the initial state of the joint
   current_joint_states[0] = joint_state;
 
   std::vector<trackjoint::KinematicState> goal_joint_states(1);
-  joint_state.position = 0.654188;
-  joint_state.velocity = 0;
-  joint_state.acceleration = 0;
+  joint_state.position = 0.216207;
+  joint_state.velocity = 0.008;
+  joint_state.acceleration = 8;
   goal_joint_states[0] = joint_state;
 
   trackjoint::Limits single_joint_limits;
@@ -52,13 +52,13 @@ int main(int argc, char** argv)
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration =
-      fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
+  double desired_duration = 0.018;
+      //fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
   // It is used for calculations internally. It should be set to a smaller number than your task requires.
-  const double position_tolerance = 0.001;
+  const double position_tolerance = 1e-7;
 
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
