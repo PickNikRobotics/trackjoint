@@ -18,62 +18,70 @@
 
 int main(int argc, char** argv)
 {
-  constexpr int num_dof = 3;
-  const double timestep = 0.0039;
-  constexpr double max_duration = 30;
-  // Streaming mode returns just a few waypoints but executes very quickly.
-  constexpr bool use_streaming_mode = false;
+  constexpr int num_dof = 6;
+  const double timestep = 0.005;
+  constexpr double max_duration = 1.5;
   // Position tolerance for each waypoint
   constexpr double waypoint_position_tolerance = 1e-4;
   const std::string output_path_base =
-      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/";
 
-  std::vector<trackjoint::KinematicState> current_joint_states(3);
+  std::vector<trackjoint::KinematicState> current_joint_states(num_dof);
   trackjoint::KinematicState joint_state;
-  joint_state.position = 1.23984;
-  joint_state.velocity = 1.45704;
-  joint_state.acceleration = -0.0196446;
+  joint_state.position = 0.238288;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
   current_joint_states[0] = joint_state;
-  joint_state.position = -1.12637;
-  joint_state.velocity = -0.774015;
-  joint_state.acceleration = 0.0104357;
+  joint_state.position = 0.378499;
   current_joint_states[1] = joint_state;
-  joint_state.position = -0.014012;
-  joint_state.velocity = 0.583426;
-  joint_state.acceleration = -0.00786606;
+  joint_state.position = -1.63914;
   current_joint_states[2] = joint_state;
+  joint_state.position = 1.10303;
+  current_joint_states[3] = joint_state;
+  joint_state.position = 0.225048;
+  current_joint_states[4] = joint_state;
+  joint_state.position = -1.55303;
+  current_joint_states[5] = joint_state;
 
-  std::vector<trackjoint::KinematicState> goal_joint_states(3);
-  joint_state.position = 1.4757;
-  joint_state.velocity = 1.45675;
-  joint_state.acceleration = 0.126129;
+  std::vector<trackjoint::KinematicState> goal_joint_states(num_dof);
+  joint_state.position = 0.654188;
   goal_joint_states[0] = joint_state;
-  joint_state.position = -0.545844;
-  joint_state.velocity = 1.81361;
-  joint_state.acceleration = 1.93357;
+  joint_state.position = 0.788694;
   goal_joint_states[1] = joint_state;
-  joint_state.position = -0.447873;
-  joint_state.velocity = -1.35293;
-  joint_state.acceleration = -1.43058;
+  joint_state.position = -0.971772;
   goal_joint_states[2] = joint_state;
+  joint_state.position = 1.37333;
+  goal_joint_states[3] = joint_state;
+  joint_state.position = 0.640917;
+  goal_joint_states[4] = joint_state;
+  joint_state.position = -1.56715;
+  goal_joint_states[5] = joint_state;
 
+  std::vector<trackjoint::Limits> limits;
   trackjoint::Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 3.15;
-  single_joint_limits.acceleration_limit = 5;
-  single_joint_limits.jerk_limit = 10000;
-  std::vector<trackjoint::Limits> limits(3, single_joint_limits);
+  single_joint_limits.velocity_limit = 2.6;
+  single_joint_limits.acceleration_limit = 16;
+  single_joint_limits.jerk_limit = 34.6;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  single_joint_limits.velocity_limit = 3;
+  single_joint_limits.acceleration_limit = 20;
+  single_joint_limits.jerk_limit = 41.4;
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
+  limits.push_back(single_joint_limits);
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration =
-      fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
+  double desired_duration = fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
-                                           goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
+                                           goal_joint_states, limits, waypoint_position_tolerance);
   traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
-                 waypoint_position_tolerance, use_streaming_mode);
+                 waypoint_position_tolerance);
 
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
 

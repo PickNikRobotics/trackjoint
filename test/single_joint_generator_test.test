@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <test test-name="single_joint_generator_test" pkg="trackjoint" type="single_joint_generator_test"/>
+  <node name="print_messages" pkg="trackjoint" type="single_joint_generator_test" output="screen"/>
+</launch>

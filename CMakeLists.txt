@@ -69,7 +69,6 @@ add_executable(
   ${PROJECT_NAME}_simple_example
   src/simple_example.cpp
 )
-# Rename C++ executable without namespace
 set_target_properties(
   ${PROJECT_NAME}_simple_example
   PROPERTIES
@@ -81,12 +80,25 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
-# A streaming example (update within a loop)
+add_executable(
+  ${PROJECT_NAME}_six_dof_examples
+  src/six_dof_examples.cpp
+)
+set_target_properties(
+  ${PROJECT_NAME}_six_dof_examples
+  PROPERTIES
+    OUTPUT_NAME six_dof_examples PREFIX ""
+)
+target_link_libraries(
+  ${PROJECT_NAME}_six_dof_examples
+  ${LIBRARY_NAME}
+  ${catkin_LIBRARIES}
+)
+
 add_executable(
   ${PROJECT_NAME}_streaming_example
   src/streaming_example.cpp
 )
-# Rename C++ executable without namespace
 set_target_properties(
   ${PROJECT_NAME}_streaming_example
   PROPERTIES
@@ -98,23 +110,6 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 
-add_executable(
-  ${PROJECT_NAME}_three_dof_examples
-  src/three_dof_examples.cpp
-)
-
-set_target_properties(
-  ${PROJECT_NAME}_three_dof_examples
-  PROPERTIES
-    OUTPUT_NAME three_dof_examples PREFIX ""
-)
-
-target_link_libraries(
-  ${PROJECT_NAME}_three_dof_examples
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
-)
-
 #############
 ## Install ##
 #############
@@ -122,7 +117,7 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example
+    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example
   ARCHIVE DESTINATION
     ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION
@@ -151,6 +146,15 @@ if(CATKIN_ENABLE_TESTING)
     test/trajectory_generation_test.cpp
   )
   target_link_libraries(trajectory_generation_test
+    ${LIBRARY_NAME}
+    ${catkin_LIBRARIES}
+  )
+
+  add_rostest_gtest(single_joint_generator_test
+    test/single_joint_generator_test.test
+    test/single_joint_generator_test.cpp
+  )
+  target_link_libraries(single_joint_generator_test
     ${LIBRARY_NAME}
     ${catkin_LIBRARIES}
   )

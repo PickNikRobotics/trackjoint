@@ -7,150 +7,222 @@
  *********************************************************************/
 
 /* Author: Andy Zelenak
-   Desc: Constantly replan a new trajectory as the robot moves toward goal pose, until it reaches the goal.
+   Desc: 6-DOF example from Rapid Robotics.
 */
 
-#include "trackjoint/error_codes.h"
-#include "trackjoint/joint_trajectory.h"
-#include "trackjoint/trajectory_generator.h"
-#include "trackjoint/utilities.h"
+#include <trackjoint/error_codes.h>
+#include <trackjoint/joint_trajectory.h>
+#include <trackjoint/trajectory_generator.h>
 #include <chrono>
 #include <fstream>
 
+// For data file parsing
+#include <iostream>
+#include <ros/package.h>
+#include <sstream>
+
+void parseTimeParameterizedJointWaypoints(const std::string& filepath, trackjoint::JointTrajectory& traj)
+{
+  std::cout << filepath << std::endl;
+  std::ifstream data_file(filepath);
+  if(!data_file.is_open())
+  {
+    throw std::runtime_error("Could not open data file");
+  }
+
+  std::string line;
+  std::stringstream ss;
+  double value;
+  std::vector<double> positions;
+  std::vector<double> velocities;
+  std::vector<double> accelerations;
+
+  // Skip the header line
+  std::getline(data_file, line);
+
+  while(std::getline(data_file, line))
+  {
+    ss = std::stringstream(line);
+
+    // Extract each column
+    ss >> value;
+    if(ss.peek() == ',')
+      ss.ignore();
+    positions.push_back(value);
+    ss >> value;
+    if(ss.peek() == ',')
+      ss.ignore();
+    velocities.push_back(value);
+    // Skip the "Accel" column, will use the "Clipped Accel" column
+    ss >> value;
+    if(ss.peek() == ',')
+      ss.ignore();
+    ss >> value;
+    if(ss.peek() == ',')
+      ss.ignore();
+    accelerations.push_back(value);
+  }
+
+  // Creating an Eigen::Vector from std::vector is kind of annoying
+  traj.positions = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(positions.data(), positions.size());
+  traj.velocities = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(velocities.data(), velocities.size());
+  traj.accelerations = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(accelerations.data(), accelerations.size());
+}
+
 int main(int argc, char** argv)
 {
-  // This example is for just one degree of freedom
-  constexpr size_t num_dof = 1;
-  // For readability, save the joint index
-  constexpr size_t joint = 0;
-  // Waypoints will be spaced at 1 ms
-  constexpr double timestep = 0.001;
-  constexpr double max_duration = 100;
-  // Streaming mode returns just a few waypoints but executes very quickly.
-  // It returns from 2-kNumWaypointsThreshold waypoints, depending on how many waypoints can be calculated on a first
-  // pass.
-  // Waypoint[0] is the current state of the robot
-  constexpr bool use_streaming_mode = true;
+  // Parse positions/velocities/accelerations from spreadsheet
+  std::string data_path = ros::package::getPath("trackjoint") + "/example_data/";
+
+  // Joint 1
+  std::string filepath = data_path + "j1.csv";
+  trackjoint::JointTrajectory j1_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j1_input_traj);
+  // Joint 2
+  filepath = data_path + "j2.csv";
+  trackjoint::JointTrajectory j2_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j2_input_traj);
+  // Joint 3
+  filepath = data_path + "j3.csv";
+  trackjoint::JointTrajectory j3_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j3_input_traj);
+  // Joint 4
+  filepath = data_path + "j4.csv";
+  trackjoint::JointTrajectory j4_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j4_input_traj);
+  // Joint 5
+  filepath = data_path + "j5.csv";
+  trackjoint::JointTrajectory j5_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j5_input_traj);
+  // Joint 6
+  filepath = data_path + "j6.csv";
+  trackjoint::JointTrajectory j6_input_traj;
+  parseTimeParameterizedJointWaypoints(filepath, j6_input_traj);
+
+  const double timestep = 0.001;
+  const double desired_duration = timestep;
+
+  constexpr uint num_dof = 1;
+  const double max_duration = 1000 * timestep;
   // Position tolerance for each waypoint
-  constexpr double waypoint_position_tolerance = 1e-5;
-  // Loop until these tolerances are achieved
-  constexpr double final_position_tolerance = 1e-4;
-  constexpr double final_velocity_tolerance = 1e-1;
-  constexpr double final_acceleration_tolerance = 1e-1;
-  // For streaming mode, it is important to keep the desired duration >=10 timesteps.
-  // Otherwise, an error will be thrown. This helps with accuracy
-  constexpr double min_desired_duration = timestep;
-  // Between TrackJoint iterations, move ahead this many waypoints along the trajectory.
-  constexpr std::size_t next_waypoint = 1;
-
-  // Define start state and goal states.
-  // Position, velocity, and acceleration default to 0.
-  std::vector<trackjoint::KinematicState> start_state(num_dof);
-  std::vector<trackjoint::KinematicState> goal_joint_states(num_dof);
-  start_state[joint].position = 0.9;
-  goal_joint_states[joint].position = -0.9;
-
-  // A vector of vel/accel/jerk limits for each DOF
-  std::vector<trackjoint::Limits> limits(num_dof);
-  limits[joint].velocity_limit = 2;
-  limits[joint].acceleration_limit = 2;
-  limits[joint].jerk_limit = 2;
-
-  // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
-  // But, don't ask for a duration that is shorter than the minimum
-  desired_duration = std::max(desired_duration, min_desired_duration);
-
-  // Create object for trajectory generation
+  constexpr double waypoint_position_tolerance = 1e-3;
+  const std::string output_path_base =
+      "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/";
   std::vector<trackjoint::JointTrajectory> output_trajectories(num_dof);
-  trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, start_state,
-                                           goal_joint_states, limits, waypoint_position_tolerance, use_streaming_mode);
-  traj_gen.reset(timestep, desired_duration, max_duration, start_state, goal_joint_states, limits,
-                 waypoint_position_tolerance, use_streaming_mode);
 
-  // An example of optional input validation
-  trackjoint::ErrorCodeEnum error_code = traj_gen.inputChecking(start_state, goal_joint_states, limits, timestep);
-  if (error_code)
+  // Kinematic limits
+  std::vector<trackjoint::Limits> limits;
+  trackjoint::Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 2.6;
+  single_joint_limits.acceleration_limit = 16;
+  single_joint_limits.jerk_limit = 34.6;
+  limits.push_back(single_joint_limits);
+  // limits.push_back(single_joint_limits);
+  // limits.push_back(single_joint_limits);
+  // single_joint_limits.velocity_limit = 3;
+  // single_joint_limits.acceleration_limit = 20;
+  // single_joint_limits.jerk_limit = 41.4;
+  // limits.push_back(single_joint_limits);
+  // limits.push_back(single_joint_limits);
+  // limits.push_back(single_joint_limits);
+
+  // Current state
+  std::vector<trackjoint::KinematicState> current_joint_states(num_dof);
+  trackjoint::KinematicState joint_state;
+
+  // Goal state
+  std::vector<trackjoint::KinematicState> goal_joint_states(num_dof);
+
+  // Initialize main class
+  trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
+                                           goal_joint_states, limits, waypoint_position_tolerance);
+
+  // Iterate over every waypoint
+  for (uint waypt = 0; waypt < j1_input_traj.positions.size() - 1; ++waypt)
   {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
-    return -1;
-  }
+    joint_state.position = j1_input_traj.positions[waypt];
+    joint_state.velocity = j1_input_traj.velocities[waypt];
+    joint_state.acceleration = 0; //j1_input_traj.accelerations[waypt];
+    current_joint_states[0] = joint_state;
+    // joint_state.position = j2_input_traj.positions[waypt];
+    // joint_state.velocity = j2_input_traj.velocities[waypt];
+    // joint_state.acceleration = j2_input_traj.accelerations[waypt];
+    // current_joint_states[1] = joint_state;
+    // joint_state.position = j3_input_traj.positions[waypt];
+    // joint_state.velocity = j3_input_traj.velocities[waypt];
+    // joint_state.acceleration = j3_input_traj.accelerations[waypt];
+    // current_joint_states[2] = joint_state;
+    // joint_state.position = j4_input_traj.positions[waypt];
+    // joint_state.velocity = j4_input_traj.velocities[waypt];
+    // joint_state.acceleration = j4_input_traj.accelerations[waypt];
+    // current_joint_states[3] = joint_state;
+    // joint_state.position = j5_input_traj.positions[waypt];
+    // joint_state.velocity = j5_input_traj.velocities[waypt];
+    // joint_state.acceleration = j5_input_traj.accelerations[waypt];
+    // current_joint_states[4] = joint_state;
+    // joint_state.position = j6_input_traj.positions[waypt];
+    // joint_state.velocity = j6_input_traj.velocities[waypt];
+    // joint_state.acceleration = j6_input_traj.accelerations[waypt];
+    // current_joint_states[5] = joint_state;
 
-  // Generate the initial trajectory
-  error_code = traj_gen.generateTrajectories(&output_trajectories);
-  if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
-  {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
-    return -1;
-  }
-  std::cout << "Initial trajectory calculation:" << std::endl;
-  PrintJointTrajectory(joint, output_trajectories, desired_duration);
+    joint_state.position = j1_input_traj.positions[waypt + 1];
+    joint_state.velocity = j1_input_traj.velocities[waypt + 1];
+    joint_state.acceleration = 0; //j1_input_traj.accelerations[waypt + 1];
+    goal_joint_states[0] = joint_state;
+    // joint_state.position = j2_input_traj.positions[waypt + 1];
+    // joint_state.velocity = j2_input_traj.velocities[waypt + 1];
+    // joint_state.acceleration = j2_input_traj.accelerations[waypt + 1];
+    // goal_joint_states[1] = joint_state;
+    // joint_state.position = j3_input_traj.positions[waypt + 1];
+    // joint_state.velocity = j3_input_traj.velocities[waypt + 1];
+    // joint_state.acceleration = j3_input_traj.accelerations[waypt + 1];
+    // goal_joint_states[2] = joint_state;
+    // joint_state.position = j4_input_traj.positions[waypt + 1];
+    // joint_state.velocity = j4_input_traj.velocities[waypt + 1];
+    // joint_state.acceleration = j4_input_traj.accelerations[waypt + 1];
+    // goal_joint_states[3] = joint_state;
+    // joint_state.position = j5_input_traj.positions[waypt + 1];
+    // joint_state.velocity = j5_input_traj.velocities[waypt + 1];
+    // joint_state.acceleration = j5_input_traj.accelerations[waypt + 1];
+    // goal_joint_states[4] = joint_state;
+    // joint_state.position = j6_input_traj.positions[waypt + 1];
+    // joint_state.velocity = j6_input_traj.velocities[waypt + 1];
+    // joint_state.acceleration = j6_input_traj.accelerations[waypt + 1];
+    // goal_joint_states[5] = joint_state;
 
-  // Update the start state with the next waypoint
-  start_state[joint].position = output_trajectories.at(joint).positions[next_waypoint];
-  start_state[joint].velocity = output_trajectories.at(joint).velocities[next_waypoint];
-  start_state[joint].acceleration = output_trajectories.at(joint).accelerations[next_waypoint];
+    traj_gen.reset(timestep, desired_duration, max_duration, current_joint_states, goal_joint_states, limits,
+                   waypoint_position_tolerance);
 
-  // Loop while these errors exceed tolerances
-  double position_error = std::numeric_limits<double>::max();
-  double velocity_error = std::numeric_limits<double>::max();
-  double acceleration_error = std::numeric_limits<double>::max();
-
-  // Loop until the tolerances are satisfied
-  while (fabs(position_error) > final_position_tolerance || fabs(velocity_error) > final_velocity_tolerance ||
-         fabs(acceleration_error) > final_acceleration_tolerance)
-  {
-    // Optionally, time TrackJoint performance
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    // This reset() function is more computationally efficient when TrackJoint is called with a high frequency
-    traj_gen.reset(timestep, desired_duration, max_duration, start_state, goal_joint_states, limits,
-                   waypoint_position_tolerance, use_streaming_mode);
-    error_code = traj_gen.generateTrajectories(&output_trajectories);
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::cout << "Run time (microseconds): "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << std::endl;
-
+    // Input error handling - if an error is found, the trajectory is not generated.
+    trackjoint::ErrorCodeEnum error_code =
+        traj_gen.inputChecking(current_joint_states, goal_joint_states, limits, timestep);
     if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
     {
       std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
       return -1;
     }
 
-    // Print the synchronized trajectories
-    PrintJointTrajectory(joint, output_trajectories, desired_duration);
+    // Measure runtime
+//    auto start = std::chrono::system_clock::now();
+    error_code = traj_gen.generateTrajectories(&output_trajectories);
+//    auto end = std::chrono::system_clock::now();
+//  std::chrono::duration<double> elapsed_seconds = end - start;
+//  std::cout << "Runtime: " << elapsed_seconds.count() << std::endl;
 
-    // Move forward one waypoint for the next iteration
-    if ((std::size_t)output_trajectories.at(joint).positions.size() > next_waypoint)
+    // Trajectory generation error handling
+    if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
     {
-      start_state[joint].position = output_trajectories.at(joint).positions[next_waypoint];
-      start_state[joint].velocity = output_trajectories.at(joint).velocities[next_waypoint];
-      start_state[joint].acceleration = output_trajectories.at(joint).accelerations[next_waypoint];
+      std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+      return -1;
     }
+
+    // Save the synchronized trajectories to .csv files
+    if (waypt == 0)
+      traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base, false /* append_single_waypoint */);
+    // After the first 2 waypoints, just save one at a time
     else
-    {
-      // This should never happen
-      std::cout << "Index error!" << std::endl;
-      return 1;
-    }
-
-    // Calculate errors so tolerances can be checked
-    position_error = start_state[joint].position - goal_joint_states.at(joint).position;
-    velocity_error = start_state[joint].velocity - goal_joint_states.at(joint).velocity;
-    acceleration_error = start_state[joint].acceleration - goal_joint_states.at(joint).acceleration;
-
-    position_error = start_state[joint].position - goal_joint_states.at(joint).position;
-    velocity_error = start_state[joint].velocity - goal_joint_states.at(joint).velocity;
-    acceleration_error = start_state[joint].acceleration - goal_joint_states.at(joint).acceleration;
-
-    // Shorten the desired duration as we get closer to goal
-    desired_duration -= timestep;
-    // But, don't ask for a duration that is shorter than the minimum
-    desired_duration = std::max(desired_duration, min_desired_duration);
+      traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base, true /* append_single_waypoint */);
   }
-
-  std::cout << "Done!" << std::endl;
 
   return 0;
 }

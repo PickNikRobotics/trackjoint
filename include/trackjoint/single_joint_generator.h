@@ -31,7 +31,7 @@ class SingleJointGenerator
 public:
   /** \brief Constructor
    *
-   * input num_waypoints_threshold minimum/maximum number of waypoints for full trajectory/streaming modes, respectively
+   * input num_waypoints_threshold minimum/maximum number of waypoints
    * input max_num_waypoints_trajectory_mode to maintain determinism, return an error if more than this many waypoints
    * is required
    */
@@ -60,15 +60,13 @@ public:
    * input desired_num_waypoints nominal number of waypoints, calculated from user-supplied duration and timestep
    * input position_tolerance tolerance for how close the final trajectory should follow a smooth interpolation.
    *                          Should be set lower than the accuracy requirements for your task
-   * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of num_waypoints_threshold
-   *                          waypoints.
    * input timestep_was_upsampled If upsampling happened (we are working with very few waypoints), do not adjust
    * timestep
    *
    */
   void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
-             const double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
+             const double position_tolerance, bool timestep_was_upsampled);
 
   /** \brief Generate a jerk-limited trajectory for this joint
    *
@@ -77,7 +75,7 @@ public:
   ErrorCodeEnum generateTrajectory();
 
   /** \brief Extend a trajectory to a new duration. Magnitudes of vel/accel/jerk will be decreased. */
-  void extendTrajectoryDuration();
+  void extendTrajectoryDuration(const Eigen::VectorXd stretched_times);
 
   /** \brief Get the generated trajectory
    *
@@ -85,11 +83,8 @@ public:
    */
   JointTrajectory getTrajectory();
 
-  /** \brief Get the last waypoint that successfully matched the polynomial interpolation
-   *
-   * return the waypoint index
-   */
-  size_t getLastSuccessfulIndex();
+  /** \brief Get the number of waypoints */
+  size_t getTrajectoryLength();
 
   /** \brief Update desired_duration_ for this joint
    *
@@ -97,17 +92,12 @@ public:
    */
   void updateTrajectoryDuration(double new_trajectory_duration);
 
-private:
-  /** \brief Record the index when compensation first failed */
-  inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
-  {
-    // Record the index when compensation first failed
-    if (current_index < *index_last_successful)
-    {
-      *index_last_successful = current_index;
-    }
-  };
+  /** \brief Gradually stretch timesteps so trajectory duration is extended to new_duration.
+   *
+   */
+  ErrorCodeEnum calculateStretchedTimes(const double new_duration, Eigen::VectorXd& stretched_times);
 
+private:
   /** \brief interpolate from start to end state with a polynomial
    *
    * input times a vector of waypoint times.
@@ -116,7 +106,7 @@ private:
   Eigen::VectorXd interpolate(Eigen::VectorXd& times);
 
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
-  ErrorCodeEnum forwardLimitCompensation(size_t* index_last_successful);
+  ErrorCodeEnum forwardLimitCompensation(bool& successful_limit_comp);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
@@ -124,16 +114,13 @@ private:
 
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
-  ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
+  ErrorCodeEnum positionVectorLimitLookAhead(bool& successful_limit_comp);
 
   /** \brief Check whether the duration needs to be extended, and do it */
   ErrorCodeEnum predictTimeToReach();
 
   /** \brief Calculate vel/accel/jerk from position */
   void calculateDerivativesFromPosition();
-
-  /** \brief Calculate accel/jerk from velocity */
-  void calculateDerivativesFromVelocity();
 
   const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
 
@@ -143,7 +130,7 @@ private:
   KinematicState goal_joint_state_;
   Eigen::VectorXd nominal_times_;
   JointTrajectory waypoints_;
-  size_t index_last_successful_;
+  bool successful_limit_comp_;
   bool is_reset_;
 };  // end class SingleJointGenerator
 }  // namespace trackjoint

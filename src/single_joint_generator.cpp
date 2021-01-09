@@ -13,6 +13,7 @@ namespace trackjoint
 SingleJointGenerator::SingleJointGenerator(size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode)
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
+  , successful_limit_comp_(false)
   , is_reset_(false)
 
 {
@@ -25,7 +26,7 @@ void SingleJointGenerator::reset(const Configuration& configuration, const Kinem
   configuration_ = configuration;
   current_joint_state_ = current_joint_state;
   goal_joint_state_ = goal_joint_state;
-  index_last_successful_ = 0;
+  successful_limit_comp_ = false;
   is_reset_ = true;
 
   // Start with this estimate of the shortest possible duration
@@ -49,10 +50,10 @@ void SingleJointGenerator::reset(const Configuration& configuration, const Kinem
 
 void SingleJointGenerator::reset(double timestep, double max_duration, const KinematicState& current_joint_state,
                                  const KinematicState& goal_joint_state, const Limits& limits,
-                                 size_t desired_num_waypoints, const double position_tolerance, bool use_streaming_mode,
+                                 size_t desired_num_waypoints, const double position_tolerance,
                                  bool timestep_was_upsampled)
 {
-  Configuration configuration(timestep, max_duration, limits, position_tolerance, use_streaming_mode);
+  Configuration configuration(timestep, max_duration, limits, position_tolerance);
   this->reset(configuration, current_joint_state, goal_joint_state, desired_num_waypoints, timestep_was_upsampled);
 }
 
@@ -69,7 +70,7 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
                                         (waypoints_.positions.size() - 1) * configuration_.timestep);
   calculateDerivativesFromPosition();
 
-  ErrorCodeEnum error_code = positionVectorLimitLookAhead(&index_last_successful_);
+  ErrorCodeEnum error_code = positionVectorLimitLookAhead(successful_limit_comp_);
   if (error_code)
   {
     return error_code;
@@ -81,45 +82,46 @@ ErrorCodeEnum SingleJointGenerator::generateTrajectory()
   return error_code;
 }
 
-void SingleJointGenerator::extendTrajectoryDuration()
+void SingleJointGenerator::extendTrajectoryDuration(const Eigen::VectorXd stretched_times)
 {
   size_t new_num_waypoints = 1 + desired_duration_ / configuration_.timestep;
 
-  // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
-  // ^This is the best way because it reduces overshoot.
-  // Otherwise, re-generate a new trajectory from scratch.
-  if (index_last_successful_ == static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
-  {
-    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
-    // This only decreases velocity/accel/jerk, so no worries re. limit violation
-    Eigen::RowVectorXd new_times;
-    new_times.setLinSpaced(waypoints_.elapsed_times.size(), 0, desired_duration_);
-    Eigen::RowVectorXd position(waypoints_.positions);
-
-    const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
-
-    // New times, with the extended duration
-    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
-    // Retrieve new positions at the new times
-    waypoints_.positions.resize(new_num_waypoints);
-
-    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
-      waypoints_.positions[idx] = fit(waypoints_.elapsed_times(idx)).coeff(0);
-
-    calculateDerivativesFromPosition();
-    return;
-  }
-
-  // Plan a new trajectory from scratch:
-  // Clear previous results
-  else
-  {
+//  // If waypoints were successfully generated for this dimension previously, just stretch the trajectory with splines.
+//  // ^This is the best way because it reduces overshoot.
+//  // Otherwise, re-generate a new trajectory from scratch.
+//  if (successful_limit_comp_)
+//  {
+//    // Fit and generate a spline function to the original positions, same number of waypoints, new (extended) duration
+//    // This only decreases velocity/accel/jerk, so no worries re. limit violation
+//    Eigen::RowVectorXd new_times;
+//    new_times.setLinSpaced(stretched_times.size(), 0, desired_duration_);
+//    Eigen::RowVectorXd position(waypoints_.positions);
+//
+//    const auto fit = SplineFitting1D::Interpolate(position, 2, new_times);
+//
+//    // New times, with the extended duration
+//    waypoints_.elapsed_times = stretched_times;
+//    // Retrieve new positions at the new times
+//    waypoints_.positions.resize(stretched_times.size());
+//
+//    for (Eigen::Index idx = 0; idx < waypoints_.elapsed_times.size(); ++idx)
+//      waypoints_.positions[idx] = fit(stretched_times(idx)).coeff(0);
+//
+//    calculateDerivativesFromPosition();
+//    forwardLimitCompensation(successful_limit_comp_);
+//    return;
+//  }
+//
+//  // Plan a new trajectory from scratch:
+//  // Clear previous results
+//  else
+//  {
     waypoints_ = JointTrajectory();
     waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
     waypoints_.positions = interpolate(waypoints_.elapsed_times);
     calculateDerivativesFromPosition();
-    forwardLimitCompensation(&index_last_successful_);
-  }
+    forwardLimitCompensation(successful_limit_comp_);
+//  }
 
   return;
 }
@@ -129,9 +131,9 @@ JointTrajectory SingleJointGenerator::getTrajectory()
   return waypoints_;
 }
 
-size_t SingleJointGenerator::getLastSuccessfulIndex()
+size_t SingleJointGenerator::getTrajectoryLength()
 {
-  return index_last_successful_;
+  return waypoints_.positions.size();
 }
 
 Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
@@ -165,21 +167,12 @@ Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
   return interpolated_position;
 }
 
-ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(bool& successful_limit_comp)
 {
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
-
-  // Start with the assumption that the entire trajectory can be completed.
-  // Streaming mode returns at the minimum number of waypoints.
-  // Streaming mode is not necessary if the number of waypoints is already very short.
-  if (!configuration_.use_streaming_mode || static_cast<size_t>(waypoints_.positions.size()) <= kNumWaypointsThreshold)
-    *index_last_successful = waypoints_.positions.size() - 1;
-  else
-    *index_last_successful = kNumWaypointsThreshold - 1;
-
-  bool successful_compensation = false;
+  successful_limit_comp = false;
 
   // Discrete differentiation introduces small numerical errors, so allow a small tolerance
   const double limit_relative_tol = 0.999999;
@@ -192,44 +185,41 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
   // Compensate for jerk limits at each timestep, starting near the beginning
   // Do not want to affect vel/accel at the first/last timestep
-  for (size_t index = 1; index < *index_last_successful; ++index)
+  bool successful_jerk_comp = true;
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
-    if (fabs(waypoints_.jerks(index)) > jerk_limit)
+    if (fabs((waypoints_.accelerations(index) - waypoints_.accelerations(index - 1)) / configuration_.timestep) > jerk_limit)
     {
       double delta_j = std::copysign(jerk_limit, waypoints_.jerks(index)) - waypoints_.jerks(index);
       waypoints_.jerks(index) = std::copysign(jerk_limit, waypoints_.jerks(index));
 
+      delta_a = delta_j * configuration_.timestep;
       waypoints_.accelerations(index) =
           waypoints_.accelerations(index - 1) + waypoints_.jerks(index) * configuration_.timestep;
       waypoints_.velocities(index) = waypoints_.velocities(index - 1) +
                                      waypoints_.accelerations(index - 1) * configuration_.timestep +
                                      0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
 
-      delta_v = 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
+      delta_v = delta_a * configuration_.timestep + 0.5 * delta_j * configuration_.timestep * configuration_.timestep;
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
+      successful_jerk_comp = backwardLimitCompensation(index, -(delta_v + position_error / configuration_.timestep));
+      if (!successful_jerk_comp)
       {
-        position_error = position_error + delta_v * configuration_.timestep;
+        position_error += delta_v * configuration_.timestep;
       }
-      if (fabs(position_error) > configuration_.position_tolerance)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
+      else
+        position_error = 0;
     }
   }
 
   // Compensate for acceleration limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided acceleration at the first timestep, so start at index 2.
   // Also do not want to affect user-provided acceleration at the last timestep.
-  position_error = 0;
-  for (size_t index = 1; index < *index_last_successful; ++index)
+  bool successful_acceleration_comp = true;
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
-    if (fabs(waypoints_.accelerations(index)) > acceleration_limit)
+    if (fabs((waypoints_.velocities(index) - waypoints_.velocities(index - 1)) / configuration_.timestep) > acceleration_limit)
     {
       double temp_accel = std::copysign(acceleration_limit, waypoints_.accelerations(index));
       delta_a = temp_accel - waypoints_.accelerations(index);
@@ -237,8 +227,8 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
       // Check jerk limit before applying the change.
       // The first condition checks if the new jerk(i) is going to exceed the limit. Pretty straightforward.
       // We also calculate a new jerk(i+1). The second condition checks if jerk(i+1) would exceed the limit.
-      if ((fabs((temp_accel - waypoints_.accelerations(index)) / configuration_.timestep) <= jerk_limit) &&
-          (fabs(waypoints_.jerks(index) + delta_a / configuration_.timestep) <= jerk_limit))
+      if ((fabs((temp_accel - waypoints_.accelerations(index - 1)) / configuration_.timestep) <= jerk_limit) &&
+          (fabs((waypoints_.accelerations(index + 1) - temp_accel) / configuration_.timestep) <= jerk_limit))
       {
         waypoints_.accelerations(index) = temp_accel;
         waypoints_.jerks(index) =
@@ -246,29 +236,16 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
         waypoints_.velocities(index) =
             waypoints_.velocities(index - 1) + waypoints_.accelerations(index - 1) * configuration_.timestep +
             0.5 * waypoints_.jerks(index) * configuration_.timestep * configuration_.timestep;
+
+        // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
+        // Try to account for position error, too.
+        delta_v = delta_a * configuration_.timestep;
+        successful_acceleration_comp = backwardLimitCompensation(index, -delta_v);
       }
       else
       {
-        // Acceleration and jerk limits cannot both be satisfied
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
-      }
-
-      // Try adjusting the velocity in previous timesteps to compensate for this limit, if needed
-      delta_v = delta_a * configuration_.timestep;
-      successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
-      {
-        position_error = position_error + delta_v * configuration_.timestep;
-      }
-      if (fabs(position_error) > configuration_.position_tolerance)
-      {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
+        successful_limit_comp = false;
+        return ErrorCodeEnum::NO_ERROR;
       }
     }
   }
@@ -276,8 +253,8 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
   // Compensate for velocity limits at each timestep, starting near the beginning of the trajectory.
   // Do not want to affect user-provided velocity at the first timestep, so start at index 2.
   // Also do not want to affect user-provided velocity at the last timestep.
-  position_error = 0;
-  for (size_t index = 1; index < *index_last_successful; ++index)
+  double successful_velocity_comp = true;
+  for (int index = 1; index < waypoints_.positions.size() - 1; ++index)
   {
     // If the velocity limit would be exceeded
     if (fabs(waypoints_.velocities(index)) > velocity_limit)
@@ -287,30 +264,25 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
       // Try adjusting the velocity in previous timesteps to compensate for this limit.
       // Try to account for position error, too.
-      delta_v += position_error / configuration_.timestep;
-      successful_compensation = backwardLimitCompensation(index, -delta_v);
-      if (!successful_compensation)
+      successful_velocity_comp = backwardLimitCompensation(index, -(delta_v + position_error / configuration_.timestep));
+      if (!successful_velocity_comp)
       {
-        position_error = position_error + delta_v * configuration_.timestep;
+        position_error += delta_v * configuration_.timestep;
       }
       else
-        position_error = 0;
-
-      if (fabs(position_error) > configuration_.position_tolerance ||
-          fabs(waypoints_.accelerations(index)) > acceleration_limit || fabs(waypoints_.jerks(index)) > jerk_limit ||
-          fabs(waypoints_.accelerations(index + 1)) > acceleration_limit ||
-          fabs(waypoints_.jerks(index + 1)) > jerk_limit)
       {
-        recordFailureTime(index, index_last_successful);
-        // Only break, do not return, because we are looking for the FIRST failure. May find an earlier failure in
-        // subsequent code
-        break;
+        position_error = 0;
       }
     }
   }
 
-  // Re-calculate derivatives from the updated velocity vector
-  calculateDerivativesFromVelocity();
+  // Check for success
+  // TODO(andyz): check limits too
+  if (successful_jerk_comp && successful_acceleration_comp && successful_velocity_comp &&
+      (position_error < configuration_.position_tolerance))
+    successful_limit_comp = true;
+  else
+    successful_limit_comp = false;
 
   return ErrorCodeEnum::NO_ERROR;
 }
@@ -326,10 +298,8 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 
   bool successful_compensation = false;
 
-  // Add a bit of velocity at step i to compensate for the limit at timestep
-  // i+1.
-  // Cannot go beyond index 2 because we use a 2-index window for derivative
-  // calculations.
+  // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
+  // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
   for (size_t index = limited_index; index > 2; --index)
   {
     // if there is some room to increase the velocity at timestep i
@@ -344,10 +314,9 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
-        double backward_jerk =
-            (backward_accel -
-             (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) / configuration_.timestep) /
-            configuration_.timestep;
+        double backward_jerk = (backward_accel - (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) /
+                                                     configuration_.timestep) /
+                               configuration_.timestep;
         // Accel and jerk, calculated from upcoming waypoints
         double forward_accel = (waypoints_.velocities(index + 1) - new_velocity) / configuration_.timestep;
         double forward_jerk =
@@ -381,15 +350,13 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       // Can't make all of the correction in this timestep, so make as much of a change as possible
       if (!successful_compensation)
       {
-        // This is what accel and jerk would be if we set velocity(index) to the
-        // limit
+        // This is what accel and jerk would be if we set velocity(index) to the limit
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
-        double backward_jerk =
-            (backward_accel -
-             (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) / configuration_.timestep) /
-            configuration_.timestep;
+        double backward_jerk = (backward_accel - (waypoints_.velocities(index - 1) - waypoints_.velocities(index - 2)) /
+                                                     configuration_.timestep) /
+                               configuration_.timestep;
         // Accel and jerk, calculated from upcoming waypoints
         double forward_accel = (waypoints_.velocities(index + 1) - new_velocity) / configuration_.timestep;
         double forward_jerk =
@@ -438,84 +405,42 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
 
   ErrorCodeEnum error_code = ErrorCodeEnum::NO_ERROR;
 
-  // If in normal mode, we can extend trajectories
-  if (!configuration_.use_streaming_mode)
+  size_t new_num_waypoints = 0;
+  // duration_extension_factor affects runtime, and effects how close the duration is too optimal
+  // (smaller -> calculated duration will be closer to optimal, but longer runtime)
+  const double duration_extension_factor = 1.02;
+  // Iterate over new durations until the position error is acceptable or the maximum duration is reached
+  while (!successful_limit_comp_ &&
+         ((duration_extension_factor * desired_duration_) < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
   {
-    size_t new_num_waypoints = 0;
-    // Iterate over new durations until the position error is acceptable or the maximum duration is reached
-    while ((index_last_successful_ < static_cast<size_t>(waypoints_.positions.size() - 1)) &&
-           (desired_duration_ < configuration_.max_duration) && (new_num_waypoints < kMaxNumWaypointsFullTrajectory))
-    {
-      // Try increasing the duration, based on fraction of states that weren't reached successfully
-      // Choice of 0.2 is subjective but it should be between 0-1.
-      // A smaller fraction will find a solution that's closer to time-optimal because it adds fewer new waypoints to
-      // the search. But, a smaller fraction likely increases runtime.
-      desired_duration_ =
-          (1. + 0.2 * (1. - index_last_successful_ / (waypoints_.positions.size() - 1))) * desired_duration_;
+    // Try increasing the duration
+    desired_duration_ = duration_extension_factor * desired_duration_;
 
-      // // Round to nearest timestep
-      if (std::fmod(desired_duration_, configuration_.timestep) > 0.5 * configuration_.timestep)
-        desired_duration_ = desired_duration_ + configuration_.timestep;
+    // // Round to nearest timestep
+    if (std::fmod(desired_duration_, configuration_.timestep) > 0.5 * configuration_.timestep)
+      desired_duration_ = desired_duration_ + configuration_.timestep;
 
-      new_num_waypoints = std::max(static_cast<size_t>(waypoints_.positions.size() + 1),
-                                   static_cast<size_t>(floor(1 + desired_duration_ / configuration_.timestep)));
-      // Cap the trajectory duration to maintain determinism
-      if (new_num_waypoints > kMaxNumWaypointsFullTrajectory)
-        new_num_waypoints = kMaxNumWaypointsFullTrajectory;
+    new_num_waypoints = std::max(static_cast<size_t>(waypoints_.positions.size() + 1),
+                                 static_cast<size_t>(floor(1 + desired_duration_ / configuration_.timestep)));
+    // Cap the trajectory duration to maintain determinism
+    if (new_num_waypoints > kMaxNumWaypointsFullTrajectory)
+      new_num_waypoints = kMaxNumWaypointsFullTrajectory;
 
-      waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
-      waypoints_.positions.resize(waypoints_.elapsed_times.size());
-      waypoints_.velocities.resize(waypoints_.elapsed_times.size());
-      waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
-      waypoints_.jerks.resize(waypoints_.elapsed_times.size());
+    waypoints_.elapsed_times.setLinSpaced(new_num_waypoints, 0., (new_num_waypoints - 1) * configuration_.timestep);
+    waypoints_.positions.resize(waypoints_.elapsed_times.size());
+    waypoints_.velocities.resize(waypoints_.elapsed_times.size());
+    waypoints_.accelerations.resize(waypoints_.elapsed_times.size());
+    waypoints_.jerks.resize(waypoints_.elapsed_times.size());
 
-      ////////////////////////////////////////////////////////////
-      // Try to create the trajectory again, with the new duration
-      ////////////////////////////////////////////////////////////
-      waypoints_.positions = interpolate(waypoints_.elapsed_times);
-      calculateDerivativesFromPosition();
-      positionVectorLimitLookAhead(&index_last_successful_);
-    }
-  }
-  // If in streaming mode, do not extend the trajectories.
-  // May need to clip the trajectories if only a few waypoints were successful.
-  else
-  {
-    // Clip at the last successful index
-    if (index_last_successful_ + 1 < kNumWaypointsThreshold)
-    {
-      // If in streaming mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.velocities, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.accelerations, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.jerks, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.elapsed_times, index_last_successful_ + 1);
-      // Eigen vectors do not have a "back" member function
-      goal_joint_state_.position = waypoints_.positions[index_last_successful_];
-      goal_joint_state_.velocity = waypoints_.velocities[index_last_successful_];
-      goal_joint_state_.acceleration = waypoints_.accelerations[index_last_successful_];
-      desired_duration_ = waypoints_.elapsed_times[index_last_successful_];
-    }
-    // else, clip at kNumWaypointsThreshold
-    else
-    {
-      // If in streaming mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.velocities, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.accelerations, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.jerks, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.elapsed_times, kNumWaypointsThreshold);
-      // Eigen vectors do not have a "back" member function
-      goal_joint_state_.position = waypoints_.positions[kNumWaypointsThreshold - 1];
-      goal_joint_state_.velocity = waypoints_.velocities[kNumWaypointsThreshold - 1];
-      goal_joint_state_.acceleration = waypoints_.accelerations[kNumWaypointsThreshold - 1];
-      desired_duration_ = waypoints_.elapsed_times[kNumWaypointsThreshold - 1];
-    }
+    ////////////////////////////////////////////////////////////
+    // Try to create the trajectory again, with the new duration
+    ////////////////////////////////////////////////////////////
+    waypoints_.positions = interpolate(waypoints_.elapsed_times);
+    calculateDerivativesFromPosition();
+    positionVectorLimitLookAhead(successful_limit_comp_);
   }
 
-  // Normal mode: Error if we extended the duration to the maximum and it still wasn't successful
-  if (!configuration_.use_streaming_mode &&
-      index_last_successful_ < static_cast<size_t>(waypoints_.elapsed_times.size() - 1))
+  if (!successful_limit_comp_)
   {
     error_code = ErrorCodeEnum::MAX_DURATION_EXCEEDED;
   }
@@ -528,9 +453,9 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
   return error_code;
 }
 
-ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_last_successful)
+ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(bool& successful_limit_comp)
 {
-  ErrorCodeEnum error_code = forwardLimitCompensation(index_last_successful);
+  ErrorCodeEnum error_code = forwardLimitCompensation(successful_limit_comp);
   if (error_code)
     return error_code;
 
@@ -540,15 +465,11 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
   const double one_sixth = 0.166667;
   // Initial waypoint
   waypoints_.positions(0) = current_joint_state_.position;
-  for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()) - 1; ++index)
+  for (size_t index = 1; index < static_cast<size_t>(waypoints_.positions.size()); ++index)
     waypoints_.positions(index) = waypoints_.positions(index - 1) +
                                   waypoints_.velocities(index - 1) * configuration_.timestep +
                                   0.5 * waypoints_.accelerations(index - 1) * pow(configuration_.timestep, 2) +
                                   one_sixth * waypoints_.jerks(index - 1) * pow(configuration_.timestep, 3);
-
-  // Final waypoint should match the goal, unless trajectory was cut short for streaming mode
-  if (!configuration_.use_streaming_mode)
-    waypoints_.positions(waypoints_.positions.size() - 1) = goal_joint_state_.position;
 
   return error_code;
 }
@@ -563,19 +484,101 @@ void SingleJointGenerator::calculateDerivativesFromPosition()
   waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
 }
 
-void SingleJointGenerator::calculateDerivativesFromVelocity()
-{
-  // From velocity vector, approximate accel/jerk.
-  waypoints_.accelerations =
-      DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
-}
-
 void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_duration)
 {
   // The trajectory will be forced to have this duration (or fail) because
   // max_duration == desired_duration
   desired_duration_ = new_trajectory_duration;
   configuration_.max_duration = new_trajectory_duration;
+}
+
+ErrorCodeEnum SingleJointGenerator::calculateStretchedTimes(const double new_duration, Eigen::VectorXd& stretched_times)
+{
+  // Gradually stretch the time steps - add the "extra time" to each existing timestep such that the new timesteps
+  // resemble a triangle wave.
+  // We do not stretch either end so that initial slope & final slope do not change.
+  // The first and last modified timestep have an extra factor of 1/2 because it is half a timestep to the average value
+  // of the waypoint.
+  // The algorithm is slightly different for even vs. odd num waypoints
+  // Spreadsheet for reference:
+  // https://docs.google.com/spreadsheets/d/1GoTcM25O5Tys8hHnADvdMYSAQzBi76lYpW9f0bHpxSo/edit#gid=515349804
+
+  updateTrajectoryDuration(new_duration);
+  size_t num_waypts = waypoints_.elapsed_times.size();
+  size_t num_timesteps_to_stretch = num_waypts - 3;
+  // Chop because the initial and final slopes don't change
+  double chopped_new_duration = new_duration - 2 * configuration_.timestep;
+  double avg_stretched_timestep = chopped_new_duration / double(num_timesteps_to_stretch);
+  // Number of timesteps is equal to number of waypoints minus one (to account for the starting waypoint)
+  Eigen::VectorXd stretched_timesteps = Eigen::VectorXd::Zero(num_waypts - 1);
+  // Do not stretch the initial and final timesteps
+  stretched_timesteps(0) = configuration_.timestep;
+  stretched_timesteps(stretched_timesteps.size() - 1) = configuration_.timestep;
+  // Begin calculations to linearly ramp up the timestep (up to n/2)
+  // For stretched_timesteps(1) (and its mirrored counterpart) divide timestep by an additional factor of 2 because it is
+  // half a timestep to the average value of the waypoint. Then a full timestep between average values after that.
+  stretched_timesteps(1) = stretched_timesteps(0) + (avg_stretched_timestep - configuration_.timestep) / (double(num_timesteps_to_stretch) / 2.);
+  // For an odd number of waypoints
+  if (fmod(stretched_timesteps.size(), 2) != 0)
+  {
+    for (size_t idx = 2; idx <= ceil(num_timesteps_to_stretch / 2.); ++idx)
+    {
+      stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
+    }
+
+    // Mirror the elements beyond n/2
+    size_t ramp_up_idx = double(num_timesteps_to_stretch) / 2.;
+    for (size_t ramp_down_idx = 3 + double(num_timesteps_to_stretch) / 2; ramp_down_idx < num_waypts - 1; ++ramp_down_idx)
+    {
+      stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
+      --ramp_up_idx;
+    }
+    stretched_timesteps(stretched_timesteps.size() - 2) = stretched_timesteps(1);
+
+    // The middle 2 waypoints (for symmetry) have a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = 0;
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = 0;
+    stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.) = (new_duration - stretched_timesteps.sum()) / 2.;
+    stretched_timesteps(2 + double(num_timesteps_to_stretch) / 2.) = stretched_timesteps(1 + double(num_timesteps_to_stretch) / 2.);
+  }
+  // For an even number of waypoints
+  else
+  {
+    for (size_t idx = 2; idx < ceil(num_timesteps_to_stretch / 2.); ++idx)
+    {
+      stretched_timesteps(idx) = stretched_timesteps(idx - 1) + (4 * (avg_stretched_timestep - configuration_.timestep)) / double(num_timesteps_to_stretch);
+    }
+
+    // Mirror the elements beyond n/2
+    size_t ramp_up_idx = ceil(num_timesteps_to_stretch / 2.) - 1;
+    for (size_t ramp_down_idx = 1 + ceil(num_timesteps_to_stretch / 2.); ramp_up_idx > 0; ++ramp_down_idx)
+    {
+      stretched_timesteps(ramp_down_idx) = stretched_timesteps(ramp_up_idx);
+      --ramp_up_idx;
+    }
+    stretched_timesteps(stretched_timesteps.size() - 2) = stretched_timesteps(1);
+
+    // The middle waypoint has a special formula - stretch it to ensure the duration ends up perfect
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = 0;
+    stretched_timesteps(ceil(num_timesteps_to_stretch / 2.)) = new_duration - stretched_timesteps.sum();
+  }
+
+  // Sum the timesteps to get new 'times' vector
+  // First element is zero
+  stretched_times = Eigen::VectorXd::Zero(stretched_timesteps.size() + 1);
+  for (int idx = 0; idx < stretched_timesteps.size(); ++idx)
+  {
+    stretched_times(idx + 1) = stretched_times(idx) + stretched_timesteps(idx);
+  }
+
+  if (fabs(stretched_times(stretched_times.size() - 1) - new_duration) > configuration_.timestep)
+  {
+    std::cout << "Duration does not match" << std::endl;
+    std::cout << "Expected duration: " << new_duration << std::endl;
+    std::cout << "Actual duration: " << stretched_times(stretched_times.size() - 1) << std::endl;
+    return ErrorCodeEnum::ERROR_IN_TIMESTEP_STRETCHING;
+  }
+
+  return ErrorCodeEnum::NO_ERROR;
 }
 }  // end namespace trackjoint
