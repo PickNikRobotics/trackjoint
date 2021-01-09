@@ -21,7 +21,7 @@ int main(int argc, char** argv)
   // This example is for just one degree of freedom
   constexpr int num_dof = 1;
   // Timestep. Units don't matter as long as they're consistent
-  constexpr double timestep = 0.0002;
+  constexpr double timestep = 0.0001;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
   constexpr double max_duration = 0.8;
@@ -40,19 +40,19 @@ int main(int argc, char** argv)
   std::vector<trackjoint::KinematicState> goal_joint_states(1);
   joint_state.position = 0.216207;
   joint_state.velocity = 0.008;
-  joint_state.acceleration = 8;
+  joint_state.acceleration = 0;
   goal_joint_states[0] = joint_state;
 
   trackjoint::Limits single_joint_limits;
   // Typically, jerk limit >> acceleration limit > velocity limit
   single_joint_limits.velocity_limit = 2.6;
   single_joint_limits.acceleration_limit = 17;
-  single_joint_limits.jerk_limit = 34.6;
+  single_joint_limits.jerk_limit = 170;
   std::vector<trackjoint::Limits> limits(1, single_joint_limits);
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration = 0.018;
+  double desired_duration = 0.001;
       //fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << std::endl;
 
