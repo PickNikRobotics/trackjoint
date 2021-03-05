@@ -12,38 +12,17 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-# Disable ROS stuff for this initial port to ROS2
-#find_package(ament_cmake REQUIRED COMPONENTS
-#  roscpp
-#  roslib
-#  roslint
-#  rospy
-#)
-
 set(THIS_PACKAGE_INCLUDE_DEPENDS)
-
-# catkin_package(
-#   CATKIN_DEPENDS
-#     roscpp
-#     roslib
-#     rospy
-#   INCLUDE_DIRS
-#     include
-#   LIBRARIES
-#     ${PROJECT_NAME}
-#   DEPENDS
-#     EIGEN3
-# )
 
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
 include_directories(
-  SYSTEM
-    ${EIGEN3_INCLUDE_DIRS}
+  include
 )
 
 include_directories(
-  include
+  SYSTEM
+    ${EIGEN3_INCLUDE_DIRS}
 )
 
 set(LIBRARY_NAME trackjoint)
@@ -58,60 +37,20 @@ target_link_libraries(${LIBRARY_NAME}
   ${Boost_FILESYSTEM_LIBRARY}
 )
 
-# Just compile one simple example in ament, for now
+set(SIMPLE_EXAMPLE simple_example)
+add_executable(${SIMPLE_EXAMPLE} src/simple_example.cpp)
+ament_target_dependencies(${SIMPLE_EXAMPLE} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(${SIMPLE_EXAMPLE} ${LIBRARY_NAME})
 
-#add_executable(
-#  ${PROJECT_NAME}_simple_example
-#  src/simple_example.cpp
-#)
-## Rename C++ executable without namespace
-#set_target_properties(
-#  ${PROJECT_NAME}_simple_example
-#  PROPERTIES
-#    OUTPUT_NAME simple_example PREFIX ""
-#)
-#target_link_libraries(
-#  ${PROJECT_NAME}_simple_example
-#  ${LIBRARY_NAME}
-#  ${catkin_LIBRARIES}
-#)
+set(STREAMING_EXAMPLE streaming_example)
+add_executable(${STREAMING_EXAMPLE} src/streaming_example.cpp)
+ament_target_dependencies(${STREAMING_EXAMPLE} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(${STREAMING_EXAMPLE} ${LIBRARY_NAME})
 
-set(SIMPLE_EXAMPLE_NAME simple_example)
-add_executable(${SIMPLE_EXAMPLE_NAME} src/simple_example.cpp)
-ament_target_dependencies(${SIMPLE_EXAMPLE_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(${SIMPLE_EXAMPLE_NAME} ${LIBRARY_NAME})
-
-## A streaming example (update within a loop)
-#add_executable(
-#  ${PROJECT_NAME}_streaming_example
-#  src/streaming_example.cpp
-#)
-## Rename C++ executable without namespace
-#set_target_properties(
-#  ${PROJECT_NAME}_streaming_example
-#  PROPERTIES
-#    OUTPUT_NAME streaming_example PREFIX ""
-#)
-#target_link_libraries(
-#  ${PROJECT_NAME}_streaming_example
-#  ${LIBRARY_NAME}
-#  ${catkin_LIBRARIES}
-#)
-
-#add_executable(
-#  ${PROJECT_NAME}_three_dof_examples
-#  src/three_dof_examples.cpp
-#)
-#set_target_properties(
-#  ${PROJECT_NAME}_three_dof_examples
-#  PROPERTIES
-#    OUTPUT_NAME three_dof_examples PREFIX ""
-#)
-#target_link_libraries(
-#  ${PROJECT_NAME}_three_dof_examples
-#  ${LIBRARY_NAME}
-#  ${catkin_LIBRARIES}
-#)
+set(THREE_DOF_EXAMPLES three_dof_examples)
+add_executable(${THREE_DOF_EXAMPLES} src/three_dof_examples.cpp)
+ament_target_dependencies(${THREE_DOF_EXAMPLES} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(${THREE_DOF_EXAMPLES} ${LIBRARY_NAME})
 
 #############
 ## Install ##
@@ -120,27 +59,20 @@ target_link_libraries(${SIMPLE_EXAMPLE_NAME} ${LIBRARY_NAME})
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${SIMPLE_EXAMPLE_NAME} 
-    #${PROJECT_NAME}_streaming_example
+    ${PROJECT_NAME} ${SIMPLE_EXAMPLE} ${STREAMING_EXAMPLE} ${THREE_DOF_EXAMPLES}
   ARCHIVE DESTINATION
     lib
   LIBRARY DESTINATION
     lib
   RUNTIME DESTINATION
-    bin
+    lib/${PROJECT_NAME}
 )
-
-## Mark cpp header files for installation
-#install(
-#  DIRECTORY
-#    include/${PROJECT_NAME}/
-#  DESTINATION
-#    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#)
 
 #############
 ## Testing ##
 #############
+
+# TODO(andyz): update this for ROS2
 
 #if(CATKIN_ENABLE_TESTING)
 #  find_package(rostest REQUIRED)
