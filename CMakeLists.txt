@@ -1,8 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(trackjoint)
-
-# C++ 14
-add_compile_options(-std=c++14)
 
 # Warnings
 add_definitions(-W -Wall -Wextra
@@ -10,36 +7,33 @@ add_definitions(-W -Wall -Wextra
   -Winit-self -Wredundant-decls
   -Wno-unused-parameter -Wno-unused-function)
 
-# Find catkin macros and libraries
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  roslib
-  roslint
-  rospy
-)
-
-# System dependencies are found with CMake's conventions
+find_package(ament_cmake REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-###################################
-## Catkin specific configuration ##
-###################################
-catkin_package(
-  CATKIN_DEPENDS
-    roscpp
-    roslib
-    rospy
-  INCLUDE_DIRS
-    include
-  LIBRARIES
-    ${PROJECT_NAME}
-  DEPENDS
-    EIGEN3
-)
+# Disable ROS stuff for this initial port to ROS2
+#find_package(ament_cmake REQUIRED COMPONENTS
+#  roscpp
+#  roslib
+#  roslint
+#  rospy
+#)
 
-###########
-## Build ##
-###########
+set(THIS_PACKAGE_INCLUDE_DEPENDS)
+
+# catkin_package(
+#   CATKIN_DEPENDS
+#     roscpp
+#     roslib
+#     rospy
+#   INCLUDE_DIRS
+#     include
+#   LIBRARIES
+#     ${PROJECT_NAME}
+#   DEPENDS
+#     EIGEN3
+# )
 
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
@@ -50,7 +44,6 @@ include_directories(
 
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS}
 )
 
 set(LIBRARY_NAME trackjoint)
@@ -59,61 +52,66 @@ add_library(${LIBRARY_NAME}
   src/single_joint_generator.cpp
   src/utilities.cpp
 )
-target_link_libraries(
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
+set_target_properties(${LIBRARY_NAME} PROPERTIES VERSION "${${PROJECT_NAME}_VERSION}")
+ament_target_dependencies(${LIBRARY_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(${LIBRARY_NAME}
+  ${Boost_FILESYSTEM_LIBRARY}
 )
 
-# A minimal, single-trajectory example
-add_executable(
-  ${PROJECT_NAME}_simple_example
-  src/simple_example.cpp
-)
-# Rename C++ executable without namespace
-set_target_properties(
-  ${PROJECT_NAME}_simple_example
-  PROPERTIES
-    OUTPUT_NAME simple_example PREFIX ""
-)
-target_link_libraries(
-  ${PROJECT_NAME}_simple_example
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
-)
+# Just compile one simple example in ament, for now
 
-# A streaming example (update within a loop)
-add_executable(
-  ${PROJECT_NAME}_streaming_example
-  src/streaming_example.cpp
-)
-# Rename C++ executable without namespace
-set_target_properties(
-  ${PROJECT_NAME}_streaming_example
-  PROPERTIES
-    OUTPUT_NAME streaming_example PREFIX ""
-)
-target_link_libraries(
-  ${PROJECT_NAME}_streaming_example
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
-)
+#add_executable(
+#  ${PROJECT_NAME}_simple_example
+#  src/simple_example.cpp
+#)
+## Rename C++ executable without namespace
+#set_target_properties(
+#  ${PROJECT_NAME}_simple_example
+#  PROPERTIES
+#    OUTPUT_NAME simple_example PREFIX ""
+#)
+#target_link_libraries(
+#  ${PROJECT_NAME}_simple_example
+#  ${LIBRARY_NAME}
+#  ${catkin_LIBRARIES}
+#)
 
-add_executable(
-  ${PROJECT_NAME}_three_dof_examples
-  src/three_dof_examples.cpp
-)
+set(SIMPLE_EXAMPLE_NAME simple_example)
+add_executable(${SIMPLE_EXAMPLE_NAME} src/simple_example.cpp)
+ament_target_dependencies(${SIMPLE_EXAMPLE_NAME} ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(${SIMPLE_EXAMPLE_NAME} ${LIBRARY_NAME})
 
-set_target_properties(
-  ${PROJECT_NAME}_three_dof_examples
-  PROPERTIES
-    OUTPUT_NAME three_dof_examples PREFIX ""
-)
+## A streaming example (update within a loop)
+#add_executable(
+#  ${PROJECT_NAME}_streaming_example
+#  src/streaming_example.cpp
+#)
+## Rename C++ executable without namespace
+#set_target_properties(
+#  ${PROJECT_NAME}_streaming_example
+#  PROPERTIES
+#    OUTPUT_NAME streaming_example PREFIX ""
+#)
+#target_link_libraries(
+#  ${PROJECT_NAME}_streaming_example
+#  ${LIBRARY_NAME}
+#  ${catkin_LIBRARIES}
+#)
 
-target_link_libraries(
-  ${PROJECT_NAME}_three_dof_examples
-  ${LIBRARY_NAME}
-  ${catkin_LIBRARIES}
-)
+#add_executable(
+#  ${PROJECT_NAME}_three_dof_examples
+#  src/three_dof_examples.cpp
+#)
+#set_target_properties(
+#  ${PROJECT_NAME}_three_dof_examples
+#  PROPERTIES
+#    OUTPUT_NAME three_dof_examples PREFIX ""
+#)
+#target_link_libraries(
+#  ${PROJECT_NAME}_three_dof_examples
+#  ${LIBRARY_NAME}
+#  ${catkin_LIBRARIES}
+#)
 
 #############
 ## Install ##
@@ -122,40 +120,46 @@ target_link_libraries(
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${PROJECT_NAME}_simple_example ${PROJECT_NAME}_streaming_example
+    ${PROJECT_NAME} ${SIMPLE_EXAMPLE_NAME} 
+    #${PROJECT_NAME}_streaming_example
   ARCHIVE DESTINATION
-    ${CATKIN_PACKAGE_LIB_DESTINATION}
+    lib
   LIBRARY DESTINATION
-    ${CATKIN_PACKAGE_LIB_DESTINATION}
+    lib
   RUNTIME DESTINATION
-    ${CATKIN_PACKAGE_BIN_DESTINATION}
+    bin
 )
 
-# Mark cpp header files for installation
-install(
-  DIRECTORY
-    include/${PROJECT_NAME}/
-  DESTINATION
-    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
+## Mark cpp header files for installation
+#install(
+#  DIRECTORY
+#    include/${PROJECT_NAME}/
+#  DESTINATION
+#    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#)
 
 #############
 ## Testing ##
 #############
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED)
+#if(CATKIN_ENABLE_TESTING)
+#  find_package(rostest REQUIRED)
+#
+#  add_rostest_gtest(trajectory_generation_test
+#    test/trajectory_generation_test.test
+#    test/trajectory_generation_test.cpp
+#  )
+#  target_link_libraries(trajectory_generation_test
+#    ${LIBRARY_NAME}
+#    ${catkin_LIBRARIES}
+#  )
+#
+#endif()
 
-  add_rostest_gtest(trajectory_generation_test
-    test/trajectory_generation_test.test
-    test/trajectory_generation_test.cpp
-  )
-  target_link_libraries(trajectory_generation_test
-    ${LIBRARY_NAME}
-    ${catkin_LIBRARIES}
-  )
+# Install include, launch, config directories
+install(DIRECTORY include/ DESTINATION include)
 
-endif()
-
-## Test for correct C++ source code
-roslint_cpp()
+ament_export_include_directories(include)
+ament_export_libraries(${LIBRARY_NAME})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_package()

@@ -14,8 +14,9 @@
   <url type="bugtracker">https://github.com/PickNikRobotics/trackjoint/issues</url>
   <url type="repository">https://github.com/PickNikRobotics/trackjoint/</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
+<!-- TODO(andyz): update for ROS2
   <depend>roslib</depend>
   <depend>roscpp</depend>
   <depend>roslint</depend>
@@ -25,7 +26,8 @@
 
   <test_depend>rostest</test_depend>
   <test_depend>rosunit</test_depend>
-
+-->
   <export>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
