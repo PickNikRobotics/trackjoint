@@ -26,7 +26,7 @@ include_directories(
 )
 
 set(LIBRARY_NAME trackjoint)
-add_library(${LIBRARY_NAME}
+add_library(${LIBRARY_NAME} SHARED
   src/trajectory_generator.cpp
   src/single_joint_generator.cpp
   src/utilities.cpp
