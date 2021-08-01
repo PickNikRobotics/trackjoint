@@ -12,6 +12,7 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# No ROS dependencies yet
 set(THIS_PACKAGE_INCLUDE_DEPENDS)
 
 # Specify additional locations of header files
@@ -37,20 +38,17 @@ target_link_libraries(${LIBRARY_NAME}
   ${Boost_FILESYSTEM_LIBRARY}
 )
 
-set(SIMPLE_EXAMPLE simple_example)
-add_executable(${SIMPLE_EXAMPLE} src/simple_example.cpp)
-ament_target_dependencies(${SIMPLE_EXAMPLE} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(${SIMPLE_EXAMPLE} ${LIBRARY_NAME})
+add_executable(simple_example src/simple_example.cpp)
+ament_target_dependencies(simple_example ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(simple_example ${LIBRARY_NAME})
 
-set(STREAMING_EXAMPLE streaming_example)
-add_executable(${STREAMING_EXAMPLE} src/streaming_example.cpp)
-ament_target_dependencies(${STREAMING_EXAMPLE} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(${STREAMING_EXAMPLE} ${LIBRARY_NAME})
+add_executable(streaming_example src/streaming_example.cpp)
+ament_target_dependencies(streaming_example ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(streaming_example ${LIBRARY_NAME})
 
-set(THREE_DOF_EXAMPLES three_dof_examples)
-add_executable(${THREE_DOF_EXAMPLES} src/three_dof_examples.cpp)
-ament_target_dependencies(${THREE_DOF_EXAMPLES} ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(${THREE_DOF_EXAMPLES} ${LIBRARY_NAME})
+add_executable(three_dof_examples src/three_dof_examples.cpp)
+ament_target_dependencies(three_dof_examples ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(three_dof_examples ${LIBRARY_NAME})
 
 #############
 ## Install ##
@@ -59,13 +57,12 @@ target_link_libraries(${THREE_DOF_EXAMPLES} ${LIBRARY_NAME})
 # Mark executables and/or libraries for installation
 install(
   TARGETS
-    ${PROJECT_NAME} ${SIMPLE_EXAMPLE} ${STREAMING_EXAMPLE} ${THREE_DOF_EXAMPLES}
-  ARCHIVE DESTINATION
-    lib
-  LIBRARY DESTINATION
-    lib
-  RUNTIME DESTINATION
-    lib/${PROJECT_NAME}
+    ${LIBRARY_NAME}
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
 )
 
 #############
@@ -93,5 +90,6 @@ install(DIRECTORY include/ DESTINATION include)
 
 ament_export_include_directories(include)
 ament_export_libraries(${LIBRARY_NAME})
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()
