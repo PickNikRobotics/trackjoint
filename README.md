@@ -29,6 +29,8 @@ See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/
 
 ## Testing
 
+    colc_build_test
+
     colc_test_pkg trackjoint
 
 ## Formatting

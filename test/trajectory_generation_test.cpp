@@ -18,17 +18,16 @@
 #include <string>
 
 // Testing
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <gtest/gtest.h>
 
 // Target testing library
 #include <trackjoint/trajectory_generator.h>
 #include <trackjoint/utilities.h>
-#include "ros/package.h"
-#include "ros/ros.h"
 
 // Preparing data file handling
 #include <fstream>
-std::string REF_PATH = ros::package::getPath("trackjoint");
+std::string REF_PATH = ament_index_cpp::get_package_share_directory("trackjoint");
 std::string BASE_FILEPATH = REF_PATH + "/test/data/tj_output";
 
 namespace trackjoint
@@ -579,112 +578,112 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   output_trajectories_ = recorded_trajectories;
 }
 
-TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
-{
-  // This test comes from a MoveIt trajectory.
-  // It was successful but there was a position oscillation.
-
-  num_dof_ = 6;
-  max_duration_ = 10;
-  timestep_ = 0.0075;
-
-  current_joint_states_.resize(num_dof_);
-  limits_.resize(num_dof_);
-  output_trajectories_.resize(num_dof_);
-
-  Limits single_joint_limits;
-  single_joint_limits.velocity_limit = 0.5;
-  single_joint_limits.acceleration_limit = 2;
-  single_joint_limits.jerk_limit = 100;
-  limits_[0] = single_joint_limits;
-  limits_[1] = single_joint_limits;
-  limits_[2] = single_joint_limits;
-  limits_[3] = single_joint_limits;
-  limits_[4] = single_joint_limits;
-  limits_[5] = single_joint_limits;
-
-  ////////////////////////////////////////////////
-  // Get TrackJoint initial states and goal states
-  ////////////////////////////////////////////////
-
-  // Vector of start states - for each waypoint, for each joint
-  std::vector<std::vector<KinematicState>> trackjt_current_joint_states;
-  // Vector of goal states - for each waypoint, for each joint
-  std::vector<std::vector<KinematicState>> trackjt_goal_joint_states;
-  // Vector of goal states - for each waypoint
-  std::vector<double> trackjt_desired_durations;
-
-  KinematicState joint_state;
-
-  std::vector<std::vector<double>> moveit_des_positions;
-  std::vector<std::vector<double>> moveit_des_velocities;
-  std::vector<std::vector<double>> moveit_des_accelerations;
-  std::vector<std::vector<double>> moveit_times_from_start;
-
-  // Reading MoveIt experimental data from .txt files
-  moveit_des_positions = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt");
-  moveit_des_velocities = loadWaypointsFromFile(REF_PATH +
-                                                "/test/data/30_percent_speed_oscillation/"
-                                                "moveit_des_vel.txt");
-  moveit_des_accelerations =
-      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_acc.txt");
-  moveit_times_from_start =
-      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_time_from_start.txt");
-
-  // For each MoveIt waypoint
-  for (std::size_t point = 0; point < moveit_times_from_start.size() - 1; ++point)
-  {
-    current_joint_states_.clear();
-    goal_joint_states_.clear();
-
-    // for each joint
-    for (size_t joint = 0; joint < num_dof_; ++joint)
-    {
-      // Save the start state of the robot
-      joint_state.position = moveit_des_positions[point][joint];
-      joint_state.velocity = moveit_des_velocities[point][joint];
-      joint_state.acceleration = moveit_des_accelerations[point][joint];
-
-      current_joint_states_.push_back(joint_state);
-
-      // Save the goal state of the robot
-      joint_state.position = moveit_des_positions[point + 1][joint];
-      joint_state.velocity = moveit_des_velocities[point + 1][joint];
-      joint_state.acceleration = moveit_des_accelerations[point + 1][joint];
-
-      goal_joint_states_.push_back(joint_state);
-    }
-
-    trackjt_current_joint_states.push_back(current_joint_states_);
-    trackjt_goal_joint_states.push_back(goal_joint_states_);
-    trackjt_desired_durations.push_back(moveit_times_from_start[point + 1][0] - moveit_times_from_start[point][0]);
-  }
-
-  // Create trajectory generator object
-  TrajectoryGenerator traj_gen(num_dof_, timestep_, trackjt_desired_durations[0], max_duration_,
-                               trackjt_current_joint_states[0], trackjt_goal_joint_states[0], limits_,
-                               position_tolerance_, use_streaming_mode_);
-
-  // Step through the saved waypoints and smooth them with TrackJoint
-  for (std::size_t point = 0; point < trackjt_desired_durations.size(); ++point)
-  {
-    traj_gen.reset(timestep_, trackjt_desired_durations[point], max_duration_, trackjt_current_joint_states[point],
-                   trackjt_goal_joint_states[point], limits_, position_tolerance_, use_streaming_mode_);
-    output_trajectories_.resize(num_dof_);
-
-    ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories_);
-
-    // Saving Trackjoint output to .csv files for plotting
-    traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH + "_joint");
-
-    EXPECT_EQ(ErrorCodeEnum::NO_ERROR, error_code);
-    // Timestep
-    const double timestep_tolerance = 0.25 * timestep_;
-    EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
-                timestep_tolerance);
-  }
-  EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
-}
+//TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
+//{
+//  // This test comes from a MoveIt trajectory.
+//  // It was successful but there was a position oscillation.
+//
+//  num_dof_ = 6;
+//  max_duration_ = 10;
+//  timestep_ = 0.0075;
+//
+//  current_joint_states_.resize(num_dof_);
+//  limits_.resize(num_dof_);
+//  output_trajectories_.resize(num_dof_);
+//
+//  Limits single_joint_limits;
+//  single_joint_limits.velocity_limit = 0.5;
+//  single_joint_limits.acceleration_limit = 2;
+//  single_joint_limits.jerk_limit = 100;
+//  limits_[0] = single_joint_limits;
+//  limits_[1] = single_joint_limits;
+//  limits_[2] = single_joint_limits;
+//  limits_[3] = single_joint_limits;
+//  limits_[4] = single_joint_limits;
+//  limits_[5] = single_joint_limits;
+//
+//  ////////////////////////////////////////////////
+//  // Get TrackJoint initial states and goal states
+//  ////////////////////////////////////////////////
+//
+//  // Vector of start states - for each waypoint, for each joint
+//  std::vector<std::vector<KinematicState>> trackjt_current_joint_states;
+//  // Vector of goal states - for each waypoint, for each joint
+//  std::vector<std::vector<KinematicState>> trackjt_goal_joint_states;
+//  // Vector of goal states - for each waypoint
+//  std::vector<double> trackjt_desired_durations;
+//
+//  KinematicState joint_state;
+//
+//  std::vector<std::vector<double>> moveit_des_positions;
+//  std::vector<std::vector<double>> moveit_des_velocities;
+//  std::vector<std::vector<double>> moveit_des_accelerations;
+//  std::vector<std::vector<double>> moveit_times_from_start;
+//
+//  // Reading MoveIt experimental data from .txt files
+//  moveit_des_positions = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt");
+//  moveit_des_velocities = loadWaypointsFromFile(REF_PATH +
+//                                                "/test/data/30_percent_speed_oscillation/"
+//                                                "moveit_des_vel.txt");
+//  moveit_des_accelerations =
+//      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_acc.txt");
+//  moveit_times_from_start =
+//      loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_time_from_start.txt");
+//
+//  // For each MoveIt waypoint
+//  for (std::size_t point = 0; point < moveit_times_from_start.size() - 1; ++point)
+//  {
+//    current_joint_states_.clear();
+//    goal_joint_states_.clear();
+//
+//    // for each joint
+//    for (size_t joint = 0; joint < num_dof_; ++joint)
+//    {
+//      // Save the start state of the robot
+//      joint_state.position = moveit_des_positions[point][joint];
+//      joint_state.velocity = moveit_des_velocities[point][joint];
+//      joint_state.acceleration = moveit_des_accelerations[point][joint];
+//
+//      current_joint_states_.push_back(joint_state);
+//
+//      // Save the goal state of the robot
+//      joint_state.position = moveit_des_positions[point + 1][joint];
+//      joint_state.velocity = moveit_des_velocities[point + 1][joint];
+//      joint_state.acceleration = moveit_des_accelerations[point + 1][joint];
+//
+//      goal_joint_states_.push_back(joint_state);
+//    }
+//
+//    trackjt_current_joint_states.push_back(current_joint_states_);
+//    trackjt_goal_joint_states.push_back(goal_joint_states_);
+//    trackjt_desired_durations.push_back(moveit_times_from_start[point + 1][0] - moveit_times_from_start[point][0]);
+//  }
+//
+//  // Create trajectory generator object
+//  TrajectoryGenerator traj_gen(num_dof_, timestep_, trackjt_desired_durations[0], max_duration_,
+//                               trackjt_current_joint_states[0], trackjt_goal_joint_states[0], limits_,
+//                               position_tolerance_, use_streaming_mode_);
+//
+//  // Step through the saved waypoints and smooth them with TrackJoint
+//  for (std::size_t point = 0; point < trackjt_desired_durations.size(); ++point)
+//  {
+//    traj_gen.reset(timestep_, trackjt_desired_durations[point], max_duration_, trackjt_current_joint_states[point],
+//                   trackjt_goal_joint_states[point], limits_, position_tolerance_, use_streaming_mode_);
+//    output_trajectories_.resize(num_dof_);
+//
+//    ErrorCodeEnum error_code = traj_gen.generateTrajectories(&output_trajectories_);
+//
+//    // Saving Trackjoint output to .csv files for plotting
+//    traj_gen.saveTrajectoriesToFile(output_trajectories_, BASE_FILEPATH + "_joint");
+//
+//    EXPECT_EQ(ErrorCodeEnum::NO_ERROR, error_code);
+//    // Timestep
+//    const double timestep_tolerance = 0.25 * timestep_;
+//    EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+//                timestep_tolerance);
+//  }
+//  EXPECT_EQ(trackjt_current_joint_states.at(0).size(), trackjt_goal_joint_states.at(0).size());
+//}
 
 TEST_F(TrajectoryGenerationTest, SuddenChangeOfDirection)
 {

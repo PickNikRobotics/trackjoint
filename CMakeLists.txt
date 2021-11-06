@@ -8,12 +8,15 @@ add_definitions(-W -Wall -Wextra
   -Wno-unused-parameter -Wno-unused-function)
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 # No ROS dependencies yet
-set(THIS_PACKAGE_INCLUDE_DEPENDS)
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  ament_index_cpp
+)
 
 # Specify additional locations of header files
 # Your package locations should be listed before other locations
@@ -68,28 +71,28 @@ install(
   INCLUDES DESTINATION include
 )
 
+# Install include, launch, config directories
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY test/ DESTINATION test)
+
 #############
 ## Testing ##
 #############
 
-# TODO(andyz): update this for ROS2
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 
-#if(CATKIN_ENABLE_TESTING)
-#  find_package(rostest REQUIRED)
-#
-#  add_rostest_gtest(trajectory_generation_test
-#    test/trajectory_generation_test.test
-#    test/trajectory_generation_test.cpp
-#  )
-#  target_link_libraries(trajectory_generation_test
-#    ${LIBRARY_NAME}
-#    ${catkin_LIBRARIES}
-#  )
-#
-#endif()
+  find_package(ament_cmake_gtest REQUIRED)
 
-# Install include, launch, config directories
-install(DIRECTORY include/ DESTINATION include)
+  ament_add_gtest(trajectory_generation_test
+    test/trajectory_generation_test.cpp
+  )
+  target_link_libraries(trajectory_generation_test
+    ${LIBRARY_NAME}
+  )
+  ament_target_dependencies(trajectory_generation_test ${THIS_PACKAGE_INCLUDE_DEPENDS})
+endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${LIBRARY_NAME})
