@@ -58,10 +58,13 @@ target_link_libraries(three_dof_examples ${LIBRARY_NAME})
 install(
   TARGETS
     ${LIBRARY_NAME}
+    simple_example
+    streaming_example
+    three_dof_examples
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
   INCLUDES DESTINATION include
 )
 

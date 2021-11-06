@@ -13,15 +13,13 @@ TODO(andyze): fix Travis badge:
 
 ### Build from Source
 
-1. Clone this package into a catkin workspace
+1. Clone this package into a colcon workspace
 
-2. `catkin build`
+2. `colcon build`
 
 ## Run
 
-1. rosrun trackjoint simple_example  (or streaming_example)
-
-(You don't need to start `roscore` because the executable doesn't use ROS)
+1. `ros2 run trackjoint simple_example`  (for example)
 
 ## Code API
 
@@ -31,7 +29,7 @@ See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/
 
 ## Testing
 
-    catkin run_tests --no-deps trackjoint -i
+    colc_test_pkg trackjoint
 
 ## Formatting
 
