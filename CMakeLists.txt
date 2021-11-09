@@ -57,18 +57,26 @@ target_link_libraries(three_dof_examples ${LIBRARY_NAME})
 ## Install ##
 #############
 
-# Mark executables and/or libraries for installation
+# Install libraries
 install(
   TARGETS
     ${LIBRARY_NAME}
+  EXPORT export_${PROJECT_NAME}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+# Install binaries
+install(
+  TARGETS
     simple_example
     streaming_example
     three_dof_examples
-  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
-  INCLUDES DESTINATION include
 )
 
 # Install include, launch, config directories
