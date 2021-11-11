@@ -210,25 +210,25 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
   // Check that current vels. are less than the limits.
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    if (abs(current_joint_states[joint].velocity) > limits[joint].velocity_limit)
+    if (abs(current_joint_states[joint].velocity) > (limits[joint].velocity_limit + kDoubleEpsilon))
     {
       return ErrorCodeEnum::VELOCITY_EXCEEDS_LIMIT;
     }
 
     // Check that goal vels. are less than the limits.
-    if (abs(goal_joint_states[joint].velocity) > limits[joint].velocity_limit)
+    if (abs(goal_joint_states[joint].velocity) > (limits[joint].velocity_limit + kDoubleEpsilon))
     {
       return ErrorCodeEnum::VELOCITY_EXCEEDS_LIMIT;
     }
 
     // Check that current accels. are less than the limits.
-    if (abs(current_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
+    if (abs(current_joint_states[joint].acceleration) > (limits[joint].acceleration_limit + kDoubleEpsilon))
     {
       return ErrorCodeEnum::ACCEL_EXCEEDS_LIMIT;
     }
 
     // Check that goal accels. are less than the limits.
-    if (abs(goal_joint_states[joint].acceleration) > limits[joint].acceleration_limit)
+    if (abs(goal_joint_states[joint].acceleration) > (limits[joint].acceleration_limit + kDoubleEpsilon))
     {
       return ErrorCodeEnum::ACCEL_EXCEEDS_LIMIT;
     }

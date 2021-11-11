@@ -119,6 +119,9 @@ private:
   // Clip trajectories to threshold in streaming mode
   const size_t kNumWaypointsThreshold = 10;
 
+  // Epsilon for double comparison
+  const double kDoubleEpsilon = 1e-6;
+
   const uint kNumDof;
   double desired_timestep_, upsampled_timestep_;
   double desired_duration_, max_duration_;
