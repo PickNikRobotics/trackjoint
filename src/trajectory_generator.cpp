@@ -336,12 +336,6 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
           single_joint_generators_[joint].updateTrajectoryDuration(new_desired_duration);
           single_joint_generators_[joint].extendTrajectoryDuration();
           output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
-
-          std::cout << "End position for Joint " << joint << ":  "
-                    << single_joint_generators_[joint]
-                           .getTrajectory()
-                           .positions[single_joint_generators_[joint].getTrajectory().positions.size() - 1]
-                    << std::endl;
         }
         // If this was the index of longest duration, don't need to re-generate a trajectory
         else
