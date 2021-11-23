@@ -274,8 +274,7 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
     {
       output_file.open(output_path, std::ofstream::out);
     }
-    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size());
-         ++waypoint)
+    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size()); ++waypoint)
     {
       output_file << output_trajectories.at(joint).elapsed_times(waypoint) << " "
                   << output_trajectories.at(joint).positions(waypoint) << " "
