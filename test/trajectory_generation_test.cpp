@@ -578,7 +578,7 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
   output_trajectories_ = recorded_trajectories;
 }
 
-//TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
+// TEST_F(TrajectoryGenerationTest, OscillatingUR5TrackJointCase)
 //{
 //  // This test comes from a MoveIt trajectory.
 //  // It was successful but there was a position oscillation.
@@ -621,8 +621,9 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 //  std::vector<std::vector<double>> moveit_times_from_start;
 //
 //  // Reading MoveIt experimental data from .txt files
-//  moveit_des_positions = loadWaypointsFromFile(REF_PATH + "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt");
-//  moveit_des_velocities = loadWaypointsFromFile(REF_PATH +
+//  moveit_des_positions = loadWaypointsFromFile(REF_PATH +
+//  "/test/data/30_percent_speed_oscillation/moveit_des_pos.txt"); moveit_des_velocities =
+//  loadWaypointsFromFile(REF_PATH +
 //                                                "/test/data/30_percent_speed_oscillation/"
 //                                                "moveit_des_vel.txt");
 //  moveit_des_accelerations =

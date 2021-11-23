@@ -45,7 +45,10 @@ See [the Doxygen documentation](http://docs.ros.org/melodic/api/trackjoint/html/
 
 ## Formatting
 
-Use `clang_this_directory_google`
+Use the clang format file in the root directory.
+
+    cd $CATKIN_WS/src/trackjoint
+    clang_this_directory_custom 10
 
 ## Hints for Tuning
 

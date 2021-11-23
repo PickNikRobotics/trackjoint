@@ -78,7 +78,7 @@ public:
    * input goal_joint_states vector of the target kinematic states for each degree of freedom
    * input limits vector of kinematic limits for each degree of freedom
    * input nominal_timestep the user-requested time between waypoints
-   * returna TrackJoint status code
+   * return a TrackJoint status code
    */
   ErrorCodeEnum inputChecking(const std::vector<KinematicState>& current_joint_states,
                               const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
