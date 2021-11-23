@@ -116,8 +116,7 @@ int main(int argc, char** argv)
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "==========" << std::endl;
-    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size());
-         ++waypoint)
+    for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size()); ++waypoint)
     {
       std::cout << "Elapsed time: " << output_trajectories.at(joint).elapsed_times(waypoint)
                 << "  Position: " << output_trajectories.at(joint).positions(waypoint)
