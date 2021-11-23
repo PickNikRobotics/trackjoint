@@ -9,6 +9,16 @@ Developed by Andy Zelenak at [PickNik Consulting](http://picknik.ai/)
 TODO(andyze): fix Travis badge:
 [![Build Status](https://travis-ci.com/PickNikRobotics/trackjoint.svg?token=o9hPQnr2kShM9ckDs6J8&branch=master)](https://travis-ci.com/PickNikRobotics/trackjoint)
 
+## What does this package do?
+
+TrackJoint takes an input state consisting of (position, velocity, acceleration) and a target state. It fits a spline from input to target state, then smooths the spline until each waypoint obeys the given (velocity, acceleration, and jerk) kinematic limits. In other words, it is great at generating a trajectory from State A to State B.
+
+TrackJoint also has a streaming mode which is intended for the smoothing of realtime commands such as from a joystick or visual servoing.
+
+## What doesn't this package do?
+
+TrackJoint is not intended to generate a trajectory passing through multiple vias or waypoints.
+
 ## Install
 
 ### Build from Source
