@@ -1128,6 +1128,163 @@ TEST_F(TrajectoryGenerationTest, SingleJointOscillation)
   EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
               timestep_tolerance);
 }
+
+TEST_F(TrajectoryGenerationTest, VelocityLimit)
+{
+  // Velocity limit is hit
+
+  const double max_duration = 20;
+
+  KinematicState joint_state;
+
+  current_joint_states_[0] = joint_state;
+  current_joint_states_[1] = joint_state;
+  current_joint_states_[2] = joint_state;
+
+  joint_state.position = -0.995;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  goal_joint_states_[0] = joint_state;
+  goal_joint_states_[1] = joint_state;
+  goal_joint_states_[2] = joint_state;
+
+  // Maximums prior to trackjoint: velocity: 1.86513, accel: 5.74272, jerk: 54.4166
+  Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 1;  // Limit velocity from 1.86513 to 1
+  single_joint_limits.acceleration_limit = 20;
+  single_joint_limits.jerk_limit = 2000;
+  limits_.clear();
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+  traj_gen.reset(timestep_, desired_duration_, max_duration, current_joint_states_, goal_joint_states_, limits_,
+                 position_tolerance_, use_streaming_mode_);
+  traj_gen.generateTrajectories(&output_trajectories_);
+
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
+
+  verifyVelAccelJerkLimits(output_trajectories_, limits_);
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
+  EXPECT_LT(position_error, position_tolerance);
+  // Timestep
+  double timestep_tolerance = 0.1 * timestep_;
+  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+              timestep_tolerance);
+  // Duration
+  size_t vector_length = output_trajectories_[0].elapsed_times.size() - 1;
+  EXPECT_LE(output_trajectories_[0].elapsed_times(vector_length), desired_duration_);
+}
+
+TEST_F(TrajectoryGenerationTest, AccelerationLimit)
+{
+  // Acceleration limit is hit
+
+  const double max_duration = 20;
+
+  KinematicState joint_state;
+
+  current_joint_states_[0] = joint_state;
+  current_joint_states_[1] = joint_state;
+  current_joint_states_[2] = joint_state;
+
+  joint_state.position = -0.995;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  goal_joint_states_[0] = joint_state;
+  goal_joint_states_[1] = joint_state;
+  goal_joint_states_[2] = joint_state;
+
+  // Maximums prior to trackjoint: velocity: 1.86513, accel: 5.74272, jerk: 54.4166
+  Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 5;  // Limit accel from 5.74272 to 5
+  single_joint_limits.jerk_limit = 2000;
+  limits_.clear();
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+  traj_gen.reset(timestep_, desired_duration_, max_duration, current_joint_states_, goal_joint_states_, limits_,
+                 position_tolerance_, use_streaming_mode_);
+  traj_gen.generateTrajectories(&output_trajectories_);
+
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
+
+  verifyVelAccelJerkLimits(output_trajectories_, limits_);
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
+  EXPECT_LT(position_error, position_tolerance);
+  // Timestep
+  double timestep_tolerance = 0.1 * timestep_;
+  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+              timestep_tolerance);
+  // Duration
+  size_t vector_length = output_trajectories_[0].elapsed_times.size() - 1;
+  EXPECT_LE(output_trajectories_[0].elapsed_times(vector_length), desired_duration_);
+}
+
+TEST_F(TrajectoryGenerationTest, JerkLimit)
+{
+  // Jerk limit is hit
+
+  const double max_duration = 20;
+
+  KinematicState joint_state;
+
+  current_joint_states_[0] = joint_state;
+  current_joint_states_[1] = joint_state;
+  current_joint_states_[2] = joint_state;
+
+  joint_state.position = -0.995;
+  joint_state.velocity = 0;
+  joint_state.acceleration = 0;
+  goal_joint_states_[0] = joint_state;
+  goal_joint_states_[1] = joint_state;
+  goal_joint_states_[2] = joint_state;
+
+  // Maximums prior to trackjoint: velocity: 1.86513, accel: 5.74272, jerk: 54.4166
+  Limits single_joint_limits;
+  single_joint_limits.velocity_limit = 2;
+  single_joint_limits.acceleration_limit = 20;
+  single_joint_limits.jerk_limit = 50;  // Limit jerk from 54.4166 to 50
+  limits_.clear();
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+  limits_.push_back(single_joint_limits);
+
+  TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration, current_joint_states_,
+                               goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
+  traj_gen.reset(timestep_, desired_duration_, max_duration, current_joint_states_, goal_joint_states_, limits_,
+                 position_tolerance_, use_streaming_mode_);
+  traj_gen.generateTrajectories(&output_trajectories_);
+
+  EXPECT_EQ(ErrorCodeEnum::NO_ERROR, traj_gen.generateTrajectories(&output_trajectories_));
+
+  verifyVelAccelJerkLimits(output_trajectories_, limits_);
+
+  // Position error
+  double position_tolerance = 1e-4;
+  double position_error = calculatePositionAccuracy(goal_joint_states_, output_trajectories_);
+  EXPECT_LT(position_error, position_tolerance);
+  // Timestep
+  double timestep_tolerance = 0.1 * timestep_;
+  EXPECT_NEAR(output_trajectories_[0].elapsed_times[1] - output_trajectories_[0].elapsed_times[0], timestep_,
+              timestep_tolerance);
+  // Duration
+  size_t vector_length = output_trajectories_[0].elapsed_times.size() - 1;
+  EXPECT_LE(output_trajectories_[0].elapsed_times(vector_length), desired_duration_);
+}
+
 }  // namespace trackjoint
 
 int main(int argc, char** argv)
