@@ -605,9 +605,7 @@ void SingleJointGenerator::calculateDerivativesFromPosition()
   // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities =
       DiscreteDifferentiation(waypoints_.positions, configuration_.timestep, current_joint_state_.velocity);
-  waypoints_.accelerations =
-      DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
+  calculateDerivativesFromVelocity();
 }
 
 void SingleJointGenerator::calculateDerivativesFromVelocity()
