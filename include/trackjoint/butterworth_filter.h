@@ -68,4 +68,4 @@ private:
   double scale_term_;
   double feedback_term_;
 };
-}
+}  // namespace trackjoint

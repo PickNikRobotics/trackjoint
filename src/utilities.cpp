@@ -31,7 +31,7 @@
 
 namespace trackjoint
 {
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
@@ -46,10 +46,8 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
-Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector,
-                                                     const double timestep,
-                                                     const double first_element,
-                                                     const double filter_coefficient)
+Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+                                                     const double first_element, const double filter_coefficient)
 {
   Eigen::VectorXd derivative = DiscreteDifferentiation(input_vector, timestep, first_element);
 

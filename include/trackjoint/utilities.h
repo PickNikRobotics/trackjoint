@@ -47,8 +47,8 @@ namespace trackjoint
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector,
-                                        const double timestep, double first_element);
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, const double timestep,
+                                        const double first_element);
 
 /**
  * \brief Discrete differentiation of a vector followed by low-pass filtering.
@@ -60,10 +60,8 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector,
  * input filter_coefficient must be >1.0, typically less than 100. Larger value -> more smoothing.
  * return a vector of derivatives
  */
-Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector,
-                                                     const double timestep,
-                                                     const double first_element,
-                                                     const double filter_coefficient);
+Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+                                                     const double first_element, const double filter_coefficient);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *
