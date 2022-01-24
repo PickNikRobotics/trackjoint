@@ -34,21 +34,36 @@
 
 #include <Eigen/Dense>
 #include <iostream>
+// Spline-fitting is used to extend trajectory duration and in derivative calculation
+#include <unsupported/Eigen/Splines>
 #include <vector>
 #include "trackjoint/joint_trajectory.h"
 
 namespace trackjoint
 {
+// Use a 3rd-degree spline to fit points well without excessive oscillations
+typedef Eigen::Spline<double, 1 /* dimension */, 3 /* degree */> Spline1D;
+typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
+
 /**
- * \brief Discrete differentiation of a vector
+ * \brief Discrete differentiation of a vector. This is faster but noisier than the spline version.
  *
  * input input_vector any vector, such as position
  * input timestep the time between consecutive elements
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-// TODO(602): Overload DiscreteDifferentiation to take starting index
 Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
+
+/**
+ * \brief Interpolate with splines then take the derivative.
+ *
+ * input input_vector any vector, such as position
+ * input timestep the time between consecutive elements
+ * input first_element supply an initial condition
+ * return a vector of derivatives
+ */
+Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *

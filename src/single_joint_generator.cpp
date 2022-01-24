@@ -613,7 +613,7 @@ void SingleJointGenerator::calculateDerivativesFromVelocity()
   // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
       DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
+  waypoints_.jerks = SplineDifferentiation(waypoints_.accelerations, configuration_.timestep, 0 /* initial jerk */);
 }
 
 void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_duration)

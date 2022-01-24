@@ -45,6 +45,38 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
+// TODO(andyz): This is horribly inefficient. Maybe it would be best to store everything as splines always.
+// Also (maybe) to store everything in one large matrix with columns for each derivative.
+Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+{
+  // Fit a spline through the input vector
+  size_t num_points = input_vector.size();
+  Eigen::RowVectorXd times = Eigen::RowVectorXd::Zero(num_points);
+  Eigen::RowVectorXd input_row = Eigen::RowVectorXd::Zero(num_points);
+  for (size_t i = 1; i < num_points; ++i)
+  {
+    input_row(i) = input_vector(i);
+    times(i) = times(i-1) + timestep;
+  }
+
+  const auto fit = SplineFitting1D::Interpolate(input_row, 3, times);
+
+  // Derivative output
+  Eigen::RowVectorXd derivative = Eigen::RowVectorXd::Zero(num_points);
+  derivative(0) = first_element;
+
+  // Take derivatives
+  double path_fraction = 0.0;
+  for (size_t point = 1; point < num_points; ++point)
+  {
+    path_fraction = (double)point / (double)num_points;
+    derivative[point] =
+      fit.derivatives(path_fraction, 1 /* order */)(1 /* first derivative */);
+  }
+
+  return derivative.transpose();
+};
+
 void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
 {
