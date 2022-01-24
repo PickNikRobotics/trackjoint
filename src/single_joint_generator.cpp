@@ -30,6 +30,12 @@
 
 namespace trackjoint
 {
+
+namespace
+{
+  constexpr double DEFAULT_FILTER_COEFFICIENT = 2.0;
+}
+
 SingleJointGenerator::SingleJointGenerator(size_t num_waypoints_threshold, size_t max_num_waypoints_trajectory_mode)
   : kNumWaypointsThreshold(num_waypoints_threshold)
   , kMaxNumWaypointsFullTrajectory(max_num_waypoints_trajectory_mode)
@@ -604,18 +610,19 @@ void SingleJointGenerator::calculateDerivativesFromPosition()
 {
   // From position vector, approximate vel/accel/jerk.
   waypoints_.velocities =
-      DiscreteDifferentiation(waypoints_.positions, configuration_.timestep, current_joint_state_.velocity);
-  waypoints_.accelerations =
-      DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
+      DiscreteDifferentiationWithFiltering(waypoints_.positions, configuration_.timestep,
+        current_joint_state_.velocity, DEFAULT_FILTER_COEFFICIENT);
+  calculateDerivativesFromVelocity();
 }
 
 void SingleJointGenerator::calculateDerivativesFromVelocity()
 {
   // From velocity vector, approximate accel/jerk.
   waypoints_.accelerations =
-      DiscreteDifferentiation(waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration);
-  waypoints_.jerks = DiscreteDifferentiation(waypoints_.accelerations, configuration_.timestep, 0);
+      DiscreteDifferentiationWithFiltering(waypoints_.velocities, configuration_.timestep,
+        current_joint_state_.acceleration, DEFAULT_FILTER_COEFFICIENT);
+  waypoints_.jerks = DiscreteDifferentiationWithFiltering(waypoints_.accelerations,
+    configuration_.timestep, 0.0 /*initial value*/, DEFAULT_FILTER_COEFFICIENT);
 }
 
 void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_duration)

@@ -31,8 +31,9 @@ include_directories(
 
 set(LIBRARY_NAME trackjoint)
 add_library(${LIBRARY_NAME} SHARED
-  src/trajectory_generator.cpp
+  src/butterworth_filter.cpp
   src/single_joint_generator.cpp
+  src/trajectory_generator.cpp
   src/utilities.cpp
 )
 set_target_properties(${LIBRARY_NAME} PROPERTIES VERSION "${${PROJECT_NAME}_VERSION}")

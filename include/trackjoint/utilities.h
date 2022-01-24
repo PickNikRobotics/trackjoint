@@ -40,15 +40,30 @@
 namespace trackjoint
 {
 /**
- * \brief Discrete differentiation of a vector
+ * \brief Discrete differentiation of a vector. Fast but noisy.
  *
  * input input_vector any vector, such as position
  * input timestep the time between consecutive elements
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-// TODO(602): Overload DiscreteDifferentiation to take starting index
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector,
+                                        const double timestep, double first_element);
+
+/**
+ * \brief Discrete differentiation of a vector followed by low-pass filtering.
+ * This reduces signal noise.
+ *
+ * input input_vector any vector, such as position
+ * input timestep the time between consecutive elements
+ * input first_element supply an initial condition
+ * input filter_coefficient must be >1.0, typically less than 100. Larger value -> more smoothing.
+ * return a vector of derivatives
+ */
+Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector,
+                                                     const double timestep,
+                                                     const double first_element,
+                                                     const double filter_coefficient);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *

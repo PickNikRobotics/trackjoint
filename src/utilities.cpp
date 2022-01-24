@@ -26,6 +26,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "trackjoint/butterworth_filter.h"
 #include "trackjoint/utilities.h"
 
 namespace trackjoint
@@ -41,6 +42,26 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   derivative.tail(derivative.size() - 1) =
       (input_vector.tail(input_vector.size() - 1) - input_shifted_right.tail(input_shifted_right.size() - 1)) /
       timestep;
+
+  return derivative;
+};
+
+Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector,
+                                                     const double timestep,
+                                                     const double first_element,
+                                                     const double filter_coefficient)
+{
+  Eigen::VectorXd derivative = DiscreteDifferentiation(input_vector, timestep, first_element);
+
+  // Apply a low-pass filter
+  ButterworthFilter filter(filter_coefficient);
+  // Set the initial value
+  filter.reset(derivative(0));
+  for (size_t point = 1; point < derivative.size(); ++point)
+  {
+    // Lowpass filter the position command
+    derivative(point) = filter.filter(derivative(point));
+  }
 
   return derivative;
 };
