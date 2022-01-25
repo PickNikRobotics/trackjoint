@@ -41,8 +41,8 @@
 
 namespace trackjoint
 {
-// Use a 3rd-degree spline to fit points well without excessive oscillations
-typedef Eigen::Spline<double, 1 /* dimension */, 3 /* degree */> Spline1D;
+// Default to use spline of dyanmic degree
+typedef Eigen::Spline<double, 1 /* dimension */> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
 /**
@@ -54,6 +54,14 @@ typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
  * return a vector of derivatives
  */
 Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
+
+/**
+ * \brief Normalize a vector between 0 and 1
+ *
+ * input input_vector any vector, such as position
+ * return a vector of normalized values between 0 and 1
+ */
+Eigen::VectorXd normalize(const Eigen::VectorXd& x);
 
 /**
  * \brief Interpolate with splines then take the derivative.
