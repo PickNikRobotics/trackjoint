@@ -53,9 +53,18 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
 
   // Apply a low-pass filter
   ButterworthFilter filter(filter_coefficient);
-  // Set the initial value
+
+  // Filter from front to back
   filter.reset(derivative(0));
   for (size_t point = 1; point < derivative.size(); ++point)
+  {
+    // Lowpass filter the position command
+    derivative(point) = filter.filter(derivative(point));
+  }
+
+  // Now filter from back to front to eliminate phase shift
+  filter.reset(derivative(derivative.size() - 1));
+  for (size_t point = derivative.size() - 2; point > 0; --point)
   {
     // Lowpass filter the position command
     derivative(point) = filter.filter(derivative(point));
