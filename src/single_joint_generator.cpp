@@ -375,21 +375,21 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 
   bool successful_compensation = false;
 
-  // Add a bit of velocity at step i to compensate for the limit at timestep
-  // i+1.
-  // Cannot go beyond index 2 because we use a 2-index window for derivative
-  // calculations.
+  // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
+  // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
   for (size_t index = limited_index; index > 2; --index)
   {
     // if there is some room to increase the velocity at timestep i
     if (fabs(waypoints_.velocities(index)) < configuration_.limits.velocity_limit)
     {
+      std::cout << "Doing index " << index << std::endl;
       // If the full change can be made in this timestep
-      if ((excess_velocity > 0 &&
-           waypoints_.velocities(index) <= configuration_.limits.velocity_limit - excess_velocity) ||
-          (excess_velocity < 0 &&
-           waypoints_.velocities(index) >= -configuration_.limits.velocity_limit - excess_velocity))
+      if (((excess_velocity > 0) &&
+           (waypoints_.velocities(index) <= configuration_.limits.velocity_limit - excess_velocity)) ||
+          ((excess_velocity < 0) &&
+           (waypoints_.velocities(index) >= -configuration_.limits.velocity_limit - excess_velocity)))
       {
+        std::cout << "Full change can be made in index " << index << std::endl;
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
@@ -408,6 +408,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
             (fabs(forward_jerk) < configuration_.limits.jerk_limit) &&
             (fabs(forward_accel) < configuration_.limits.acceleration_limit))
         {
+          std::cout << "Setting vel[" << index << "] to " << new_velocity << std::endl;
           waypoints_.velocities(index) = new_velocity;
 
           // if at the velocity limit, must stop accelerating
@@ -429,8 +430,8 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       // Can't make all of the correction in this timestep, so make as much of a change as possible
       if (!successful_compensation)
       {
-        // This is what accel and jerk would be if we set velocity(index) to the
-        // limit
+        std::cout << "Making a partial correction in index " << index << std::endl;
+        // This is what accel and jerk would be if we set velocity(index) to the limit
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
@@ -472,8 +473,10 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
     waypoints_.velocities(index) =
         std::min(std::max(waypoints_.velocities(index), -configuration_.limits.velocity_limit),
                  configuration_.limits.velocity_limit);
+    std::cout << "Remaining excess_velocity for the next index: " << excess_velocity << std::endl;
   }
 
+  std::cout << "Returning " << successful_compensation << std::endl;
   return successful_compensation;
 }
 
