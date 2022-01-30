@@ -117,6 +117,14 @@ public:
    */
   void updateTrajectoryDuration(double new_trajectory_duration);
 
+  /** \brief This method is used to set waypoints_ state, for testing */
+  void setInternalWaypointsData(const Eigen::VectorXd& positions,
+                                const Eigen::VectorXd& velocities,
+                                const Eigen::VectorXd& accelerations,
+                                const Eigen::VectorXd& jerks,
+                                const Eigen::VectorXd& elapsed_times
+    );
+
 private:
   /** \brief Record the index when compensation first failed */
   inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
@@ -155,7 +163,8 @@ private:
   /** \brief Calculate accel/jerk from velocity */
   void calculateDerivativesFromVelocity();
 
-  const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
+  const size_t kNumWaypointsThreshold;
+  const size_t kMaxNumWaypointsFullTrajectory;
 
   Configuration configuration_;
   double desired_duration_;

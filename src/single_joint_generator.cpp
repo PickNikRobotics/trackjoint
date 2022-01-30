@@ -625,4 +625,17 @@ void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_durati
   desired_duration_ = new_trajectory_duration;
   configuration_.max_duration = new_trajectory_duration;
 }
+
+void SingleJointGenerator::setInternalWaypointsData(const Eigen::VectorXd& positions,
+                                                    const Eigen::VectorXd& velocities,
+                                                    const Eigen::VectorXd& accelerations,
+                                                    const Eigen::VectorXd& jerks,
+                                                    const Eigen::VectorXd& elapsed_times)
+{
+  waypoints_.positions = positions;
+  waypoints_.velocities = velocities;
+  waypoints_.accelerations = accelerations;
+  waypoints_.jerks = jerks;
+  waypoints_.elapsed_times = elapsed_times;
+}
 }  // end namespace trackjoint
