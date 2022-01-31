@@ -235,12 +235,12 @@ protected:
 TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
 {
   // Test SingleJointGenerator::backwardLimitCompensation()
-  // The default test input is 4 waypoints with zero motion
-  size_t num_waypoints = 5;
+  // The default test input is no motion
+  size_t num_waypoints = 6;
   Eigen::VectorXd zero_positions(num_waypoints);
-  zero_positions << 0, 0, 0, 0, 0;
+  zero_positions << 0, 0, 0, 0, 0, 0;
   Eigen::VectorXd elapsed_times(num_waypoints);
-  elapsed_times << 0, 0.01, 0.02, 0.03, 0.04;
+  elapsed_times << 0, 0.01, 0.02, 0.03, 0.04, 0.05;
 
   // Initialize the trajectory generator object
   SingleJointGenerator single_joint_gen(2 /* min num waypoints */, 10000 /* max num waypoints */);
@@ -252,29 +252,27 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   //////////////////////////////////////
   // Test whether jerk limits are obeyed
   //////////////////////////////////////
-  // Request a higher velocity at the last timestep (index 3).
-  // Jerk in the previous timestep should increase since jerk[3] is a maximum already.
+  // Request a higher velocity at the second-to-last timestep (index 4).
+  // Jerk in the previous timestep should increase since jerk[4] is a maximum already.
   // The velocity error has a magnitude we can compensate for in a single timestep.
-
-
-  // TODO: does this work at the last index?
-
   double velocity_error = 0.001; //0.5 * limits_.at(0).acceleration_limit * pow(timestep_, 2);
   std::cout << "Velocity error: " << velocity_error << std::endl;
   // jerk[4] is at the limit, so jerk[3] should be adjusted to correct for the velocity error
   Eigen::VectorXd input_jerk(num_waypoints);
-  input_jerk << 0, 0, 0, 0, limits_.at(0).jerk_limit;
+  input_jerk << 0, 0, 0, 0, limits_.at(0).jerk_limit, 0;
   Eigen::VectorXd input_acceleration(num_waypoints);
-  input_acceleration << 0, 0, 0, 0, limits_.at(0).jerk_limit * timestep_;
+  double accel_4 = limits_.at(0).jerk_limit * timestep_;
+  input_acceleration << 0, 0, 0, 0, accel_4, accel_4 + input_jerk(5) * timestep_;
   Eigen::VectorXd input_velocity(num_waypoints);
-  input_velocity << 0, 0, 0, 0, input_acceleration(3) * timestep_ + 0.5 * input_jerk(3) * pow(timestep_, 2);
+  double vel_4 = input_acceleration(4) * timestep_ + 0.5 * input_jerk(4) * pow(timestep_, 2);
+  input_velocity << 0, 0, 0, 0, vel_4, vel_4 + input_acceleration(5) * timestep_ + 0.5 * input_jerk(5) * pow(timestep_, 2);
   single_joint_gen.setInternalWaypointsData(zero_positions,
                                             input_velocity,
                                             input_acceleration,
                                             input_jerk,
                                             elapsed_times);
   // For this test, say the velocity at this index needs correction
-  size_t limited_index = num_waypoints - 1;
+  size_t limited_index = num_waypoints - 2;  // second-from-last
   single_joint_gen.backwardLimitCompensation(limited_index, velocity_error);
   // jerk[3] should be different than it was previously
   // and velocity[4] should match the target
