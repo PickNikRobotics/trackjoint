@@ -122,12 +122,9 @@ public:
   bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
 
   /** \brief This method is used to set waypoints_ state, for testing */
-  void setInternalWaypointsData(const Eigen::VectorXd& positions,
-                                const Eigen::VectorXd& velocities,
-                                const Eigen::VectorXd& accelerations,
-                                const Eigen::VectorXd& jerks,
-                                const Eigen::VectorXd& elapsed_times
-    );
+  void setInternalWaypointsData(const Eigen::VectorXd& positions, const Eigen::VectorXd& velocities,
+                                const Eigen::VectorXd& accelerations, const Eigen::VectorXd& jerks,
+                                const Eigen::VectorXd& elapsed_times);
 
 private:
   /** \brief Record the index when compensation first failed */
