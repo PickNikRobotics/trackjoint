@@ -46,6 +46,17 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
+Eigen::VectorXd normalize(const Eigen::VectorXd& x)
+{
+  const double min = x.minCoeff();
+  const double max = x.maxCoeff();
+  size_t num_points = x.size();
+  Eigen::RowVectorXd x_norm = Eigen::RowVectorXd::Zero(num_points);
+
+  x_norm = (x.array() - min) / (max - min);
+  return x_norm;
+}
+
 // TODO(andyz): This is horribly inefficient. Maybe it would be best to store everything as splines always.
 // Also (maybe) to store everything in one large matrix with columns for each derivative.
 Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
@@ -57,10 +68,12 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   for (size_t i = 1; i < num_points; ++i)
   {
     input_row(i) = input_vector(i);
-    times(i) = times(i-1) + timestep;
+    times(i) = times(i - 1) + timestep;
   }
 
-  const auto fit = SplineFitting1D::Interpolate(input_row, 3, times);
+  const auto knots = normalize(times);
+  const auto fit = SplineFitting1D::Interpolate(input_row, 3, knots);
+  double scale = 1 / (times.maxCoeff() - times.minCoeff());
 
   // Derivative output
   Eigen::RowVectorXd derivative = Eigen::RowVectorXd::Zero(num_points);
@@ -71,8 +84,7 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   for (size_t point = 1; point < num_points; ++point)
   {
     path_fraction = (double)point / (double)num_points;
-    derivative[point] =
-      fit.derivatives(path_fraction, 1 /* order */)(1 /* first derivative */);
+    derivative[point] = fit.derivatives(path_fraction, 1 /* order */)(1 /* first derivative */) * scale;
   }
 
   return derivative.transpose();

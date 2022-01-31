@@ -41,8 +41,8 @@
 
 namespace trackjoint
 {
-// Use a 3rd-degree spline to fit points well without excessive oscillations
-typedef Eigen::Spline<double, 1 /* dimension */, 3 /* degree */> Spline1D;
+// Default to use spline of dynamic degree
+typedef Eigen::Spline<double, 1 /* dimension */> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
 /**
@@ -70,7 +70,15 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
                                                      const double first_element, const double filter_coefficient);
 
 /**
- * \brief Discrete differentiation of a vector. Fast but noisy.
+ * \brief Normalize a vector between 0 and 1
+ *
+ * input input_vector any vector, such as position
+ * return a vector of normalized values between 0 and 1
+ */
+Eigen::VectorXd normalize(const Eigen::VectorXd& x);
+
+/**
+ * \brief Interpolate with splines then take the derivative.
  *
  * input input_vector any vector, such as position
  * input timestep the time between consecutive elements
