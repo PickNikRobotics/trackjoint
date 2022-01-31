@@ -50,13 +50,9 @@ Eigen::VectorXd normalize(const Eigen::VectorXd& x)
   const double min = x.minCoeff();
   const double max = x.maxCoeff();
   size_t num_points = x.size();
-  Eigen::VectorXd x_norm = Eigen::RowVectorXd::Zero(num_points);
+  Eigen::RowVectorXd x_norm = Eigen::RowVectorXd::Zero(num_points);
 
-  for (size_t i = 0; i < num_points; i++)
-  {
-    x_norm(i) = (x(i) - min) / (max - min);
-  }
-
+  x_norm = (x.array() - min) / (max - min);
   return x_norm;
 }
 

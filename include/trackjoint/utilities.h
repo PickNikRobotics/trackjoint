@@ -41,7 +41,7 @@
 
 namespace trackjoint
 {
-// Default to use spline of dyanmic degree
+// Default to use spline of dynamic degree
 typedef Eigen::Spline<double, 1 /* dimension */> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
