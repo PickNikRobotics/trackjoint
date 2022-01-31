@@ -53,7 +53,7 @@ namespace
 std::string REF_PATH = ament_index_cpp::get_package_share_directory("trackjoint");
 std::string BASE_FILEPATH = REF_PATH + "/test/data/tj_output";
 constexpr double DOUBLE_TOLERANCE = 1e-9;  // For double comparison
-}
+}  // namespace
 
 namespace trackjoint
 {
@@ -247,10 +247,9 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   //////////////////////////////////////
   // Request a higher velocity at the second-to-last timestep (index 4).
   // Jerk in the previous timestep should increase since jerk[4] is a maximum already.
-  // The velocity error has a magnitude we can compensate for in a single timestep.
   // The full correction for the velocity error is made at index 3.
 
-  // Need to adjust some kinematic limits for the contrived test conditions to work 
+  // Need to adjust some kinematic limits for the contrived test conditions to work
   limits_.at(0).acceleration_limit = 1e5;
   limits_.at(0).jerk_limit = 1e6;
 
@@ -261,8 +260,7 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   single_joint_gen.reset(timestep_, max_duration_, current_joint_states_.at(0), goal_joint_states_.at(0), limits_.at(0),
                          num_waypoints, position_tolerance_, use_streaming_mode_, timestep_was_upsampled);
 
-  double velocity_error = 0.001; //just a reasonable value. Should be achievable in one timestep.
-  std::cout << "Velocity error: " << velocity_error << std::endl;
+  double velocity_error = 0.001;  // just a reasonable value, achievable in one timestep.
   // jerk[4] is already at the limit, so jerk[3] should be adjusted to correct for the velocity error
   Eigen::VectorXd input_jerk(num_waypoints);
   double jerk_4 = limits_.at(0).jerk_limit;
@@ -272,11 +270,9 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   input_acceleration << 0, 0, 0, 0, accel_4, accel_4 + input_jerk(5) * timestep_;
   Eigen::VectorXd input_velocity(num_waypoints);
   double vel_4 = input_acceleration(4) * timestep_ + 0.5 * input_jerk(4) * pow(timestep_, 2);
-  input_velocity << 0, 0, 0, 0, vel_4, vel_4 + input_acceleration(5) * timestep_ + 0.5 * input_jerk(5) * pow(timestep_, 2);
-  single_joint_gen.setInternalWaypointsData(zero_positions,
-                                            input_velocity,
-                                            input_acceleration,
-                                            input_jerk,
+  input_velocity << 0, 0, 0, 0, vel_4,
+      vel_4 + input_acceleration(5) * timestep_ + 0.5 * input_jerk(5) * pow(timestep_, 2);
+  single_joint_gen.setInternalWaypointsData(zero_positions, input_velocity, input_acceleration, input_jerk,
                                             elapsed_times);
   // For this test, say the velocity at this index needs correction
   size_t limited_index = num_waypoints - 2;  // second-from-last
@@ -299,8 +295,10 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   // jerk[3] should be different than it was previously
   EXPECT_NE(output.jerks[3], input_jerk[3]);
   // index 4 and onward should not have changed
-  // But, vel[4] gets clipped at the very end of backwardLimitComp(). That's fine for the purpose of this test
-//  EXPECT_NEAR(output.velocities[4], input_velocity[4], DOUBLE_TOLERANCE);
+  // But, vel[4] gets clipped to the velocity limit at the very end of backwardLimitComp()
+  // because the input value was too high.
+  // That's fine for the purpose of this test
+  // EXPECT_NEAR(output.velocities[4], input_velocity[4], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.velocities[5], input_velocity[5], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.accelerations[4], input_acceleration[4], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.accelerations[5], input_acceleration[5], DOUBLE_TOLERANCE);
