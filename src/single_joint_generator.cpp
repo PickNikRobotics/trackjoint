@@ -396,7 +396,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
           ((excess_velocity < 0) &&
            (waypoints_.velocities(index) >= -configuration_.limits.velocity_limit - excess_velocity)))
       {
-        std::cout << "Full change can be made in index " << index << std::endl;
+        std::cout << "Possibility of a full correction in index " << index << std::endl;
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
@@ -408,6 +408,11 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
         double forward_jerk =
             (forward_accel - (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep) /
             configuration_.timestep;
+
+        std::cout << "backward_jerk: " << backward_jerk << "  " << (fabs(backward_jerk) < configuration_.limits.jerk_limit) << std::endl;
+        std::cout << "backward_accel: " << backward_accel << "  " << (fabs(backward_accel) < configuration_.limits.acceleration_limit) << std::endl;
+        std::cout << "forward_jerk: " << forward_jerk << "  " << (fabs(forward_jerk) < configuration_.limits.jerk_limit) << std::endl;
+        std::cout << "forward_accel: " << forward_accel << "  " << (fabs(forward_accel) < configuration_.limits.acceleration_limit) << std::endl;
 
         // Calculate this new velocity if it would not violate accel/jerk limits
         if ((fabs(backward_jerk) < configuration_.limits.jerk_limit) &&
@@ -437,7 +442,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       // Can't make all of the correction in this timestep, so make as much of a change as possible
       if (!successful_compensation)
       {
-        std::cout << "Making a partial correction in index " << index << std::endl;
+        std::cout << "Possibility of a partial correction in index " << index << std::endl;
         // This is what accel and jerk would be if we set velocity(index) to the limit
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
