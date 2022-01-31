@@ -375,6 +375,13 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
 
   bool successful_compensation = false;
 
+  // Since (index + 1) is used in some calculations below, the algorithm won't work if
+  // limited_index is the last element in the array
+  if (limited_index == waypoints_.velocities.size() - 1)
+  {
+    return false;
+  }
+
   // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
   // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
   for (size_t index = limited_index; index > 2; --index)
