@@ -26,11 +26,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include "trackjoint/butterworth_filter.h"
 #include "trackjoint/utilities.h"
 
 namespace trackjoint
 {
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
@@ -41,6 +42,33 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   derivative.tail(derivative.size() - 1) =
       (input_vector.tail(input_vector.size() - 1) - input_shifted_right.tail(input_shifted_right.size() - 1)) /
       timestep;
+
+  return derivative;
+};
+
+Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+                                                     const double first_element, const double filter_coefficient)
+{
+  Eigen::VectorXd derivative = DiscreteDifferentiation(input_vector, timestep, first_element);
+
+  // Apply a low-pass filter
+  ButterworthFilter filter(filter_coefficient);
+
+  // Filter from front to back
+  filter.reset(derivative(0));
+  for (size_t point = 1; point < derivative.size(); ++point)
+  {
+    // Lowpass filter the position command
+    derivative(point) = filter.filter(derivative(point));
+  }
+
+  // Now filter from back to front to eliminate phase shift
+  filter.reset(derivative(derivative.size() - 1));
+  for (size_t point = derivative.size() - 2; point > 0; --point)
+  {
+    // Lowpass filter the position command
+    derivative(point) = filter.filter(derivative(point));
+  }
 
   return derivative;
 };

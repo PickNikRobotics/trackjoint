@@ -546,6 +546,7 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
 
   double time = 0;
   // Create Trajectory Generator object
+  use_streaming_mode_ = true;
   TrajectoryGenerator traj_gen(num_dof_, timestep_, desired_duration_, max_duration_, current_joint_states_,
                                goal_joint_states_, limits_, position_tolerance_, use_streaming_mode_);
 
