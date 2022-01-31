@@ -299,18 +299,18 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   // jerk[3] should be different than it was previously
   EXPECT_NE(output.jerks[3], input_jerk[3]);
   // index 4 and onward should not have changed
-/*
-  EXPECT_NEAR(output.velocities[4], input_velocity[4], DOUBLE_TOLERANCE);
+  // But, vel[4] gets clipped at the very end of backwardLimitComp(). That's fine for the purpose of this test
+//  EXPECT_NEAR(output.velocities[4], input_velocity[4], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.velocities[5], input_velocity[5], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.accelerations[4], input_acceleration[4], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.accelerations[5], input_acceleration[5], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.jerks[4], input_jerk[4], DOUBLE_TOLERANCE);
   EXPECT_NEAR(output.jerks[5], input_jerk[5], DOUBLE_TOLERANCE);
-*/
+
   // TearDown() should skip post-test checks
   skip_teardown_checks_ = true;
 }
-/*
+
 TEST_F(TrajectoryGenerationTest, DetectNoReset)
 {
   // Calling `generateTrajectories()` without an initial `reset()`
@@ -1368,7 +1368,7 @@ TEST_F(TrajectoryGenerationTest, JerkLimit)
   size_t vector_length = output_trajectories_[0].elapsed_times.size() - 1;
   EXPECT_LE(output_trajectories_[0].elapsed_times(vector_length), desired_duration_);
 }
-*/
+
 }  // namespace trackjoint
 
 int main(int argc, char** argv)
