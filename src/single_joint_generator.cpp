@@ -221,6 +221,13 @@ Eigen::VectorXd SingleJointGenerator::interpolate(Eigen::VectorXd& times)
 
 ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_successful)
 {
+  // The algorithm:
+  // 1) check jerk limits, from beginning to end of trajectory. Don't bother
+  // checking accel/vel limits here, they will be checked next
+  // 2) check accel limits. Make sure it doesn't cause jerk to exceed limits.
+  // 3) check vel limits. This will also check whether previously-checked
+  // jerk/accel limits were exceeded
+
   // This is the indexing convention.
   // 1. accel(i) = accel(i-1) + jerk(i) * dt
   // 2. vel(i) == vel(i-1) + accel(i-1) * dt + 0.5 * jerk(i) * dt ^ 2
@@ -371,29 +378,27 @@ ErrorCodeEnum SingleJointGenerator::forwardLimitCompensation(size_t* index_last_
 
 bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, double excess_velocity)
 {
-  // The algorithm:
-  // 1) check jerk limits, from beginning to end of trajectory. Don't bother
-  // checking accel/vel limits here, they will be checked next
-  // 2) check accel limits. Make sure it doesn't cause jerk to exceed limits.
-  // 3) check vel limits. This will also check whether previously-checked
-  // jerk/accel limits were exceeded
-
   bool successful_compensation = false;
 
-  // Add a bit of velocity at step i to compensate for the limit at timestep
-  // i+1.
-  // Cannot go beyond index 2 because we use a 2-index window for derivative
-  // calculations.
+  // Since (index + 1) is used in some calculations below, the algorithm won't work if
+  // limited_index is the last element in the array
+  if (limited_index == (unsigned)waypoints_.velocities.size() - 1)
+  {
+    return false;
+  }
+
+  // Add a bit of velocity at step i to compensate for the limit at timestep i+1.
+  // Cannot go beyond index 2 because we use a 2-index window for derivative calculations.
   for (size_t index = limited_index; index > 2; --index)
   {
     // if there is some room to increase the velocity at timestep i
     if (fabs(waypoints_.velocities(index)) < configuration_.limits.velocity_limit)
     {
       // If the full change can be made in this timestep
-      if ((excess_velocity > 0 &&
-           waypoints_.velocities(index) <= configuration_.limits.velocity_limit - excess_velocity) ||
-          (excess_velocity < 0 &&
-           waypoints_.velocities(index) >= -configuration_.limits.velocity_limit - excess_velocity))
+      if (((excess_velocity > 0) &&
+           (waypoints_.velocities(index) <= configuration_.limits.velocity_limit - excess_velocity)) ||
+          ((excess_velocity < 0) &&
+           (waypoints_.velocities(index) >= -configuration_.limits.velocity_limit - excess_velocity)))
       {
         double new_velocity = waypoints_.velocities(index) + excess_velocity;
         // Accel and jerk, calculated from the previous waypoints
@@ -434,8 +439,7 @@ bool SingleJointGenerator::backwardLimitCompensation(size_t limited_index, doubl
       // Can't make all of the correction in this timestep, so make as much of a change as possible
       if (!successful_compensation)
       {
-        // This is what accel and jerk would be if we set velocity(index) to the
-        // limit
+        // This is what accel and jerk would be if we set velocity(index) to the limit
         double new_velocity = std::copysign(1.0, excess_velocity) * configuration_.limits.velocity_limit;
         // Accel and jerk, calculated from the previous waypoints
         double backward_accel = (new_velocity - waypoints_.velocities(index - 1)) / configuration_.timestep;
@@ -628,5 +632,16 @@ void SingleJointGenerator::updateTrajectoryDuration(double new_trajectory_durati
   // max_duration == desired_duration
   desired_duration_ = new_trajectory_duration;
   configuration_.max_duration = new_trajectory_duration;
+}
+
+void SingleJointGenerator::setInternalWaypointsData(const Eigen::VectorXd& positions, const Eigen::VectorXd& velocities,
+                                                    const Eigen::VectorXd& accelerations, const Eigen::VectorXd& jerks,
+                                                    const Eigen::VectorXd& elapsed_times)
+{
+  waypoints_.positions = positions;
+  waypoints_.velocities = velocities;
+  waypoints_.accelerations = accelerations;
+  waypoints_.jerks = jerks;
+  waypoints_.elapsed_times = elapsed_times;
 }
 }  // end namespace trackjoint

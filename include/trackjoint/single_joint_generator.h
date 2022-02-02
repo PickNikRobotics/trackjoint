@@ -113,6 +113,15 @@ public:
    */
   void updateTrajectoryDuration(double new_trajectory_duration);
 
+  /** \brief Start looking back through a velocity vector to calculate for an
+   * excess velocity at limited_index. */
+  bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
+
+  /** \brief This method is used to set waypoints_ state, for testing */
+  void setInternalWaypointsData(const Eigen::VectorXd& positions, const Eigen::VectorXd& velocities,
+                                const Eigen::VectorXd& accelerations, const Eigen::VectorXd& jerks,
+                                const Eigen::VectorXd& elapsed_times);
+
 private:
   /** \brief Record the index when compensation first failed */
   inline void recordFailureTime(size_t current_index, size_t* index_last_successful)
@@ -134,10 +143,6 @@ private:
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
   ErrorCodeEnum forwardLimitCompensation(size_t* index_last_successful);
 
-  /** \brief Start looking back through a velocity vector to calculate for an
-   * excess velocity at limited_index. */
-  bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
-
   /** \brief This uses backwardLimitCompensation() but it starts from a position
    * vector */
   ErrorCodeEnum positionVectorLimitLookAhead(size_t* index_last_successful);
@@ -151,7 +156,8 @@ private:
   /** \brief Calculate accel/jerk from velocity */
   void calculateDerivativesFromVelocity();
 
-  const size_t kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory;
+  const size_t kNumWaypointsThreshold;
+  const size_t kMaxNumWaypointsFullTrajectory;
 
   Configuration configuration_;
   double desired_duration_;
