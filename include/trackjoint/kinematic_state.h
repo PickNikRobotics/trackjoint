@@ -49,7 +49,7 @@ public:
 
   /** \brief Print this state
    */
-  void print()
+  void print() const
   {
     std::cout << "Position:" << std::endl;
     std::cout << this->position << std::endl << std::endl;
