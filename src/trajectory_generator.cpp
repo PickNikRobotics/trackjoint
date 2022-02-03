@@ -36,6 +36,16 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
                                          const std::vector<KinematicState>& goal_joint_states,
                                          const std::vector<Limits>& limits, const double position_tolerance,
                                          bool use_streaming_mode)
+  : TrajectoryGenerator(num_dof, timestep, desired_duration, max_duration, current_joint_states, goal_joint_states,
+                        limits, position_tolerance, use_streaming_mode, std::numeric_limits<size_t>::max())
+{
+}
+
+TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
+                                         const std::vector<KinematicState>& current_joint_states,
+                                         const std::vector<KinematicState>& goal_joint_states,
+                                         const std::vector<Limits>& limits, const double position_tolerance,
+                                         bool use_streaming_mode, size_t num_waypoints_threshold)
   : kNumDof(num_dof)
   , desired_timestep_(timestep)
   , upsampled_timestep_(timestep)
@@ -44,6 +54,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , current_joint_states_(current_joint_states)
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
+  , kMaxNumWaypointsFullTrajectory(num_waypoints_threshold)
 {
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
