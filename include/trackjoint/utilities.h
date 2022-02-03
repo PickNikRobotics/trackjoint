@@ -75,7 +75,7 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
  * input input_vector any vector, such as position
  * return a vector of normalized values between 0 and 1
  */
-Eigen::VectorXd normalize(const Eigen::VectorXd& x);
+Eigen::VectorXd Normalize(const Eigen::VectorXd& x);
 
 /**
  * \brief Interpolate with splines then take the derivative.

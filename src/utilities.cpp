@@ -46,7 +46,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 };
 
-Eigen::VectorXd normalize(const Eigen::VectorXd& x)
+Eigen::VectorXd Normalize(const Eigen::VectorXd& x)
 {
   const double min = x.minCoeff();
   const double max = x.maxCoeff();
@@ -71,7 +71,7 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
     times(i) = times(i - 1) + timestep;
   }
 
-  const auto knots = normalize(times);
+  const auto knots = Normalize(times);
   const auto fit = SplineFitting1D::Interpolate(input_row, 3, knots);
   double scale = 1 / (times.maxCoeff() - times.minCoeff());
 
