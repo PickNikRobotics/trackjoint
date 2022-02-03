@@ -100,7 +100,7 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
 
   // Filter from front to back
   filter.reset(derivative(0));
-  for (long unsigned int point = 1; point < derivative.size(); ++point)
+  for (long int point = 1; point < derivative.size(); ++point)
   {
     // Lowpass filter the position command
     derivative(point) = filter.filter(derivative(point));
