@@ -120,19 +120,19 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
 void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
 {
-  std::cout << "==========" << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "==========" << std::endl;
-  std::cout << "Joint " << joint << std::endl;
-  std::cout << "==========" << std::endl;
-  std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << std::endl;
-  std::cout << "  Desired duration: " << desired_duration << std::endl;
+  std::cout << "==========" << '\n';
+  std::cout << '\n';
+  std::cout << '\n';
+  std::cout << "==========" << '\n';
+  std::cout << "Joint " << joint << '\n';
+  std::cout << "==========" << '\n';
+  std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << '\n';
+  std::cout << "  Desired duration: " << desired_duration << '\n';
   std::cout << "Timestep: " << output_trajectories.at(joint).elapsed_times[1]
             << "  Initial position: " << output_trajectories.at(joint).positions[0]
             << "  Initial velocity: " << output_trajectories.at(joint).velocities[0]
             << "  Initial acceleration: " << output_trajectories.at(joint).accelerations[0]
-            << "  Initial jerk: " << output_trajectories.at(joint).jerks[0] << std::endl;
+            << "  Initial jerk: " << output_trajectories.at(joint).jerks[0] << '\n';
   std::cout << "  Final position: "
             << output_trajectories.at(joint).positions[output_trajectories.at(joint).positions.size() - 1]
             << "  Final velocity: "
@@ -140,7 +140,7 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajec
             << "  Final acceleration: "
             << output_trajectories.at(joint).accelerations[output_trajectories.at(joint).positions.size() - 1]
             << "  Final jerk: "
-            << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << std::endl;
+            << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << '\n';
 }
 
 void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)

@@ -51,14 +51,14 @@ public:
    */
   void print() const
   {
-    std::cout << "Position:" << std::endl;
-    std::cout << this->position << std::endl << std::endl;
+    std::cout << "Position:" << '\n';
+    std::cout << this->position << '\n' << '\n';
 
-    std::cout << "Velocity:" << std::endl;
-    std::cout << this->velocity << std::endl << std::endl;
+    std::cout << "Velocity:" << '\n';
+    std::cout << this->velocity << '\n' << '\n';
 
-    std::cout << "Acceleration:" << std::endl;
-    std::cout << this->acceleration << std::endl;
+    std::cout << "Acceleration:" << '\n';
+    std::cout << this->acceleration << '\n';
   }
 };
 }  // namespace trackjoint

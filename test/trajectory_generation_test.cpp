@@ -153,7 +153,7 @@ protected:
                     << output_trajectories_.at(joint).positions(waypoint) << " "
                     << output_trajectories_.at(joint).velocities(waypoint) << " "
                     << output_trajectories_.at(joint).accelerations(waypoint) << " "
-                    << output_trajectories_.at(joint).jerks(waypoint) << std::endl;
+                    << output_trajectories_.at(joint).jerks(waypoint) << '\n';
       }
       output_file.clear();
       output_file.close();
@@ -320,7 +320,7 @@ TEST_F(TrajectoryGenerationTest, DetectNoReset)
   EXPECT_EQ(error_code, ErrorCodeEnum::OBJECT_NOT_RESET);
 
   // Ensure OBJECT_NOT_RESET can be converted to string
-  std::cout << "Error: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+  std::cout << "Error: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
 
   // TearDown() should skip post-test checks
   skip_teardown_checks_ = true;

@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   trackjoint::ErrorCodeEnum error_code = traj_gen.inputChecking(start_state, goal_joint_states, limits, timestep);
   if (error_code)
   {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
     return -1;
   }
 
@@ -100,10 +100,10 @@ int main(int argc, char** argv)
   error_code = traj_gen.generateTrajectories(&output_trajectories);
   if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
     return -1;
   }
-  std::cout << "Initial trajectory calculation:" << std::endl;
+  std::cout << "Initial trajectory calculation:" << '\n';
   PrintJointTrajectory(joint, output_trajectories, desired_duration);
 
   // Update the start state with the next waypoint
@@ -130,11 +130,11 @@ int main(int argc, char** argv)
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::cout << "Run time (microseconds): "
-              << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << std::endl;
+              << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << '\n';
 
     if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
     {
-      std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+      std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
       return -1;
     }
 
@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     else
     {
       // This should never happen
-      std::cout << "Index error!" << std::endl;
+      std::cout << "Index error!" << '\n';
       return 1;
     }
 
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     desired_duration = std::max(desired_duration, min_desired_duration);
   }
 
-  std::cout << "Done!" << std::endl;
+  std::cout << "Done!" << '\n';
 
   return 0;
 }
