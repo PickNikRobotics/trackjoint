@@ -190,7 +190,7 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   *position_vector = new_positions;
   *velocity_vector = new_velocities;
   *acceleration_vector = new_accelerations;
-  *jerk_vector = DiscreteDifferentiation(new_accelerations, desired_timestep_, 0);
+  *jerk_vector = discreteDifferentiation(new_accelerations, desired_timestep_, 0);
 }
 
 ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicState>& current_joint_states,
@@ -201,7 +201,7 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
   {
     // Print a warning but do not exit
     std::cout << "Capping desired duration at " << kMaxNumWaypointsFullTrajectory
-              << " waypoints to maintain determinism." << std::endl;
+              << " waypoints to maintain determinism." << '\n';
     desired_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
   }
 
@@ -209,7 +209,7 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
   {
     // Print a warning but do not exit
     std::cout << "Capping max duration at " << kMaxNumWaypointsFullTrajectory << " waypoints to maintain determinism."
-              << std::endl;
+              << '\n';
     max_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
   }
 
@@ -279,7 +279,7 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
   // Warning if the folder does not exist
   if (!boost::filesystem::exists(base_filepath))
   {
-    std::cout << "Directory " << base_filepath << " does not exist. Cannot save results." << std::endl;
+    std::cout << "Directory " << base_filepath << " does not exist. Cannot save results." << '\n';
     return;
   }
 
@@ -300,7 +300,7 @@ void TrajectoryGenerator::saveTrajectoriesToFile(const std::vector<JointTrajecto
                   << output_trajectories.at(joint).positions(waypoint) << " "
                   << output_trajectories.at(joint).velocities(waypoint) << " "
                   << output_trajectories.at(joint).accelerations(waypoint) << " "
-                  << output_trajectories.at(joint).jerks(waypoint) << std::endl;
+                  << output_trajectories.at(joint).jerks(waypoint) << '\n';
     }
     output_file.clear();
     output_file.close();
@@ -378,11 +378,11 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     {
       output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
 
-      ClipEigenVector(&output_trajectories->at(joint).positions, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).velocities, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).accelerations, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).jerks, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).elapsed_times, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).positions, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).velocities, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).accelerations, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).jerks, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).elapsed_times, shortest_num_waypoints);
     }
   }
 

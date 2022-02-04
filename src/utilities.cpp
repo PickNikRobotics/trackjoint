@@ -31,7 +31,7 @@
 
 namespace trackjoint
 {
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
+Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
@@ -44,7 +44,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
       timestep;
 
   return derivative;
-};
+}
 
 Eigen::VectorXd normalize(const Eigen::VectorXd& x)
 {
@@ -59,7 +59,7 @@ Eigen::VectorXd normalize(const Eigen::VectorXd& x)
 
 // TODO(andyz): This is horribly inefficient. Maybe it would be best to store everything as splines always.
 // Also (maybe) to store everything in one large matrix with columns for each derivative.
-Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
 {
   // Fit a spline through the input vector
   size_t num_points = input_vector.size();
@@ -90,17 +90,17 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   return derivative.transpose();
 }
 
-Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
                                                      const double first_element, const double filter_coefficient)
 {
-  Eigen::VectorXd derivative = DiscreteDifferentiation(input_vector, timestep, first_element);
+  Eigen::VectorXd derivative = discreteDifferentiation(input_vector, timestep, first_element);
 
   // Apply a low-pass filter
   ButterworthFilter filter(filter_coefficient);
 
   // Filter from front to back
   filter.reset(derivative(0));
-  for (long unsigned int point = 1; point < derivative.size(); ++point)
+  for (long int point = 1; point < derivative.size(); ++point)
   {
     // Lowpass filter the position command
     derivative(point) = filter.filter(derivative(point));
@@ -115,24 +115,24 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
   }
 
   return derivative;
-};
+}
 
-void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
+void printJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
 {
-  std::cout << "==========" << std::endl;
-  std::cout << std::endl;
-  std::cout << std::endl;
-  std::cout << "==========" << std::endl;
-  std::cout << "Joint " << joint << std::endl;
-  std::cout << "==========" << std::endl;
-  std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << std::endl;
-  std::cout << "  Desired duration: " << desired_duration << std::endl;
+  std::cout << "==========" << '\n';
+  std::cout << '\n';
+  std::cout << '\n';
+  std::cout << "==========" << '\n';
+  std::cout << "Joint " << joint << '\n';
+  std::cout << "==========" << '\n';
+  std::cout << "  Num waypts: " << output_trajectories.at(joint).positions.size() << '\n';
+  std::cout << "  Desired duration: " << desired_duration << '\n';
   std::cout << "Timestep: " << output_trajectories.at(joint).elapsed_times[1]
             << "  Initial position: " << output_trajectories.at(joint).positions[0]
             << "  Initial velocity: " << output_trajectories.at(joint).velocities[0]
             << "  Initial acceleration: " << output_trajectories.at(joint).accelerations[0]
-            << "  Initial jerk: " << output_trajectories.at(joint).jerks[0] << std::endl;
+            << "  Initial jerk: " << output_trajectories.at(joint).jerks[0] << '\n';
   std::cout << "  Final position: "
             << output_trajectories.at(joint).positions[output_trajectories.at(joint).positions.size() - 1]
             << "  Final velocity: "
@@ -140,16 +140,16 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajec
             << "  Final acceleration: "
             << output_trajectories.at(joint).accelerations[output_trajectories.at(joint).positions.size() - 1]
             << "  Final jerk: "
-            << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << std::endl;
+            << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << '\n';
 }
 
-void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
+void clipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
 {
   Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
   *vector = new_vector;
 }
 
-bool VerifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector)
+bool verifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector)
 {
   if (high_limit < low_limit)
     return false;
