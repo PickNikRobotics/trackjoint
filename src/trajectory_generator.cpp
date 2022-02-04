@@ -47,7 +47,7 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
 {
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
-  double max_num_waypoints = desired_duration / upsampled_timestep_;
+  double max_num_waypoints = max_duration / upsampled_timestep_;
 
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
