@@ -71,26 +71,6 @@ public:
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
                       const double position_tolerance, bool use_streaming_mode);
 
-  /** \brief Constructor
-   *
-   * input num_dof number of degrees of freedom
-   * input timestep desired time between waypoints
-   * input desired_duration total desired duration of the trajectory
-   * input max_duration allow the trajectory to be extended up to this limit. Error if that cannot be done.
-   * input current_joint_states vector of the initial kinematic states for each degree of freedom
-   * input goal_joint_states vector of the target kinematic states for each degree of freedom
-   * input limits vector of kinematic limits for each degree of freedom
-   * input position_tolerance tolerance for how close the final trajectory should follow a smooth interpolation.
-   *                          Should be set lower than the accuracy requirements for your task
-   * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of kNumWaypointsThreshold
-   * waypoints.
-   * input size_t num_waypoints_threshold maximum number of waypoints, default is infinite
-   */
-  TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
-                      const std::vector<KinematicState>& current_joint_states,
-                      const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                      const double position_tolerance, bool use_streaming_mode, size_t num_waypoints_threshold);
-
   /** \brief reset the member variables of the object and prepare to generate a new trajectory */
   void reset(double timestep, double desired_duration, double max_duration,
              const std::vector<KinematicState>& current_joint_states,
@@ -168,6 +148,5 @@ private:
   std::vector<SingleJointGenerator> single_joint_generators_;
   size_t upsampled_num_waypoints_;
   size_t upsample_rounds_ = 0;  // Every time we upsample, timestep is halved. Track this.
-  const size_t kMaxNumWaypointsFullTrajectory;
-};  // end class TrajectoryGenerator
+};                              // end class TrajectoryGenerator
 }  // namespace trackjoint

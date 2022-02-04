@@ -36,16 +36,6 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
                                          const std::vector<KinematicState>& goal_joint_states,
                                          const std::vector<Limits>& limits, const double position_tolerance,
                                          bool use_streaming_mode)
-  : TrajectoryGenerator(num_dof, timestep, desired_duration, max_duration, current_joint_states, goal_joint_states,
-                        limits, position_tolerance, use_streaming_mode, std::numeric_limits<size_t>::max())
-{
-}
-
-TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
-                                         const std::vector<KinematicState>& current_joint_states,
-                                         const std::vector<KinematicState>& goal_joint_states,
-                                         const std::vector<Limits>& limits, const double position_tolerance,
-                                         bool use_streaming_mode, size_t num_waypoints_threshold)
   : kNumDof(num_dof)
   , desired_timestep_(timestep)
   , upsampled_timestep_(timestep)
@@ -54,15 +44,15 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   , current_joint_states_(current_joint_states)
   , limits_(limits)
   , use_streaming_mode_(use_streaming_mode)
-  , kMaxNumWaypointsFullTrajectory(num_waypoints_threshold)
 {
   // Upsample if num. waypoints would be short. Helps with accuracy
   upsample();
+  auto max_num_waypoints = desired_duration / upsampled_timestep_;
 
   // Initialize a trajectory generator for each joint
   for (size_t joint = 0; joint < kNumDof; ++joint)
   {
-    single_joint_generators_.push_back(SingleJointGenerator(kNumWaypointsThreshold, kMaxNumWaypointsFullTrajectory));
+    single_joint_generators_.push_back(SingleJointGenerator(kNumWaypointsThreshold, max_num_waypoints));
   }
 }
 
@@ -208,22 +198,6 @@ ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicStat
                                                  const std::vector<KinematicState>& goal_joint_states,
                                                  const std::vector<Limits>& limits, double nominal_timestep)
 {
-  if (desired_duration_ > kMaxNumWaypointsFullTrajectory * upsampled_timestep_)
-  {
-    // Print a warning but do not exit
-    std::cout << "Capping desired duration at " << kMaxNumWaypointsFullTrajectory
-              << " waypoints to maintain determinism." << std::endl;
-    desired_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
-  }
-
-  if (max_duration_ > kMaxNumWaypointsFullTrajectory * upsampled_timestep_)
-  {
-    // Print a warning but do not exit
-    std::cout << "Capping max duration at " << kMaxNumWaypointsFullTrajectory << " waypoints to maintain determinism."
-              << std::endl;
-    max_duration_ = kMaxNumWaypointsFullTrajectory * upsampled_timestep_;
-  }
-
   double rounded_duration = std::round(desired_duration_ / upsampled_timestep_) * upsampled_timestep_;
 
   // Need at least 1 timestep
