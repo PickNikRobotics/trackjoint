@@ -53,7 +53,7 @@ typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, const double timestep,
+Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, const double timestep,
                                         const double first_element);
 
 /**
@@ -66,7 +66,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, con
  * input filter_coefficient must be >1.0, typically less than 100. Larger value -> more smoothing.
  * return a vector of derivatives
  */
-Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
                                                      const double first_element, const double filter_coefficient);
 
 /**
@@ -75,7 +75,7 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
  * input input_vector any vector, such as position
  * return a vector of normalized values between 0 and 1
  */
-Eigen::VectorXd Normalize(const Eigen::VectorXd& x);
+Eigen::VectorXd normalize(const Eigen::VectorXd& x);
 
 /**
  * \brief Interpolate with splines then take the derivative.
@@ -85,7 +85,7 @@ Eigen::VectorXd Normalize(const Eigen::VectorXd& x);
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
+Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *
@@ -93,12 +93,12 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
  * input output_trajectories the calculated trajectories for n joints
  * input desired_duration the user-requested duration of the trajectory
  */
-void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
+void printJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration);
 
 /** \brief Clip all elements beyond a given size */
-void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints);
+void clipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints);
 
 /* \brief Check if all elements of a vector are within a [low_limit, high_limit] range. */
-bool VerifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector);
+bool verifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector);
 }  // namespace trackjoint

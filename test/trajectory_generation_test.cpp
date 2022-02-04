@@ -133,7 +133,7 @@ protected:
       min_pos = std::min(potential_min, potential_min_2);
       max_pos = std::max(potential_max, potential_max_2);
 
-      EXPECT_TRUE(VerifyVectorWithinBounds(min_pos, max_pos, output_trajectories_[i].positions));
+      EXPECT_TRUE(verifyVectorWithinBounds(min_pos, max_pos, output_trajectories_[i].positions));
     }
   }
 

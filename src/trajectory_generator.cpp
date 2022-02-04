@@ -190,7 +190,7 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
   *position_vector = new_positions;
   *velocity_vector = new_velocities;
   *acceleration_vector = new_accelerations;
-  *jerk_vector = DiscreteDifferentiation(new_accelerations, desired_timestep_, 0);
+  *jerk_vector = discreteDifferentiation(new_accelerations, desired_timestep_, 0);
 }
 
 ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicState>& current_joint_states,
@@ -378,11 +378,11 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     {
       output_trajectories->at(joint) = single_joint_generators_[joint].getTrajectory();
 
-      ClipEigenVector(&output_trajectories->at(joint).positions, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).velocities, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).accelerations, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).jerks, shortest_num_waypoints);
-      ClipEigenVector(&output_trajectories->at(joint).elapsed_times, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).positions, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).velocities, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).accelerations, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).jerks, shortest_num_waypoints);
+      clipEigenVector(&output_trajectories->at(joint).elapsed_times, shortest_num_waypoints);
     }
   }
 

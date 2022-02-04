@@ -31,7 +31,7 @@
 
 namespace trackjoint
 {
-Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
+Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
   Eigen::VectorXd input_shifted_right(input_vector.size());
@@ -46,7 +46,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 }
 
-Eigen::VectorXd Normalize(const Eigen::VectorXd& x)
+Eigen::VectorXd normalize(const Eigen::VectorXd& x)
 {
   const double min = x.minCoeff();
   const double max = x.maxCoeff();
@@ -59,7 +59,7 @@ Eigen::VectorXd Normalize(const Eigen::VectorXd& x)
 
 // TODO(andyz): This is horribly inefficient. Maybe it would be best to store everything as splines always.
 // Also (maybe) to store everything in one large matrix with columns for each derivative.
-Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
 {
   // Fit a spline through the input vector
   size_t num_points = input_vector.size();
@@ -71,7 +71,7 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
     times(i) = times(i - 1) + timestep;
   }
 
-  const auto knots = Normalize(times);
+  const auto knots = normalize(times);
   const auto fit = SplineFitting1D::Interpolate(input_row, 3, knots);
   double scale = 1 / (times.maxCoeff() - times.minCoeff());
 
@@ -90,10 +90,10 @@ Eigen::VectorXd SplineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   return derivative.transpose();
 }
 
-Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
                                                      const double first_element, const double filter_coefficient)
 {
-  Eigen::VectorXd derivative = DiscreteDifferentiation(input_vector, timestep, first_element);
+  Eigen::VectorXd derivative = discreteDifferentiation(input_vector, timestep, first_element);
 
   // Apply a low-pass filter
   ButterworthFilter filter(filter_coefficient);
@@ -117,7 +117,7 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
   return derivative;
 }
 
-void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
+void printJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
 {
   std::cout << "==========" << '\n';
@@ -143,13 +143,13 @@ void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajec
             << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << '\n';
 }
 
-void ClipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
+void clipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
 {
   Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
   *vector = new_vector;
 }
 
-bool VerifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector)
+bool verifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector)
 {
   if (high_limit < low_limit)
     return false;

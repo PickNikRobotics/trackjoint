@@ -104,7 +104,7 @@ int main(int argc, char** argv)
     return -1;
   }
   std::cout << "Initial trajectory calculation:" << '\n';
-  PrintJointTrajectory(joint, output_trajectories, desired_duration);
+  printJointTrajectory(joint, output_trajectories, desired_duration);
 
   // Update the start state with the next waypoint
   start_state[joint].position = output_trajectories.at(joint).positions[next_waypoint];
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
     }
 
     // Print the synchronized trajectories
-    PrintJointTrajectory(joint, output_trajectories, desired_duration);
+    printJointTrajectory(joint, output_trajectories, desired_duration);
 
     // Move forward one waypoint for the next iteration
     if ((std::size_t)output_trajectories.at(joint).positions.size() > next_waypoint)
