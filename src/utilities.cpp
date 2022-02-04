@@ -44,7 +44,7 @@ Eigen::VectorXd DiscreteDifferentiation(const Eigen::VectorXd& input_vector, dou
       timestep;
 
   return derivative;
-};
+}
 
 Eigen::VectorXd Normalize(const Eigen::VectorXd& x)
 {
@@ -115,7 +115,7 @@ Eigen::VectorXd DiscreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
   }
 
   return derivative;
-};
+}
 
 void PrintJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
                           const double desired_duration)
