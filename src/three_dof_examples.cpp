@@ -87,7 +87,7 @@ int main(int argc, char** argv)
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
   double desired_duration =
       fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
-  std::cout << "Desired duration: " << desired_duration << std::endl;
+  std::cout << "Desired duration: " << desired_duration << '\n';
 
   // Initialize main class
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
   // generated.
   if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
     return -1;
   }
 
@@ -116,15 +116,15 @@ int main(int argc, char** argv)
   // Trajectory generation error handling
   if (error_code != trackjoint::ErrorCodeEnum::NO_ERROR)
   {
-    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+    std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
     return -1;
   }
 
   std::chrono::duration<double> elapsed_seconds = end - start;
 
-  std::cout << "Runtime: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << std::endl;
-  std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << std::endl;
+  std::cout << "Runtime: " << elapsed_seconds.count() << '\n';
+  std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << '\n';
+  std::cout << "Error code: " << trackjoint::ERROR_CODE_MAP.at(error_code) << '\n';
 
   // Save the synchronized trajectories to .csv files
   traj_gen.saveTrajectoriesToFile(output_trajectories, output_path_base);
@@ -132,25 +132,25 @@ int main(int argc, char** argv)
   // Print the synchronized trajectories
   for (size_t joint = 0; joint < output_trajectories.size(); ++joint)
   {
-    std::cout << "==========" << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "==========" << std::endl;
-    std::cout << "Joint " << joint << std::endl;
-    std::cout << "==========" << std::endl;
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "==========" << std::endl;
+    std::cout << "==========" << '\n';
+    std::cout << '\n';
+    std::cout << '\n';
+    std::cout << "==========" << '\n';
+    std::cout << "Joint " << joint << '\n';
+    std::cout << "==========" << '\n';
+    std::cout << '\n';
+    std::cout << '\n';
+    std::cout << "==========" << '\n';
     for (size_t waypoint = 0; waypoint < static_cast<size_t>(output_trajectories.at(joint).positions.size()); ++waypoint)
     {
       std::cout << "Elapsed time: " << output_trajectories.at(joint).elapsed_times(waypoint)
                 << "  Position: " << output_trajectories.at(joint).positions(waypoint)
                 << "  Velocity: " << output_trajectories.at(joint).velocities(waypoint)
                 << "  Acceleration: " << output_trajectories.at(joint).accelerations(waypoint)
-                << "  Jerk: " << output_trajectories.at(joint).jerks(waypoint) << std::endl;
+                << "  Jerk: " << output_trajectories.at(joint).jerks(waypoint) << '\n';
     }
   }
-  std::cout << "============================================" << std::endl;
+  std::cout << "============================================" << '\n';
 
   return 0;
 }

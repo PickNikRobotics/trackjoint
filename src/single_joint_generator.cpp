@@ -541,11 +541,11 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     if (index_last_successful_ + 1 < kNumWaypointsThreshold)
     {
       // If in streaming mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.velocities, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.accelerations, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.jerks, index_last_successful_ + 1);
-      ClipEigenVector(&waypoints_.elapsed_times, index_last_successful_ + 1);
+      clipEigenVector(&waypoints_.positions, index_last_successful_ + 1);
+      clipEigenVector(&waypoints_.velocities, index_last_successful_ + 1);
+      clipEigenVector(&waypoints_.accelerations, index_last_successful_ + 1);
+      clipEigenVector(&waypoints_.jerks, index_last_successful_ + 1);
+      clipEigenVector(&waypoints_.elapsed_times, index_last_successful_ + 1);
       // Eigen vectors do not have a "back" member function
       goal_joint_state_.position = waypoints_.positions[index_last_successful_];
       goal_joint_state_.velocity = waypoints_.velocities[index_last_successful_];
@@ -556,11 +556,11 @@ ErrorCodeEnum SingleJointGenerator::predictTimeToReach()
     else
     {
       // If in streaming mode, clip at the shorter number of waypoints
-      ClipEigenVector(&waypoints_.positions, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.velocities, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.accelerations, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.jerks, kNumWaypointsThreshold);
-      ClipEigenVector(&waypoints_.elapsed_times, kNumWaypointsThreshold);
+      clipEigenVector(&waypoints_.positions, kNumWaypointsThreshold);
+      clipEigenVector(&waypoints_.velocities, kNumWaypointsThreshold);
+      clipEigenVector(&waypoints_.accelerations, kNumWaypointsThreshold);
+      clipEigenVector(&waypoints_.jerks, kNumWaypointsThreshold);
+      clipEigenVector(&waypoints_.elapsed_times, kNumWaypointsThreshold);
       // Eigen vectors do not have a "back" member function
       goal_joint_state_.position = waypoints_.positions[kNumWaypointsThreshold - 1];
       goal_joint_state_.velocity = waypoints_.velocities[kNumWaypointsThreshold - 1];
@@ -612,7 +612,7 @@ ErrorCodeEnum SingleJointGenerator::positionVectorLimitLookAhead(size_t* index_l
 void SingleJointGenerator::calculateDerivativesFromPosition()
 {
   // From position vector, approximate vel/accel/jerk.
-  waypoints_.velocities = DiscreteDifferentiationWithFiltering(
+  waypoints_.velocities = discreteDifferentiationWithFiltering(
       waypoints_.positions, configuration_.timestep, current_joint_state_.velocity, DEFAULT_FILTER_COEFFICIENT);
   calculateDerivativesFromVelocity();
 }
@@ -620,9 +620,9 @@ void SingleJointGenerator::calculateDerivativesFromPosition()
 void SingleJointGenerator::calculateDerivativesFromVelocity()
 {
   // From velocity vector, approximate accel/jerk.
-  waypoints_.accelerations = DiscreteDifferentiationWithFiltering(
+  waypoints_.accelerations = discreteDifferentiationWithFiltering(
       waypoints_.velocities, configuration_.timestep, current_joint_state_.acceleration, DEFAULT_FILTER_COEFFICIENT);
-  waypoints_.jerks = DiscreteDifferentiationWithFiltering(waypoints_.accelerations, configuration_.timestep,
+  waypoints_.jerks = discreteDifferentiationWithFiltering(waypoints_.accelerations, configuration_.timestep,
                                                           0.0 /*initial value*/, DEFAULT_FILTER_COEFFICIENT);
 }
 
