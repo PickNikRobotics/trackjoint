@@ -132,9 +132,6 @@ private:
    */
   ErrorCodeEnum synchronizeTrajComponents(std::vector<JointTrajectory>* output_trajectories);
 
-  // TODO(andyz): set this back to a small number when done testing
-  // TODO(709): Remove kMaxNumWaypointsFullTrajectory - not needed now that we have streaming mode
-  const size_t kMaxNumWaypointsFullTrajectory = 10000;  // A relatively small number, to run fast
   // Upsample for better accuracy if num waypoints is below threshold in full trajectory mode
   // Clip trajectories to threshold in streaming mode
   const size_t kNumWaypointsThreshold = 10;
