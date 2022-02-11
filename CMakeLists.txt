@@ -88,20 +88,20 @@ install(DIRECTORY test/ DESTINATION test)
 ## Testing ##
 #############
 
-#if(BUILD_TESTING)
-#  find_package(ament_lint_auto REQUIRED)
-#  ament_lint_auto_find_test_dependencies()
-#
-#  find_package(ament_cmake_gtest REQUIRED)
-#
-#  ament_add_gtest(trajectory_generation_test
-#    test/trajectory_generation_test.cpp
-#  )
-#  target_link_libraries(trajectory_generation_test
-#    ${LIBRARY_NAME}
-#  )
-#  ament_target_dependencies(trajectory_generation_test ${THIS_PACKAGE_INCLUDE_DEPENDS})
-#endif()
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+
+  ament_add_gtest(trajectory_generation_test
+    test/trajectory_generation_test.cpp
+  )
+  target_link_libraries(trajectory_generation_test
+    ${LIBRARY_NAME}
+  )
+  ament_target_dependencies(trajectory_generation_test ${THIS_PACKAGE_INCLUDE_DEPENDS})
+endif()
 
 ament_export_include_directories(include)
 ament_export_libraries(${LIBRARY_NAME})

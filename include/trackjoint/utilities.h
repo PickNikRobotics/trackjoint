@@ -160,5 +160,11 @@ inline void printJointTrajectory(const std::size_t joint, const std::vector<Join
 void clipEigenVector(VectorXlong* vector, size_t new_num_waypoints);
 
 /* \brief Check if all elements of a vector are within a [low_limit, high_limit] range. */
-bool verifyVectorWithinBounds(long double low_limit, long double high_limit, VectorXlong& vector);
+inline bool verifyVectorWithinBounds(double low_limit, double high_limit, VectorXlong& vector)
+{
+  if (high_limit < low_limit)
+    return false;
+
+  return ((vector.array() >= low_limit).all() && (vector.array() <= high_limit).all());
+}
 }  // namespace trackjoint

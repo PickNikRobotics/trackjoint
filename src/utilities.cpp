@@ -79,12 +79,4 @@ void clipEigenVector(VectorXlong* vector, size_t new_num_waypoints)
   VectorXlong new_vector = vector->head(new_num_waypoints);
   *vector = new_vector;
 }
-
-bool verifyVectorWithinBounds(double low_limit, double high_limit, VectorXlong& vector)
-{
-  if (high_limit < low_limit)
-    return false;
-
-  return ((vector.array() >= low_limit).all() && (vector.array() <= high_limit).all());
-}
 }  // namespace trackjoint
