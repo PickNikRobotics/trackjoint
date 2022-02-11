@@ -42,7 +42,7 @@
 namespace trackjoint
 {
 // Default to use spline of dynamic degree
-typedef Eigen::Spline<double, 1 /* dimension */> Spline1D;
+typedef Eigen::Spline<long double, 1 /* dimension */> Spline1D;
 typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
 
 /**
@@ -53,8 +53,8 @@ typedef Eigen::SplineFitting<Spline1D> SplineFitting1D;
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, const double timestep,
-                                        const double first_element);
+VectorXlong discreteDifferentiation(const VectorXlong& input_vector, const long double timestep,
+                                        const long double first_element);
 
 /**
  * \brief Discrete differentiation of a vector followed by low-pass filtering.
@@ -66,8 +66,8 @@ Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, con
  * input filter_coefficient must be >1.0, typically less than 100. Larger value -> more smoothing.
  * return a vector of derivatives
  */
-Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
-                                                     const double first_element, const double filter_coefficient);
+VectorXlong discreteDifferentiationWithFiltering(const VectorXlong& input_vector, const long double timestep,
+                                                     const long double first_element, const long double filter_coefficient);
 
 /**
  * \brief Normalize a vector between 0 and 1
@@ -75,7 +75,7 @@ Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& inpu
  * input input_vector any vector, such as position
  * return a vector of normalized values between 0 and 1
  */
-Eigen::VectorXd normalize(const Eigen::VectorXd& x);
+VectorXlong normalize(const VectorXlong& x);
 
 /**
  * \brief Interpolate with splines then take the derivative.
@@ -85,7 +85,7 @@ Eigen::VectorXd normalize(const Eigen::VectorXd& x);
  * input first_element supply an initial condition
  * return a vector of derivatives
  */
-Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element);
+VectorXlong splineDifferentiation(const VectorXlong& input_vector, long double timestep, long double first_element);
 
 /** \brief Print desired duration, number of waypoints, timestep, initial state, and final state of a trajectory
  *
@@ -94,11 +94,11 @@ Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, doubl
  * input desired_duration the user-requested duration of the trajectory
  */
 void printJointTrajectory(const std::size_t joint, const std::vector<JointTrajectory>& output_trajectories,
-                          const double desired_duration);
+                          const long double desired_duration);
 
 /** \brief Clip all elements beyond a given size */
-void clipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints);
+void clipEigenVector(VectorXlong* vector, size_t new_num_waypoints);
 
 /* \brief Check if all elements of a vector are within a [low_limit, high_limit] range. */
-bool verifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector);
+bool verifyVectorWithinBounds(long double low_limit, long double high_limit, VectorXlong& vector);
 }  // namespace trackjoint

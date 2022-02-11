@@ -43,9 +43,9 @@ class KinematicState
 {
 public:
   // State at this waypoint in a global, inertial reference frame
-  double position = 0.0;  // radians
-  double velocity = 0.0;
-  double acceleration = 0.0;
+  long double position = 0.0;  // radians
+  long double velocity = 0.0;
+  long double acceleration = 0.0;
 
   /** \brief Print this state
    */

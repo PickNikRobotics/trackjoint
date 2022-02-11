@@ -53,19 +53,19 @@ public:
    * Rough plot, with cutoff frequency on the y-axis:
    * https://www.wolframalpha.com/input/?i=plot+arccot(c)
    */
-  ButterworthFilter(double low_pass_filter_coeff);
+  ButterworthFilter(long double low_pass_filter_coeff);
   ButterworthFilter() = delete;
 
-  double filter(double new_measurement);
+  long double filter(long double new_measurement);
 
-  void reset(const double data);
+  void reset(const long double data);
 
 private:
   static constexpr size_t FILTER_LENGTH = 2;
-  std::array<double, FILTER_LENGTH> previous_measurements_;
-  double previous_filtered_measurement_;
+  std::array<long double, FILTER_LENGTH> previous_measurements_;
+  long double previous_filtered_measurement_;
   // Scale and feedback term are calculated from supplied filter coefficient
-  double scale_term_;
-  double feedback_term_;
+  long double scale_term_;
+  long double feedback_term_;
 };
 }  // namespace trackjoint

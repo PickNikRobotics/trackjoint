@@ -41,7 +41,7 @@ namespace trackjoint
  */
 struct Configuration
 {
-  Configuration(double timestep, double max_duration, const Limits& limits, const double position_tolerance,
+  Configuration(const long double timestep, const long double max_duration, const Limits& limits, const long double position_tolerance,
                 bool use_streaming_mode)
     : timestep(timestep)
     , max_duration(max_duration)
@@ -55,10 +55,10 @@ struct Configuration
   {
   }
 
-  double timestep;
-  double max_duration;
+  long double timestep;
+  long double max_duration;
   Limits limits;
-  double position_tolerance;
+  long double position_tolerance;
   // If streaming mode is enabled, trajectories are clipped at
   // kNumWaypointsThreshold so the algorithm runs very quickly.
   //

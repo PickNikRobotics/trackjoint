@@ -42,10 +42,10 @@ namespace trackjoint
 {
 namespace
 {
-constexpr double EPSILON = 1e-9;
+constexpr long double EPSILON = 1e-9;
 }
 
-ButterworthFilter::ButterworthFilter(double low_pass_filter_coeff)
+ButterworthFilter::ButterworthFilter(long double low_pass_filter_coeff)
   : previous_measurements_{ 0., 0. }
   , previous_filtered_measurement_(0.)
   , scale_term_(1. / (1. + low_pass_filter_coeff))
@@ -70,7 +70,7 @@ ButterworthFilter::ButterworthFilter(double low_pass_filter_coeff)
         "online_signal_smoothing::ButterworthFilter: Filter coefficient value resulted in feedback term of 0");
 }
 
-double ButterworthFilter::filter(double new_measurement)
+long double ButterworthFilter::filter(long double new_measurement)
 {
   // Push in the new measurement
   previous_measurements_[1] = previous_measurements_[0];
@@ -82,7 +82,7 @@ double ButterworthFilter::filter(double new_measurement)
   return previous_filtered_measurement_;
 }
 
-void ButterworthFilter::reset(const double data)
+void ButterworthFilter::reset(const long double data)
 {
   previous_measurements_[0] = data;
   previous_measurements_[1] = data;

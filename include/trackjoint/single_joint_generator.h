@@ -82,9 +82,9 @@ public:
    * timestep
    *
    */
-  void reset(double timestep, double max_duration, const KinematicState& current_joint_state,
+  void reset(const long double timestep, const long double max_duration, const KinematicState& current_joint_state,
              const KinematicState& goal_joint_state, const Limits& limits, size_t desired_num_waypoints,
-             const double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
+             const long double position_tolerance, bool use_streaming_mode, bool timestep_was_upsampled);
 
   /** \brief Generate a jerk-limited trajectory for this joint
    *
@@ -111,16 +111,16 @@ public:
    *
    * input new_trajectory_duration the new desired duration. Units not important as long as they are consistent
    */
-  void updateTrajectoryDuration(double new_trajectory_duration);
+  void updateTrajectoryDuration(const long double new_trajectory_duration);
 
   /** \brief Start looking back through a velocity vector to calculate for an
    * excess velocity at limited_index. */
-  bool backwardLimitCompensation(size_t limited_index, double excess_velocity);
+  bool backwardLimitCompensation(const size_t limited_index, long double excess_velocity);
 
   /** \brief This method is used to set waypoints_ state, for testing */
-  void setInternalWaypointsData(const Eigen::VectorXd& positions, const Eigen::VectorXd& velocities,
-                                const Eigen::VectorXd& accelerations, const Eigen::VectorXd& jerks,
-                                const Eigen::VectorXd& elapsed_times);
+  void setInternalWaypointsData(const VectorXlong& positions, const VectorXlong& velocities,
+                                const VectorXlong& accelerations, const VectorXlong& jerks,
+                                const VectorXlong& elapsed_times);
 
 private:
   /** \brief Record the index when compensation first failed */
@@ -138,7 +138,7 @@ private:
    * input times a vector of waypoint times.
    * return a vector of interpolated positions
    */
-  Eigen::VectorXd interpolate(Eigen::VectorXd& times);
+  VectorXlong interpolate(VectorXlong& times);
 
   /** \brief Step through a vector of velocities, compensating for limits. Start from the beginning. */
   ErrorCodeEnum forwardLimitCompensation(size_t* index_last_successful);
@@ -160,10 +160,10 @@ private:
   const size_t kMaxNumWaypointsFullTrajectory;
 
   Configuration configuration_;
-  double desired_duration_;
+  long double desired_duration_;
   KinematicState current_joint_state_;
   KinematicState goal_joint_state_;
-  Eigen::VectorXd nominal_times_;
+  VectorXlong nominal_times_;
   JointTrajectory waypoints_;
   size_t index_last_successful_;
   bool is_reset_;

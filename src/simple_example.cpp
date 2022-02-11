@@ -41,10 +41,10 @@ int main(int argc, char** argv)
   // This example is for just one degree of freedom
   constexpr int num_dof = 1;
   // Timestep. Units don't matter as long as they're consistent
-  constexpr double timestep = 0.001;
+  constexpr long double timestep = 0.001;
   // TrackJoint is allowed to extend the trajectory up to this duration, if a solution at kDesiredDuration can't be
   // found
-  constexpr double max_duration = 5;
+  constexpr long double max_duration = 5;
   // streaming mode returns just a few waypoints but executes very quickly. We won't use it here -- we'll calculate
   // the whole trajectory at once.
   constexpr bool use_streaming_mode = false;
@@ -75,13 +75,13 @@ int main(int argc, char** argv)
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration =
+  long double desired_duration =
       fabs(goal_joint_states[0].position - current_joint_states[0].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << '\n';
 
   // This descibes how far TrackJoint can deviate from a smooth, interpolated polynomial.
   // It is used for calculations internally. It should be set to a smaller number than your task requires.
-  const double position_tolerance = 0.0001;
+  const long double position_tolerance = 0.0001;
 
   // Instantiate a trajectory generation object
   trackjoint::TrajectoryGenerator traj_gen(num_dof, timestep, desired_duration, max_duration, current_joint_states,
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::chrono::duration<long double> elapsed_seconds = end - start;
 
   std::cout << "Runtime: " << elapsed_seconds.count() << '\n';
   std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << '\n';

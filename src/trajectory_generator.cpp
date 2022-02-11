@@ -31,10 +31,10 @@
 
 namespace trackjoint
 {
-TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
+TrajectoryGenerator::TrajectoryGenerator(const uint num_dof, const long double timestep, const long double desired_duration, const long double max_duration,
                                          const std::vector<KinematicState>& current_joint_states,
                                          const std::vector<KinematicState>& goal_joint_states,
-                                         const std::vector<Limits>& limits, const double position_tolerance,
+                                         const std::vector<Limits>& limits, const long double position_tolerance,
                                          bool use_streaming_mode)
   : kNumDof(num_dof)
   , desired_timestep_(timestep)
@@ -56,10 +56,10 @@ TrajectoryGenerator::TrajectoryGenerator(uint num_dof, double timestep, double d
   }
 }
 
-void TrajectoryGenerator::reset(double timestep, double desired_duration, double max_duration,
+void TrajectoryGenerator::reset(const long double timestep, const long double desired_duration, const long double max_duration,
                                 const std::vector<KinematicState>& current_joint_states,
                                 const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                                const double position_tolerance, bool use_streaming_mode)
+                                const long double position_tolerance, bool use_streaming_mode)
 {
   desired_timestep_ = timestep;
   upsampled_timestep_ = timestep;
@@ -111,9 +111,9 @@ void TrajectoryGenerator::upsample()
   }
 }
 
-void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector,
-                                     Eigen::VectorXd* velocity_vector, Eigen::VectorXd* acceleration_vector,
-                                     Eigen::VectorXd* jerk_vector)
+void TrajectoryGenerator::downSample(VectorXlong* time_vector, VectorXlong* position_vector,
+                                     VectorXlong* velocity_vector, VectorXlong* acceleration_vector,
+                                     VectorXlong* jerk_vector)
 {
   // Need at least 2 waypoints
   if (time_vector->size() <= 2)
@@ -121,8 +121,8 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
     return;
   }
 
-  // Eigen::VectorXd does not provide .back(), so get the final time like this:
-  double final_time = (*time_vector)[time_vector->size() - 1];
+  // VectorXlong does not provide .back(), so get the final time like this:
+  long double final_time = (*time_vector)[time_vector->size() - 1];
   // minimum new_vector_size is two (initial waypoint and final waypoint)
   size_t new_vector_size = std::max(size_t(1 + round(final_time / desired_timestep_)), size_t(2));
   // Time downsampling:
@@ -130,9 +130,9 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
   // Determine length of position/velocity/acceleration from length of time
   // vector:
-  Eigen::VectorXd new_positions(new_vector_size);
-  Eigen::VectorXd new_velocities(new_vector_size);
-  Eigen::VectorXd new_accelerations(new_vector_size);
+  VectorXlong new_positions(new_vector_size);
+  VectorXlong new_velocities(new_vector_size);
+  VectorXlong new_accelerations(new_vector_size);
 
   // Keep the first and last elements of position/vel/accel since they should match exactly
   new_positions[0] = (*position_vector)[0];
@@ -196,9 +196,9 @@ void TrajectoryGenerator::downSample(Eigen::VectorXd* time_vector, Eigen::Vector
 
 ErrorCodeEnum TrajectoryGenerator::inputChecking(const std::vector<KinematicState>& current_joint_states,
                                                  const std::vector<KinematicState>& goal_joint_states,
-                                                 const std::vector<Limits>& limits, double nominal_timestep)
+                                                 const std::vector<Limits>& limits, long double nominal_timestep)
 {
-  double rounded_duration = std::round(desired_duration_ / upsampled_timestep_) * upsampled_timestep_;
+  long double rounded_duration = std::round(desired_duration_ / upsampled_timestep_) * upsampled_timestep_;
 
   // Need at least 1 timestep
   if (rounded_duration < nominal_timestep)
@@ -328,7 +328,7 @@ ErrorCodeEnum TrajectoryGenerator::synchronizeTrajComponents(std::vector<JointTr
     }
 
     // Subtract one from longest_num_waypoints because the first index doesn't count toward duration
-    double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
+    long double new_desired_duration = (longest_num_waypoints - 1) * upsampled_timestep_;
 
     // If any of the component durations were changed, run them again
     if (new_desired_duration != desired_duration_)

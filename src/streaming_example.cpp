@@ -44,22 +44,22 @@ int main(int argc, char** argv)
   // For readability, save the joint index
   constexpr size_t joint = 0;
   // Waypoints will be spaced at 1 ms
-  constexpr double timestep = 0.001;
-  constexpr double max_duration = 100;
+  constexpr long double timestep = 0.001;
+  constexpr long double max_duration = 100;
   // Streaming mode returns just a few waypoints but executes very quickly.
   // It returns from 2-kNumWaypointsThreshold waypoints, depending on how many waypoints can be calculated on a first
   // pass.
   // Waypoint[0] is the current state of the robot
   constexpr bool use_streaming_mode = true;
   // Position tolerance for each waypoint
-  constexpr double waypoint_position_tolerance = 1e-5;
+  constexpr long double waypoint_position_tolerance = 1e-5;
   // Loop until these tolerances are achieved
-  constexpr double final_position_tolerance = 1e-4;
-  constexpr double final_velocity_tolerance = 1e-1;
-  constexpr double final_acceleration_tolerance = 1e-1;
+  constexpr long double final_position_tolerance = 1e-4;
+  constexpr long double final_velocity_tolerance = 1e-1;
+  constexpr long double final_acceleration_tolerance = 1e-1;
   // For streaming mode, it is important to keep the desired duration >=10 timesteps.
   // Otherwise, an error will be thrown. This helps with accuracy
-  constexpr double min_desired_duration = timestep;
+  constexpr long double min_desired_duration = timestep;
   // Between TrackJoint iterations, move ahead this many waypoints along the trajectory.
   constexpr std::size_t next_waypoint = 1;
 
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
   limits[joint].jerk_limit = 2;
 
   // This is a best-case estimate, assuming the robot is already at maximum velocity
-  double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
+  long double desired_duration = fabs(start_state[0].position - goal_joint_states[0].position) / limits[0].velocity_limit;
   // But, don't ask for a duration that is shorter than the minimum
   desired_duration = std::max(desired_duration, min_desired_duration);
 
@@ -112,9 +112,9 @@ int main(int argc, char** argv)
   start_state[joint].acceleration = output_trajectories.at(joint).accelerations[next_waypoint];
 
   // Loop while these errors exceed tolerances
-  double position_error = std::numeric_limits<double>::max();
-  double velocity_error = std::numeric_limits<double>::max();
-  double acceleration_error = std::numeric_limits<double>::max();
+  long double position_error = std::numeric_limits<long double>::max();
+  long double velocity_error = std::numeric_limits<long double>::max();
+  long double acceleration_error = std::numeric_limits<long double>::max();
 
   // Loop until the tolerances are satisfied
   while (fabs(position_error) > final_position_tolerance || fabs(velocity_error) > final_velocity_tolerance ||

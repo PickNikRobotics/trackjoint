@@ -66,16 +66,16 @@ public:
    * input use_streaming_mode set to true for fast streaming applications. Returns a maximum of kNumWaypointsThreshold
    * waypoints.
    */
-  TrajectoryGenerator(uint num_dof, double timestep, double desired_duration, double max_duration,
+  TrajectoryGenerator(const uint num_dof, const long double timestep, const long double desired_duration, const long double max_duration,
                       const std::vector<KinematicState>& current_joint_states,
                       const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                      const double position_tolerance, bool use_streaming_mode);
+                      const long double position_tolerance, bool use_streaming_mode);
 
   /** \brief reset the member variables of the object and prepare to generate a new trajectory */
-  void reset(double timestep, double desired_duration, double max_duration,
+  void reset(const long double timestep, const long double desired_duration, const long double max_duration,
              const std::vector<KinematicState>& current_joint_states,
              const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-             const double position_tolerance, bool use_streaming_mode);
+             const long double position_tolerance, bool use_streaming_mode);
 
   /** \brief Generate and return trajectories for every joint
    *
@@ -102,7 +102,7 @@ public:
    */
   ErrorCodeEnum inputChecking(const std::vector<KinematicState>& current_joint_states,
                               const std::vector<KinematicState>& goal_joint_states, const std::vector<Limits>& limits,
-                              double nominal_timestep);
+                              const long double nominal_timestep);
 
 private:
   /** \brief Ensure limits are obeyed before outputting.
@@ -122,8 +122,8 @@ private:
    * input acceleration_vector a vector of accelerations
    * input jerk_vector a vector of jerks
    */
-  void downSample(Eigen::VectorXd* time_vector, Eigen::VectorXd* position_vector, Eigen::VectorXd* velocity_vector,
-                  Eigen::VectorXd* acceleration_vector, Eigen::VectorXd* jerk_vector);
+  void downSample(VectorXlong* time_vector, VectorXlong* position_vector, VectorXlong* velocity_vector,
+                  VectorXlong* acceleration_vector, VectorXlong* jerk_vector);
 
   /** \brief Synchronize all trajectories with the one of longest duration.
    *
@@ -137,11 +137,11 @@ private:
   const size_t kNumWaypointsThreshold = 10;
 
   // Epsilon for double comparison
-  const double kDoubleEpsilon = 1e-6;
+  const long double kDoubleEpsilon = 1e-6;
 
   const uint kNumDof;
-  double desired_timestep_, upsampled_timestep_;
-  double desired_duration_, max_duration_;
+  long double desired_timestep_, upsampled_timestep_;
+  long double desired_duration_, max_duration_;
   std::vector<KinematicState> current_joint_states_;
   std::vector<Limits> limits_;
   bool use_streaming_mode_;

@@ -39,12 +39,12 @@
 int main(int argc, char** argv)
 {
   constexpr int num_dof = 3;
-  const double timestep = 0.0039;
-  constexpr double max_duration = 30;
+  const long double timestep = 0.0039;
+  constexpr long double max_duration = 30;
   // Streaming mode returns just a few waypoints but executes very quickly.
   constexpr bool use_streaming_mode = false;
   // Position tolerance for each waypoint
-  constexpr double waypoint_position_tolerance = 1e-4;
+  constexpr long double waypoint_position_tolerance = 1e-4;
   const std::string output_path_base =
       "/home/" + std::string(getenv("USER")) + "/Downloads/trackjoint_data/output_joint";
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 
   // Estimate trajectory duration
   // This is the fastest possible trajectory execution time, assuming the robot starts at full velocity.
-  double desired_duration =
+  long double desired_duration =
       fabs(goal_joint_states[1].position - current_joint_states[1].position) / single_joint_limits.velocity_limit;
   std::cout << "Desired duration: " << desired_duration << '\n';
 
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::chrono::duration<long double> elapsed_seconds = end - start;
 
   std::cout << "Runtime: " << elapsed_seconds.count() << '\n';
   std::cout << "Num waypoints: " << output_trajectories.at(0).positions.size() << '\n';

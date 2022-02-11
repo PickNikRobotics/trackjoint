@@ -164,8 +164,8 @@ protected:
                                    std::vector<JointTrajectory>& trajectory)
   {
     // Use a 2-norm to calculate positional accuracy
-    Eigen::VectorXd goal_positions(trajectory.size());
-    Eigen::VectorXd final_positions(trajectory.size());
+    VectorXlong goal_positions(trajectory.size());
+    VectorXlong final_positions(trajectory.size());
 
     for (size_t joint = 0; joint < trajectory.size(); ++joint)
     {
@@ -175,7 +175,7 @@ protected:
 
     // Make clang-tidy happy about taking the norm() of a zero-length
     // vector
-    Eigen::VectorXd errors = final_positions - goal_positions;
+    VectorXlong errors = final_positions - goal_positions;
     if (errors.size() < 1)
       return 0;
 
@@ -237,9 +237,9 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
   // Test SingleJointGenerator::backwardLimitCompensation()
   // The default test input is no motion
   size_t num_waypoints = 6;
-  Eigen::VectorXd zero_positions(num_waypoints);
+  VectorXlong zero_positions(num_waypoints);
   zero_positions << 0, 0, 0, 0, 0, 0;
-  Eigen::VectorXd elapsed_times(num_waypoints);
+  VectorXlong elapsed_times(num_waypoints);
   elapsed_times << 0, 0.01, 0.02, 0.03, 0.04, 0.05;
 
   //////////////////////////////////////
@@ -262,13 +262,13 @@ TEST_F(TrajectoryGenerationTest, BackwardLimitCompensation)
 
   double velocity_error = 0.001;  // just a reasonable value, achievable in one timestep.
   // jerk[4] is already at the limit, so jerk[3] should be adjusted to correct for the velocity error
-  Eigen::VectorXd input_jerk(num_waypoints);
+  VectorXlong input_jerk(num_waypoints);
   double jerk_4 = limits_.at(0).jerk_limit;
   input_jerk << 0, 0, 0, 0, jerk_4, 0;
-  Eigen::VectorXd input_acceleration(num_waypoints);
+  VectorXlong input_acceleration(num_waypoints);
   double accel_4 = jerk_4 * timestep_;
   input_acceleration << 0, 0, 0, 0, accel_4, accel_4 + input_jerk(5) * timestep_;
-  Eigen::VectorXd input_velocity(num_waypoints);
+  VectorXlong input_velocity(num_waypoints);
   double vel_4 = input_acceleration(4) * timestep_ + 0.5 * input_jerk(4) * pow(timestep_, 2);
   input_velocity << 0, 0, 0, 0, vel_4,
       vel_4 + input_acceleration(5) * timestep_ + 0.5 * input_jerk(5) * pow(timestep_, 2);
@@ -623,8 +623,8 @@ TEST_F(TrajectoryGenerationTest, NoisyStreamingCommand)
     recorded_trajectories[joint].elapsed_times(0) = 0;
   }
 
-  Eigen::VectorXd x_desired(num_waypoints);
-  Eigen::VectorXd x_smoothed(num_waypoints);
+  VectorXlong x_desired(num_waypoints);
+  VectorXlong x_smoothed(num_waypoints);
 
   double time = 0;
   // Create Trajectory Generator object

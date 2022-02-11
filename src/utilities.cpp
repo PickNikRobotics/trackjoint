@@ -31,13 +31,13 @@
 
 namespace trackjoint
 {
-Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, double timestep, const double first_element)
+VectorXlong discreteDifferentiation(const VectorXlong& input_vector, double timestep, const double first_element)
 {
   // derivative = (difference between adjacent elements) / timestep
-  Eigen::VectorXd input_shifted_right(input_vector.size());
+  VectorXlong input_shifted_right(input_vector.size());
   input_shifted_right(0) = 0;
   input_shifted_right.tail(input_shifted_right.size() - 1) = input_vector.head(input_vector.size() - 1);
-  Eigen::VectorXd derivative(input_vector.size());
+  VectorXlong derivative(input_vector.size());
   derivative(0) = first_element;
   derivative.tail(derivative.size() - 1) =
       (input_vector.tail(input_vector.size() - 1) - input_shifted_right.tail(input_shifted_right.size() - 1)) /
@@ -46,12 +46,12 @@ Eigen::VectorXd discreteDifferentiation(const Eigen::VectorXd& input_vector, dou
   return derivative;
 }
 
-Eigen::VectorXd normalize(const Eigen::VectorXd& x)
+VectorXlong normalize(const VectorXlong& x)
 {
   const double min = x.minCoeff();
   const double max = x.maxCoeff();
   size_t num_points = x.size();
-  Eigen::RowVectorXd x_norm = Eigen::RowVectorXd::Zero(num_points);
+  Eigen::Matrix<long double, 1, Eigen::Dynamic> x_norm = Eigen::Matrix<long double, 1, Eigen::Dynamic>::Zero(num_points);
 
   x_norm = (x.array() - min) / (max - min);
   return x_norm;
@@ -59,12 +59,12 @@ Eigen::VectorXd normalize(const Eigen::VectorXd& x)
 
 // TODO(andyz): This is horribly inefficient. Maybe it would be best to store everything as splines always.
 // Also (maybe) to store everything in one large matrix with columns for each derivative.
-Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, double timestep, double first_element)
+VectorXlong splineDifferentiation(const VectorXlong& input_vector, double timestep, double first_element)
 {
   // Fit a spline through the input vector
   size_t num_points = input_vector.size();
-  Eigen::RowVectorXd times = Eigen::RowVectorXd::Zero(num_points);
-  Eigen::RowVectorXd input_row = Eigen::RowVectorXd::Zero(num_points);
+  Eigen::Matrix<long double, 1, Eigen::Dynamic> times = Eigen::Matrix<long double, 1, Eigen::Dynamic>::Zero(1, num_points);
+  Eigen::Matrix<long double, 1, Eigen::Dynamic> input_row = Eigen::Matrix<long double, 1, Eigen::Dynamic>::Zero(1, num_points);
   for (size_t i = 1; i < num_points; ++i)
   {
     input_row(i) = input_vector(i);
@@ -76,7 +76,7 @@ Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   double scale = 1 / (times.maxCoeff() - times.minCoeff());
 
   // Derivative output
-  Eigen::RowVectorXd derivative = Eigen::RowVectorXd::Zero(num_points);
+  Eigen::Matrix<long double, 1, Eigen::Dynamic> derivative = Eigen::Matrix<long double, 1, Eigen::Dynamic>::Zero(1, num_points);
   derivative(0) = first_element;
 
   // Take derivatives
@@ -90,10 +90,10 @@ Eigen::VectorXd splineDifferentiation(const Eigen::VectorXd& input_vector, doubl
   return derivative.transpose();
 }
 
-Eigen::VectorXd discreteDifferentiationWithFiltering(const Eigen::VectorXd& input_vector, const double timestep,
+VectorXlong discreteDifferentiationWithFiltering(const VectorXlong& input_vector, const double timestep,
                                                      const double first_element, const double filter_coefficient)
 {
-  Eigen::VectorXd derivative = discreteDifferentiation(input_vector, timestep, first_element);
+  VectorXlong derivative = discreteDifferentiation(input_vector, timestep, first_element);
 
   // Apply a low-pass filter
   ButterworthFilter filter(filter_coefficient);
@@ -143,13 +143,13 @@ void printJointTrajectory(const std::size_t joint, const std::vector<JointTrajec
             << output_trajectories.at(joint).jerks[output_trajectories.at(joint).positions.size() - 1] << '\n';
 }
 
-void clipEigenVector(Eigen::VectorXd* vector, size_t new_num_waypoints)
+void clipEigenVector(VectorXlong* vector, size_t new_num_waypoints)
 {
-  Eigen::VectorXd new_vector = vector->head(new_num_waypoints);
+  VectorXlong new_vector = vector->head(new_num_waypoints);
   *vector = new_vector;
 }
 
-bool verifyVectorWithinBounds(double low_limit, double high_limit, Eigen::VectorXd& vector)
+bool verifyVectorWithinBounds(double low_limit, double high_limit, VectorXlong& vector)
 {
   if (high_limit < low_limit)
     return false;

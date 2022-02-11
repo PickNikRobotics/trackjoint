@@ -36,15 +36,20 @@
 
 namespace trackjoint
 {
+constexpr int EIGEN_AUTO_ALIGN = 0;
+// Custom Eigen types using long double for better accuracy
+typedef Eigen::Matrix<long double, Eigen::Dynamic, 1, EIGEN_AUTO_ALIGN> VectorXlong;
+typedef Eigen::Matrix<long double, 1, Eigen::Dynamic, EIGEN_AUTO_ALIGN> RowVectorXlong;
+
 /**
  * \brief Vectors of kinematic states and time
  */
 struct JointTrajectory
 {
-  Eigen::VectorXd positions;      // rad
-  Eigen::VectorXd velocities;     // rad/s
-  Eigen::VectorXd accelerations;  // rad/s^2
-  Eigen::VectorXd jerks;          // rad/s^3
-  Eigen::VectorXd elapsed_times;  // seconds
+  VectorXlong positions;      // rad
+  VectorXlong velocities;     // rad/s
+  VectorXlong accelerations;  // rad/s^2
+  VectorXlong jerks;          // rad/s^3
+  VectorXlong elapsed_times;  // seconds
 };
 }  // namespace trackjoint
