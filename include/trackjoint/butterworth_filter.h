@@ -35,6 +35,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <stdexcept>
 
 namespace trackjoint
 {
